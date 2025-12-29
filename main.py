@@ -291,5 +291,5 @@ def pagina_no_encontrada(e): return render_template('404.html'), 404
 def error_servidor(e): return render_template('500.html'), 500
 
 if __name__ == '__main__':
-    inicializar_sistema()
+ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
