@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Control - Ubik2CR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .admin-header { background: var(--azul); color: white; padding: 20px 0; margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .stat-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; }
+        .stat-number { font-size: 3rem; font-weight: bold; color: var(--verde); display: block; }
+        .stat-label { color: #666; font-weight: 500; }
+        .action-btn { display: inline-block; padding: 15px 30px; border-radius: 10px; font-weight: bold; transition: 0.3s; margin: 10px; text-decoration: none; color: white;}
+        .action-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .logout-link { color: white; text-decoration: none; border: 1px solid white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div class="container nav-container">
+            <h3>Panel de Administración</h3>
+            <a href="/logout" class="logout-link">Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Hola, Admin 👋</h1>
+        <p style="margin-bottom: 30px;">Aquí tienes el resumen de tu directorio.</p>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number">{{ pendientes }}</span>
+                <span class="stat-label">Pendientes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">{{ activos }}</span>
+                <span class="stat-label">Activos</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">{{ total }}</span>
+                <span class="stat-label">Total Histórico</span>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="/admin/moderacion" class="action-btn" style="background: {% if pendientes > 0 %}#e74c3c{% else %}#7f8c8d{% endif %};">
+                🚨 Revisar Pendientes
+            </a>
+
+            <a href="/admin/comercios" class="action-btn" style="background: var(--azul);">
+                🏢 Gestionar Negocios Activos
+            </a>
+
+            <a href="/admin/noticias" class="action-btn" style="background: #f39c12;">
+                📰 Gestionar Noticias
+            </a>
+
+            <br><br>
+            <a href="/" style="color: var(--azul);">Ir a la página de inicio</a>
+        </div>
+    </div>
+</body>
+</html>

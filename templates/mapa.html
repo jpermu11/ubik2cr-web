@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa Interactivo - Ubik2CR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        #map { width: 100%; height: calc(100vh - 70px); z-index: 1; }
+
+        /* Botón flotante para recentrar */
+        .btn-locate {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            background: white;
+            border: 2px solid #104E8B;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .popup-title { font-weight: bold; color: #104E8B; font-size: 1.1rem; }
+        .popup-cat { color: #8CC63F; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+        .popup-link { display: block; margin-top: 5px; text-decoration: none; color: white; background: #104E8B; padding: 5px; text-align: center; border-radius: 5px; font-size: 0.9rem;}
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" style="height: 70px; padding: 0 20px;">
+        <div class="container nav-container">
+            <a href="/" class="logo-link"><img src="{{ url_for('static', filename='uploads/logo.png') }}" style="height: 50px;"></a>
+            <a href="/" class="nav-link" style="font-weight: bold;">Cerrar Mapa ✖</a>
+        </div>
+    </nav>
+
+    <div id="map"></div>
+
+    <button class="btn-locate" onclick="ubicarUsuario()" title="Ir a mi ubicación">🎯</button>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. Inicializar el mapa (Centro por defecto si no hay GPS)
+        var defaultLat = 10.07;
+        var defaultLng = -84.31;
+        var map = L.map('map').setView([defaultLat, defaultLng], 13);
+
+        // 2. Cargar las capas visuales
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; Ubik2CR'
+        }).addTo(map);
+
+        // 3. Icono de Negocios
+        var pinIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/markers/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        // 4. Cargar Negocios desde Python
+        var negocios = [
+            {% for n in negocios %}
+                {
+                    nombre: "{{ n.nombre }}",
+                    cat: "{{ n.categoria }}",
+                    lat: {{ n.latitud }},
+                    lng: {{ n.longitud }},
+                    link: "/negocio/{{ n.id }}"
+                },
+            {% endfor %}
+        ];
+
+        // 5. Poner los pines
+        negocios.forEach(function(n) {
+            var marker = L.marker([n.lat, n.lng], {icon: pinIcon}).addTo(map);
+            var popupContent = `
+                <div class="popup-cat">${n.cat}</div>
+                <div class="popup-title">${n.nombre}</div>
+                <a href="${n.link}" class="popup-link">Ver Perfil</a>
+            `;
+            marker.bindPopup(popupContent);
+        });
+
+        // --- 6. GEOLOCALIZACIÓN INTELIGENTE (GPS) ---
+
+        function onLocationFound(e) {
+            var radius = e.accuracy / 2;
+
+            // Dibujamos un punto azul donde está la persona
+            L.circleMarker(e.latlng, {
+                radius: 10,
+                fillColor: "#3388ff",
+                color: "#fff",
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map).bindPopup("📍 ¡Estás aquí!").openPopup();
+
+            // Dibujamos el radio de precisión
+            L.circle(e.latlng, radius).addTo(map);
+        }
+
+        function onLocationError(e) {
+            console.log("GPS no disponible o permiso denegado.");
+            // Si falla, no hacemos nada y dejamos el mapa en la vista por defecto
+        }
+
+        // Activamos los eventos
+        map.on('locationfound', onLocationFound);
+        map.on('locationerror', onLocationError);
+
+        // Esta función dispara la búsqueda del GPS al iniciar
+        function ubicarUsuario() {
+            map.locate({setView: true, maxZoom: 16});
+        }
+
+        // Ejecutar apenas carga la página
+        ubicarUsuario();
+
+    </script>
+</body>
+</html>

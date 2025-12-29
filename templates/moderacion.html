@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderación - Ubik2CR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/admin" class="logo-link">
+                <span style="font-size: 1.5rem; font-weight: bold; color: #104E8B;">Admin<span style="color:#8CC63F;">Panel</span></span>
+            </a>
+            <a href="/admin" class="nav-link" style="font-weight: 600;">&larr; Volver al Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 40px; margin-bottom: 40px;">
+        <h2 style="margin-bottom: 25px; color: #333;">Negocios Pendientes de Aprobación</h2>
+
+        {% if negocios %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Negocio</th>
+                            <th>Categoría</th>
+                            <th>WhatsApp</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for n in negocios %}
+                        <tr>
+                            <td>
+                                <strong style="font-size: 1.1rem; color: #104E8B;">{{ n.nombre }}</strong><br>
+                                <span style="font-size: 0.9rem; color: #777;">{{ n.descripcion }}</span>
+                            </td>
+                            <td><span class="tag-cat">{{ n.categoria }}</span></td>
+                            <td>{{ n.whatsapp }}</td>
+                            <td>
+                                <div style="display: flex; gap: 5px;">
+                                    <form action="/admin/aprobar/{{ n.id }}" method="POST">
+                                        <button class="btn-approve">✅ Aprobar</button>
+                                    </form>
+                                    <form action="/admin/eliminar/{{ n.id }}" method="POST">
+                                        <button class="btn-delete">🗑️ Rechazar</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div class="empty-state-box">
+                <div style="font-size: 3rem; margin-bottom: 10px;">✨</div>
+                <h3>¡Todo limpio!</h3>
+                <p>No hay negocios pendientes de revisión en este momento.</p>
+                <a href="/admin" class="btn-login" style="padding: 10px 30px;">Volver al Dashboard</a>
+            </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>

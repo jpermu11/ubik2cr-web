@@ -1,0 +1,83 @@
+/* === Ubik2CR - Estilos Completos === */
+:root {
+    --azul: #104E8B;
+    --verde: #8CC63F;
+    --blanco: #ffffff;
+    --gris-fondo: #f4f7f6;
+    --rojo-alerta: #e74c3c;
+    --dorado: #FFD700; /* Color VIP */
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+body { background-color: var(--gris-fondo); color: #333; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* Navbar */
+.navbar { background: var(--blanco); height: 90px; display: flex; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+.nav-container { width: 100%; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+.nav-logo { height: 70px; width: auto; }
+.nav-menu { list-style: none; display: flex; gap: 20px; align-items: center; }
+.nav-link { text-decoration: none; color: #555; font-weight: 500; transition: color 0.3s; }
+.nav-link:hover { color: var(--azul); }
+.nav-link.highlight { color: var(--verde); font-weight: 700; }
+.btn-login { border: 2px solid var(--azul); color: var(--azul); padding: 8px 25px; border-radius: 50px; text-decoration: none; font-weight: 600; transition: all 0.3s; }
+.btn-login:hover { background: var(--azul); color: white; }
+
+/* Hero */
+.hero { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: radial-gradient(circle, #fff, #eef2f3); padding: 60px 20px 40px 20px; }
+.hero-title { font-size: 3rem; margin-bottom: 15px; color: #222; }
+.hero-subtitle { font-size: 1.2rem; color: #666; margin-bottom: 30px; }
+.search-wrapper { background: #fff; padding: 8px; border-radius: 50px; display: flex; box-shadow: 0 5px 20px rgba(0,0,0,0.08); max-width: 600px; width: 100%; margin: 0 auto; border: 1px solid #eee; }
+.search-input { flex: 1; border: none; padding: 15px 20px; font-size: 1rem; outline: none; border-radius: 50px; }
+.search-btn { background: var(--azul); color: white; border: none; padding: 15px 40px; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: background 0.3s; }
+
+/* CATEGORÍAS */
+.categories-section { padding: 40px 20px; max-width: 1200px; margin: 0 auto; text-align: center; }
+.categories-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; }
+.cat-card { background: white; width: 110px; height: 110px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; border: 1px solid transparent; }
+.cat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-color: var(--verde); }
+.cat-card.active { border: 2px solid var(--azul); background-color: #f0f7ff; }
+.cat-card.news { border: 2px solid #e74c3c; color: #e74c3c; }
+.cat-card.news:hover { background-color: #fdf2f2; }
+.cat-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.cat-name { font-size: 0.8rem; font-weight: 600; color: #555; text-align: center; line-height: 1.2; padding: 0 5px; }
+
+/* RESULTADOS & CARDS */
+.results-section { padding: 20px 20px 60px 20px; max-width: 1200px; margin: 0 auto; flex: 1; }
+.section-title { font-size: 1.5rem; color: #333; margin-bottom: 20px; border-left: 5px solid var(--azul); padding-left: 15px; }
+.grid-negocios { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+
+.card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.3s; text-decoration: none; color: inherit; border: 1px solid #eee; display: flex; flex-direction: column; position: relative; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: var(--verde); }
+
+/* ESTILOS VIP (DESTACADOS) */
+.card.vip { border: 2px solid var(--dorado); background-color: #fffff0; transform: scale(1.02); }
+.card.vip:hover { transform: scale(1.04); box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3); }
+.vip-badge { position: absolute; top: 10px; right: 10px; background: var(--dorado); color: #000; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; letter-spacing: 0.5px; }
+
+.card-img { width: 100%; height: 180px; object-fit: cover; background: #eee; }
+.card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+.card-cat { font-size: 0.8rem; color: var(--verde); font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+.card-title { font-size: 1.2rem; font-weight: 700; color: var(--azul); margin-bottom: 10px; }
+.card-desc { font-size: 0.9rem; color: #666; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 15px; }
+.card-footer { margin-top: auto; padding-top: 15px; border-top: 1px solid #f4f4f4; color: var(--azul); font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+
+/* VOTACIÓN Y EXTRAS */
+.rating-box { background: #fff; padding: 20px; border-radius: 15px; text-align: center; margin-top: 30px; border: 1px solid #eee; }
+.stars { font-size: 2rem; color: #ddd; cursor: pointer; }
+.stars a { text-decoration: none; color: #ddd; transition: color 0.2s; }
+.stars a:hover, .stars a:hover ~ a { color: var(--dorado); }
+.stars:hover a { color: var(--dorado); }
+.stars a:hover ~ a { color: #ddd; }
+.current-rating { color: var(--dorado); font-weight: bold; font-size: 1.2rem; margin-top: 5px; display: block; }
+.alert-box { padding: 15px; margin-bottom: 20px; border-radius: 10px; font-weight: 600; text-align: center; }
+.alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+.empty-state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px 20px; background: #fff; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin: 40px auto; max-width: 600px; }
+.site-footer { background: white; padding: 30px 20px; text-align: center; border-top: 1px solid #eee; margin-top: 40px; color: #777; font-size: 0.9rem; }
+
+@media (max-width: 768px) {
+    .nav-menu { display: none; }
+    .hero-title { font-size: 2rem; }
+    .categories-grid { gap: 10px; }
+    .cat-card { width: 90px; height: 90px; }
+}

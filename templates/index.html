@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubik2CR - Directorio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Ajuste para el botón de Mapa al lado del buscador */
+        .search-container {
+            display: flex; 
+            gap: 10px; 
+            justify-content: center; 
+            width: 100%; 
+            max-width: 800px; 
+            flex-wrap: wrap;
+        }
+        .btn-map-hero {
+            background: white; 
+            color: #333; 
+            border: none; 
+            padding: 0 25px; 
+            border-radius: 50px; 
+            font-weight: 600; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            text-decoration: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            height: 55px; /* Misma altura que el buscador */
+            white-space: nowrap;
+        }
+        .btn-map-hero:hover { background: #f9f9f9; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo-link"><img src="{{ url_for('static', filename='uploads/logo.png') }}" class="nav-logo" alt="Logo"></a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link highlight">Inicio</a></li>
+                <li><a href="/publicar" class="nav-link">Publicar Negocio</a></li>
+                <li><a href="/login" class="btn-login">Ingresar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Encuentra todo en <span style="color:#104E8B;">Ubik</span><span style="color:#8CC63F;">2CR</span></h1>
+            <p class="hero-subtitle">La red comercial más robusta del cantón</p>
+
+            <div class="search-container">
+                <form action="/" method="GET" class="search-wrapper" style="margin: 0; flex: 1;">
+                    <input type="text" name="q" class="search-input" placeholder="Buscar (Ej: Pizza, Llantas, Soda)..." value="{{ request.args.get('q', '') }}">
+                    <button type="submit" class="search-btn">Buscar</button>
+                </form>
+
+                <a href="/mapa" class="btn-map-hero">
+                    🗺️ Ver Mapa
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="categories-section">
+        <div class="categories-grid">
+
+            <a href="/noticias" class="cat-card news">
+                <span class="cat-icon">📰</span><span class="cat-name">NOTICIAS</span>
+            </a>
+            <a href="/" class="cat-card {% if not categoria_actual %}active{% endif %}">
+                <span class="cat-icon">🌐</span><span class="cat-name">TODAS</span>
+            </a>
+
+            <a href="/?cat=Sodas" class="cat-card"><span class="cat-icon">🍔</span><span class="cat-name">SODAS Y REST.</span></a>
+            <a href="/?cat=ComidaRapida" class="cat-card"><span class="cat-icon">🍕</span><span class="cat-name">COMIDA RÁPIDA</span></a>
+            <a href="/?cat=Cafeterias" class="cat-card"><span class="cat-icon">☕</span><span class="cat-name">CAFETERÍAS</span></a>
+            <a href="/?cat=Bares" class="cat-card"><span class="cat-icon">🍺</span><span class="cat-name">BARES Y LICORES</span></a>
+            <a href="/?cat=Heladerias" class="cat-card"><span class="cat-icon">🍦</span><span class="cat-name">HELADERÍAS</span></a>
+            <a href="/?cat=Verdulerias" class="cat-card"><span class="cat-icon">🥦</span><span class="cat-name">VERDULERÍAS</span></a>
+            <a href="/?cat=Carnicerias" class="cat-card"><span class="cat-icon">🥩</span><span class="cat-name">CARNICERÍAS</span></a>
+            <a href="/?cat=Panaderias" class="cat-card"><span class="cat-icon">🥐</span><span class="cat-name">PANADERÍAS</span></a>
+            <a href="/?cat=Supermercado" class="cat-card"><span class="cat-icon">🛒</span><span class="cat-name">SUPER Y PULPES</span></a>
+            <a href="/?cat=Restaurantes" class="cat-card"><span class="cat-icon">🍽️</span><span class="cat-name">RESTAURANTES</span></a>
+
+            <a href="/?cat=Farmacias" class="cat-card"><span class="cat-icon">💊</span><span class="cat-name">FARMACIAS</span></a>
+            <a href="/?cat=Medicos" class="cat-card"><span class="cat-icon">🩺</span><span class="cat-name">CLÍNICAS Y DR.</span></a>
+            <a href="/?cat=Dentistas" class="cat-card"><span class="cat-icon">🦷</span><span class="cat-name">DENTISTAS</span></a>
+            <a href="/?cat=Laboratorios" class="cat-card"><span class="cat-icon">🧬</span><span class="cat-name">LABORATORIOS</span></a>
+            <a href="/?cat=Veterinarias" class="cat-card"><span class="cat-icon">🐾</span><span class="cat-name">VETERINARIAS</span></a>
+            <a href="/?cat=Opticas" class="cat-card"><span class="cat-icon">👓</span><span class="cat-name">ÓPTICAS</span></a>
+            <a href="/?cat=Gimnasios" class="cat-card"><span class="cat-icon">🏋️</span><span class="cat-name">GIMNASIOS</span></a>
+            <a href="/?cat=Spas" class="cat-card"><span class="cat-icon">💆</span><span class="cat-name">SPAS Y MASAJES</span></a>
+            <a href="/?cat=Belleza" class="cat-card"><span class="cat-icon">💇</span><span class="cat-name">BELLEZA Y BARBERÍA</span></a>
+
+            <a href="/?cat=Ropa" class="cat-card"><span class="cat-icon">👗</span><span class="cat-name">ROPA Y CALZADO</span></a>
+            <a href="/?cat=Tecnologia" class="cat-card"><span class="cat-icon">📱</span><span class="cat-name">TECNOLOGÍA</span></a>
+            <a href="/?cat=Reparaciones" class="cat-card"><span class="cat-icon">🖥️</span><span class="cat-name">REPARACIONES</span></a>
+            <a href="/?cat=Ferreterias" class="cat-card"><span class="cat-icon">🔨</span><span class="cat-name">FERRETERÍAS</span></a>
+            <a href="/?cat=Materiales" class="cat-card"><span class="cat-icon">🏗️</span><span class="cat-name">MATERIALES CONS.</span></a>
+            <a href="/?cat=Mecanica" class="cat-card"><span class="cat-icon">🔧</span><span class="cat-name">MECÁNICA</span></a>
+            <a href="/?cat=Transporte" class="cat-card"><span class="cat-icon">🚕</span><span class="cat-name">TRANSPORTE</span></a>
+            <a href="/?cat=Gasolineras" class="cat-card"><span class="cat-icon">⛽</span><span class="cat-name">GASOLINERAS</span></a>
+            <a href="/?cat=Librerias" class="cat-card"><span class="cat-icon">📚</span><span class="cat-name">LIBRERÍAS</span></a>
+            <a href="/?cat=Hoteles" class="cat-card"><span class="cat-icon">🏨</span><span class="cat-name">HOTELES</span></a>
+
+            <a href="/?cat=Escuelas" class="cat-card"><span class="cat-icon">🎓</span><span class="cat-name">ESCUELAS</span></a>
+            <a href="/?cat=Bibliotecas" class="cat-card"><span class="cat-icon">📖</span><span class="cat-name">BIBLIOTECAS</span></a>
+            <a href="/?cat=Academias" class="cat-card"><span class="cat-icon">🎒</span><span class="cat-name">ACADEMIAS</span></a>
+            <a href="/?cat=Parques" class="cat-card"><span class="cat-icon">🌳</span><span class="cat-name">PARQUES</span></a>
+            <a href="/?cat=Plazas" class="cat-card"><span class="cat-icon">🏞️</span><span class="cat-name">PLAZAS</span></a>
+            <a href="/?cat=Polideportivos" class="cat-card"><span class="cat-icon">🏟️</span><span class="cat-name">POLIDEPORTIVOS</span></a>
+            <a href="/?cat=Cines" class="cat-card"><span class="cat-icon">🎬</span><span class="cat-name">CINES Y ENTRET.</span></a>
+
+            <a href="/?cat=Bancos" class="cat-card"><span class="cat-icon">🏦</span><span class="cat-name">BANCOS</span></a>
+            <a href="/?cat=Cooperativas" class="cat-card"><span class="cat-icon">💰</span><span class="cat-name">COOPERATIVAS</span></a>
+            <a href="/?cat=CruzRoja" class="cat-card"><span class="cat-icon">🚑</span><span class="cat-name">CRUZ ROJA</span></a>
+            <a href="/?cat=Bomberos" class="cat-card"><span class="cat-icon">🚒</span><span class="cat-name">BOMBEROS</span></a>
+            <a href="/?cat=Policia" class="cat-card"><span class="cat-icon">🚓</span><span class="cat-name">POLICÍA</span></a>
+            <a href="/?cat=Municipalidad" class="cat-card"><span class="cat-icon">🏛️</span><span class="cat-name">MUNICIPALIDAD</span></a>
+            <a href="/?cat=Iglesias" class="cat-card"><span class="cat-icon">⛪</span><span class="cat-name">IGLESIAS</span></a>
+            <a href="/?cat=Publicas" class="cat-card"><span class="cat-icon">🏢</span><span class="cat-name">INST. PÚBLICAS</span></a>
+
+            <a href="/?cat=ServiciosPro" class="cat-card"><span class="cat-icon">💼</span><span class="cat-name">SERVICIOS PRO</span></a>
+            <a href="/?cat=Consultoria" class="cat-card"><span class="cat-icon">📊</span><span class="cat-name">CONSULTORÍA</span></a>
+            <a href="/?cat=Abogados" class="cat-card"><span class="cat-icon">⚖️</span><span class="cat-name">ABOGADOS</span></a>
+            <a href="/?cat=Contables" class="cat-card"><span class="cat-icon">📋</span><span class="cat-name">CONTABLES</span></a>
+            <a href="/?cat=Eventos" class="cat-card"><span class="cat-icon">🎉</span><span class="cat-name">EVENTOS</span></a>
+
+            <a href="/?cat=Mudanzas" class="cat-card"><span class="cat-icon">📦</span><span class="cat-name">MUDANZAS</span></a>
+            <a href="/?cat=Plomeria" class="cat-card"><span class="cat-icon">⚡</span><span class="cat-name">PLOMERÍA Y ELEC.</span></a>
+            <a href="/?cat=Jardineria" class="cat-card"><span class="cat-icon">🌱</span><span class="cat-name">JARDINERÍA</span></a>
+            <a href="/?cat=Mascotas" class="cat-card"><span class="cat-icon">🐶</span><span class="cat-name">MASCOTAS</span></a>
+        </div>
+    </section>
+
+    <section class="results-section">
+        {% if categoria_actual %}
+            <h2 class="section-title">Resultados en: {{ categoria_actual }}</h2>
+        {% else %}
+            <h2 class="section-title">Comercios Destacados</h2>
+        {% endif %}
+
+        {% if negocios %}
+            <div class="grid-negocios">
+                {% for n in negocios %}
+                <a href="/negocio/{{ n.id }}" class="card {% if n.es_vip %}vip{% endif %}">
+                    {% if n.es_vip %}
+                        <div class="vip-badge">✨ DESTACADO</div>
+                    {% endif %}
+
+                    <img src="{{ n.imagen_url }}" alt="{{ n.nombre }}" class="card-img" onerror="this.src='https://placehold.co/600x400?text=Sin+Foto'">
+                    <div class="card-body">
+                        <span class="card-cat">{{ n.categoria }}</span>
+                        <h3 class="card-title">{{ n.nombre }}</h3>
+
+                        <div style="margin-bottom: 10px; color: #f1c40f; font-size: 0.9rem;">
+                            {% if n.calificacion > 0 %}
+                                ⭐ {{ n.calificacion }} 
+                                <span style="color: #999; font-size: 0.8rem;">({{ n.total_votos }})</span>
+                            {% else %}
+                                ⭐ Nuevo
+                            {% endif %}
+                        </div>
+
+                        <p class="card-desc">{{ n.descripcion }}</p>
+                        <div class="card-footer">
+                            <span>📍 Ver detalles</span>
+                            <span>&rarr;</span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state-box">
+                <div style="font-size: 4rem; opacity: 0.2;">🔍</div>
+                <h3>No hay comercios en esta categoría aún.</h3>
+                <br>
+                <a href="/" class="btn-login">Ver todos</a>
+                <br><br>
+                <a href="/publicar" class="search-btn" style="background:#ffc107; color:black;">➕ Publicar un Negocio Aquí</a>
+            </div>
+        {% endif %}
+    </section>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 Ubik2CR - Directorio Comercial.</p>
+        <p>
+            <a href="/sobre-nosotros" style="color: #555; text-decoration: none; margin: 0 10px;">Sobre Nosotros</a> | 
+            <a href="/contacto" style="color: #555; text-decoration: none; margin: 0 10px;">Contacto</a>
+        </p>
+    </footer>
+
+</body>
+</html>

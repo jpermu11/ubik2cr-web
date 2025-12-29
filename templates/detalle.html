@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ negocio.nombre }} - Ubik2CR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
+        .profile-img { width: 100%; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .cat-badge { background: var(--verde); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; display: inline-block; margin-bottom: 20px; }
+        .btn-action { flex: 1; padding: 15px; border-radius: 10px; text-align: center; text-decoration: none; font-weight: bold; color: white; transition: transform 0.2s; min-width: 150px; display: inline-block; margin-right: 10px; margin-bottom: 10px;}
+        .btn-wa { background-color: #25D366; }
+        .btn-call { background-color: var(--azul); }
+        .data-row { margin-bottom: 15px; font-size: 1.1rem; color: #555; display: flex; align-items: center; }
+
+        /* ALERTAS (Nuevo) */
+        .alert-box { padding: 15px; margin-bottom: 20px; border-radius: 10px; font-weight: 600; text-align: center; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+        @media(max-width: 768px) { .profile-grid { grid-template-columns: 1fr; } .profile-img { height: 250px; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo-link"><img src="{{ url_for('static', filename='uploads/logo.png') }}" class="nav-logo"></a>
+            <a href="/" class="nav-link" style="font-weight: bold;">&larr; Volver</a>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 40px; margin-bottom: 60px;">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert-box alert-{{ category }}">
+                  {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="profile-grid">
+            <div>
+                <img src="{{ negocio.imagen_url }}" class="profile-img" onerror="this.src='https://placehold.co/600x600?text=Sin+Foto'">
+
+                <div class="rating-box">
+                    <p>¿Qué te pareció este lugar?</p>
+                    <span class="current-rating">⭐ {{ negocio.calificacion }} / 5.0</span>
+                    <span style="font-size: 0.8rem; color: #999;">({{ negocio.total_votos }} votos)</span>
+
+                    <div class="stars" style="margin-top: 10px;">
+                        <a href="/votar/{{ negocio.id}}/1" title="Malo">★</a>
+                        <a href="/votar/{{ negocio.id}}/2" title="Regular">★</a>
+                        <a href="/votar/{{ negocio.id}}/3" title="Bueno">★</a>
+                        <a href="/votar/{{ negocio.id}}/4" title="Muy Bueno">★</a>
+                        <a href="/votar/{{ negocio.id}}/5" title="Excelente">★</a>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #aaa; margin-top: 5px;">Toca una estrella para calificar</p>
+                </div>
+            </div>
+
+            <div class="profile-info">
+                <span class="cat-badge">{{ negocio.categoria }}</span>
+                <h1 style="font-size: 2.5rem; color: var(--azul); margin-bottom: 10px; line-height: 1.1;">{{ negocio.nombre }}</h1>
+                <p style="font-size: 1.1rem; line-height: 1.6; color: #666; margin-bottom: 30px;">
+                    {{ negocio.descripcion }}
+                </p>
+
+                <div class="data-row">📍 {{ negocio.ubicacion }}</div>
+                {% if negocio.telefono %}<div class="data-row">📞 {{ negocio.telefono }}</div>{% endif %}
+
+                <div style="margin-top: 30px;">
+                    {% if negocio.whatsapp %}
+                    <a href="https://wa.me/506{{ negocio.whatsapp }}" target="_blank" class="btn-action btn-wa">💬 WhatsApp</a>
+                    {% endif %}
+                    {% if negocio.telefono %}
+                    <a href="tel:{{ negocio.telefono }}" class="btn-action btn-call">📞 Llamar</a>
+                    {% endif %}
+                </div>
+
+                {% if negocio.maps_url %}
+                <div style="margin-top: 20px;">
+                    <a href="{{ negocio.maps_url }}" target="_blank" style="color: #666; text-decoration: underline;">Ver ubicación en Mapa &rarr;</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 Ubik2CR - El Directorio Oficial del Cantón.</p>
+    </footer>
+
+</body>
+</html>

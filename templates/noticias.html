@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticias del Pueblo - Ubik2CR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .news-container { max-width: 800px; margin: 40px auto; }
+        .news-card { background: white; border-radius: 15px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .news-img { width: 100%; height: 300px; object-fit: cover; }
+        .news-body { padding: 30px; }
+        .news-date { color: #888; font-size: 0.9rem; margin-bottom: 10px; display: block; }
+        .news-title { font-size: 1.8rem; color: var(--azul); margin-bottom: 15px; }
+        .news-content { line-height: 1.6; color: #444; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo-link"><img src="{{ url_for('static', filename='uploads/logo.png') }}" class="nav-logo"></a>
+            <a href="/" class="nav-link" style="font-weight: bold;">&larr; Volver al Directorio</a>
+        </div>
+    </nav>
+
+    <div class="container news-container">
+        <h1 style="text-align: center; margin-bottom: 40px; color: #e74c3c;">📢 Noticias de la Comunidad</h1>
+
+        {% if noticias %}
+            {% for noticia in noticias %}
+            <div class="news-card">
+                {% if noticia.imagen_url %}
+                <img src="{{ noticia.imagen_url }}" class="news-img">
+                {% endif %}
+                <div class="news-body">
+                    <span class="news-date">📅 {{ noticia.fecha.strftime('%d-%m-%Y') }}</span>
+                    <h2 class="news-title">{{ noticia.titulo }}</h2>
+                    <p class="news-content">{{ noticia.contenido }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state-box">
+                <h3>Sin noticias recientes</h3>
+                <p>No hay avisos publicados en este momento.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Noticias - Ubik2CR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .form-news { background: white; padding: 20px; border-radius: 15px; margin-bottom: 40px; }
+        .form-input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/admin" class="logo-link">AdminPanel</a>
+            <a href="/admin" class="nav-link">Volver al Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 40px;">
+        <h2 style="color: var(--azul);">📰 Gestionar Noticias</h2>
+
+        <div class="form-news">
+            <h3>Publicar Nueva Noticia</h3>
+            <form action="/admin/noticias/crear" method="POST" enctype="multipart/form-data">
+                <input type="text" name="titulo" class="form-input" placeholder="Título de la noticia" required>
+                <textarea name="contenido" class="form-input" rows="4" placeholder="Escribe aquí el contenido..." required></textarea>
+                <label style="display:block; margin-bottom:5px;">Imagen (Opcional):</label>
+                <input type="file" name="foto" class="form-input">
+                <button type="submit" class="search-btn" style="width:100%;">Publicar</button>
+            </form>
+        </div>
+
+        <h3>Historial de Noticias</h3>
+        {% if noticias %}
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Fecha</th><th>Título</th><th>Acción</th></tr></thead>
+                    <tbody>
+                        {% for n in noticias %}
+                        <tr>
+                            <td>{{ n.fecha.strftime('%d/%m') }}</td>
+                            <td>{{ n.titulo }}</td>
+                            <td>
+                                <form action="/admin/noticias/borrar/{{ n.id }}" method="POST">
+                                    <button class="btn-delete">🗑️ Borrar</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No has publicado ninguna noticia aún.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

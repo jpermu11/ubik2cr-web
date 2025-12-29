@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Negocio - Ubik2CR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .edit-container { max-width: 600px; margin: 40px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .form-input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/admin" class="logo-link">AdminPanel</a>
+            <a href="/admin/comercios" class="nav-link">Cancelar y Volver</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="edit-container">
+            <h2 style="color: var(--azul); margin-bottom: 20px;">✏️ Editar: {{ n.nombre }}</h2>
+
+            <form method="POST" enctype="multipart/form-data">
+
+                <label class="label">Nombre del Negocio</label>
+                <input type="text" name="nombre" class="form-input" value="{{ n.nombre }}" required>
+
+                <label class="label">Categoría (Actual: {{ n.categoria }})</label>
+                <select name="categoria" class="form-input" required>
+                    <option value="{{ n.categoria }}" selected>{{ n.categoria }}</option>
+                    <option value="Sodas">Sodas</option>
+                    <option value="Taller">Taller</option>
+                    <option value="Farmacias">Farmacias</option>
+                </select>
+
+                <label class="label">Descripción</label>
+                <textarea name="descripcion" class="form-input" rows="4">{{ n.descripcion }}</textarea>
+
+                <label class="label">Teléfono</label>
+                <input type="text" name="telefono" class="form-input" value="{{ n.telefono }}">
+
+                <label class="label">WhatsApp</label>
+                <input type="text" name="whatsapp" class="form-input" value="{{ n.whatsapp }}">
+
+                <label class="label">Dirección</label>
+                <input type="text" name="ubicacion" class="form-input" value="{{ n.ubicacion }}">
+
+                <label class="label">Link Maps</label>
+                <input type="text" name="maps_url" class="form-input" value="{{ n.maps_url }}">
+
+                <label class="label">Cambiar Foto (Dejar vacío si no se cambia)</label>
+                <input type="file" name="foto" class="form-input">
+
+                <button type="submit" class="search-btn" style="width:100%;">💾 Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

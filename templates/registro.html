@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publicar en Ubik2CR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .form-container { max-width: 600px; margin: 40px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
+        .form-input { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; outline: none; transition: border 0.3s; }
+        .form-input:focus { border-color: var(--azul); }
+        .btn-submit { width: 100%; background-color: var(--verde); color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.3s; }
+        .btn-submit:hover { background-color: var(--azul); }
+        .form-title { text-align: center; margin-bottom: 30px; color: var(--azul); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo-link"><img src="{{ url_for('static', filename='uploads/logo.png') }}" class="nav-logo"></a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Volver al Inicio</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 class="form-title">Publica tu Negocio Gratis</h2>
+
+            <form action="/publicar" method="POST" enctype="multipart/form-data">
+
+                <div class="form-group">
+                    <label class="form-label">Nombre del Negocio</label>
+                    <input type="text" name="nombre" class="form-input" placeholder="Ej. Ferretería El Roble" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Categoría</label>
+                    <select name="categoria" class="form-input" required>
+                        <option value="" disabled selected>Selecciona la categoría exacta...</option>
+
+                        <optgroup label="Comida y Bebida">
+                            <option value="Sodas">Sodas y Restaurantes</option>
+                            <option value="ComidaRapida">Comida Rápida</option>
+                            <option value="Cafeterias">Cafeterías</option>
+                            <option value="Bares">Bares y Licores</option>
+                            <option value="Heladerias">Heladerías</option>
+                            <option value="Panaderias">Panaderías</option>
+                            <option value="Carnicerias">Carnicerías</option>
+                            <option value="Verdulerias">Verdulerías</option>
+                            <option value="Supermercado">Supermercados y Pulperías</option>
+                            <option value="Restaurantes">Restaurantes Formales</option>
+                        </optgroup>
+
+                        <optgroup label="Salud y Belleza">
+                            <option value="Farmacias">Farmacias</option>
+                            <option value="Medicos">Clínicas y Doctores</option>
+                            <option value="Dentistas">Dentistas</option>
+                            <option value="Laboratorios">Laboratorios</option>
+                            <option value="Veterinarias">Veterinarias</option>
+                            <option value="Opticas">Ópticas</option>
+                            <option value="Gimnasios">Gimnasios</option>
+                            <option value="Spas">Spas y Masajes</option>
+                            <option value="Belleza">Belleza y Barbería</option>
+                        </optgroup>
+
+                        <optgroup label="Compras, Ropa y Tecnología">
+                            <option value="Ropa">Ropa y Calzado</option>
+                            <option value="Tecnologia">Tecnología y Celulares</option>
+                            <option value="Reparaciones">Reparaciones Tech</option>
+                            <option value="Ferreterias">Ferreterías</option>
+                            <option value="Materiales">Materiales Construcción</option>
+                            <option value="Librerias">Librerías y Bazar</option>
+                        </optgroup>
+
+                        <optgroup label="Vehículos y Transporte">
+                            <option value="Mecanica">Mecánica y Llantas</option>
+                            <option value="Transporte">Transporte / Taxis</option>
+                            <option value="Gasolineras">Gasolineras</option>
+                        </optgroup>
+
+                        <optgroup label="Hospedaje y Turismo">
+                             <option value="Hoteles">Hoteles y Hospedaje</option>
+                        </optgroup>
+
+                        <optgroup label="Servicios Públicos y Emergencias">
+                            <option value="Bancos">Bancos</option>
+                            <option value="Cooperativas">Cooperativas</option>
+                            <option value="CruzRoja">Cruz Roja</option>
+                            <option value="Bomberos">Bomberos</option>
+                            <option value="Policia">Policía</option>
+                            <option value="Municipalidad">Municipalidad</option>
+                            <option value="Iglesias">Iglesias</option>
+                            <option value="Publicas">Instituciones Públicas</option>
+                        </optgroup>
+
+                        <optgroup label="Educación y Recreación">
+                            <option value="Escuelas">Escuelas y Colegios</option>
+                            <option value="Bibliotecas">Bibliotecas</option>
+                            <option value="Academias">Academias</option>
+                            <option value="Parques">Parques</option>
+                            <option value="Plazas">Plazas</option>
+                            <option value="Polideportivos">Polideportivos</option>
+                            <option value="Cines">Cines y Entretenimiento</option>
+                        </optgroup>
+
+                        <optgroup label="Servicios Profesionales y Hogar">
+                            <option value="Abogados">Abogados</option>
+                            <option value="Contables">Contables</option>
+                            <option value="Consultoria">Consultoría</option>
+                            <option value="ServiciosPro">Servicios Profesionales</option>
+                            <option value="Eventos">Salones de Eventos</option>
+                            <option value="Mudanzas">Mudanzas y Transporte</option>
+                            <option value="Plomeria">Plomería y Electricidad</option>
+                            <option value="Jardineria">Jardinería</option>
+                            <option value="Mascotas">Mascotas y Suministros</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Descripción Corta</label>
+                    <textarea name="descripcion" class="form-input" rows="3" placeholder="¿Qué vendes? ¿Cuál es tu horario?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Teléfono (Llamadas)</label>
+                    <input type="text" name="telefono" class="form-input" placeholder="Ej. 2448-0000">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="color: #25D366;">WhatsApp (Sin guiones)</label>
+                    <input type="text" name="whatsapp" class="form-input" placeholder="Ej. 88889999">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Dirección Exacta</label>
+                    <input type="text" name="ubicacion" class="form-input" placeholder="Ej. 100m Norte de la plaza...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Link de Waze / Maps (Opcional)</label>
+                    <input type="text" name="maps_url" class="form-input" placeholder="Pega el link aquí">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Foto del Negocio (Opcional)</label>
+                    <input type="file" name="foto" class="form-input">
+                </div>
+
+                <button type="submit" class="btn-submit">¡Publicar Ahora!</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
