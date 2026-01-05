@@ -1,61 +1,241 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Editar Negocio - Ubik2CR</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <style>
-        .edit-container { max-width: 600px; margin: 40px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .form-input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
-        .label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editar negocio | Ubik2CR</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Leaflet (mapa con pin) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <style>
+    body { background:#f5f7fa; }
+    .topbar{
+      background: linear-gradient(90deg,#0b4fa3,#38b24d);
+      color:#fff;
+    }
+    .brand img{ height:56px; }
+    .brand span{ font-weight:800; letter-spacing:.2px; }
+    .cardx{
+      border:none; border-radius:16px;
+      box-shadow:0 10px 25px rgba(0,0,0,.08);
+      overflow:hidden;
+    }
+    .cardx-header{
+      background: rgba(11,79,163,.08);
+      border-bottom:1px solid rgba(0,0,0,.06);
+    }
+    #map{
+      height: 360px;
+      border-radius: 14px;
+      border:1px solid rgba(0,0,0,.10);
+    }
+    .hint{
+      font-size:.92rem;
+      color:#6c757d;
+    }
+    .badge-soft{
+      background: rgba(56,178,77,.12);
+      color:#1e7e34;
+      border:1px solid rgba(56,178,77,.25);
+      font-weight:700;
+    }
+  </style>
 </head>
+
 <body>
-    <nav class="navbar">
-        <div class="container nav-container">
-            <a href="/admin" class="logo-link">AdminPanel</a>
-            <a href="/admin/comercios" class="nav-link">Cancelar y Volver</a>
-        </div>
-    </nav>
 
-    <div class="container">
-        <div class="edit-container">
-            <h2 style="color: var(--azul); margin-bottom: 20px;">✏️ Editar: {{ n.nombre }}</h2>
+<!-- HEADER -->
+<nav class="navbar topbar">
+  <div class="container d-flex align-items-center justify-content-between py-2">
+    <a class="navbar-brand brand d-flex align-items-center gap-2 text-white text-decoration-none" href="/">
+      <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
+      <span class="fs-4">Ubik2CR</span>
+    </a>
 
-            <form method="POST" enctype="multipart/form-data">
-
-                <label class="label">Nombre del Negocio</label>
-                <input type="text" name="nombre" class="form-input" value="{{ n.nombre }}" required>
-
-                <label class="label">Categoría (Actual: {{ n.categoria }})</label>
-                <select name="categoria" class="form-input" required>
-                    <option value="{{ n.categoria }}" selected>{{ n.categoria }}</option>
-                    <option value="Sodas">Sodas</option>
-                    <option value="Taller">Taller</option>
-                    <option value="Farmacias">Farmacias</option>
-                </select>
-
-                <label class="label">Descripción</label>
-                <textarea name="descripcion" class="form-input" rows="4">{{ n.descripcion }}</textarea>
-
-                <label class="label">Teléfono</label>
-                <input type="text" name="telefono" class="form-input" value="{{ n.telefono }}">
-
-                <label class="label">WhatsApp</label>
-                <input type="text" name="whatsapp" class="form-input" value="{{ n.whatsapp }}">
-
-                <label class="label">Dirección</label>
-                <input type="text" name="ubicacion" class="form-input" value="{{ n.ubicacion }}">
-
-                <label class="label">Link Maps</label>
-                <input type="text" name="maps_url" class="form-input" value="{{ n.maps_url }}">
-
-                <label class="label">Cambiar Foto (Dejar vacío si no se cambia)</label>
-                <input type="file" name="foto" class="form-input">
-
-                <button type="submit" class="search-btn" style="width:100%;">💾 Guardar Cambios</button>
-            </form>
-        </div>
+    <div class="d-flex gap-2">
+      <a href="/admin/comercios" class="btn btn-light fw-bold">
+        <i class="fa-solid fa-store me-1"></i> Comercios
+      </a>
+      <a href="/admin" class="btn btn-outline-light">
+        <i class="fa-solid fa-gauge me-1"></i> Panel
+      </a>
     </div>
+  </div>
+</nav>
+
+<div class="container my-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h2 class="fw-bold mb-1">Editar negocio</h2>
+      <div class="hint">
+        Estado actual:
+        <span class="badge badge-soft">{{ n.estado }}</span>
+        &nbsp;•&nbsp; Al guardar, quedará <b>pendiente</b> para revisión del admin.
+      </div>
+    </div>
+    <a href="/admin/comercios" class="btn btn-outline-secondary">
+      <i class="fa-solid fa-arrow-left me-1"></i> Volver
+    </a>
+  </div>
+
+  <div class="cardx">
+    <div class="cardx-header p-3">
+      <div class="fw-bold">
+        <i class="fa-solid fa-pen-to-square me-2"></i> Información del negocio
+      </div>
+      <div class="hint">Tip: tocá el mapa para colocar el pin (más fácil que lat/long).</div>
+    </div>
+
+    <div class="p-4">
+      <form method="POST" enctype="multipart/form-data">
+
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label fw-bold">Nombre</label>
+            <input type="text" name="nombre" class="form-control form-control-lg" value="{{ n.nombre }}" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Categoría</label>
+            <select name="categoria" class="form-select form-select-lg" required>
+
+              <!-- NUEVAS (CR) -->
+              <option value="Iglesia" {% if n.categoria=='Iglesia' %}selected{% endif %}>⛪ Iglesia</option>
+              <option value="Bomberos" {% if n.categoria=='Bomberos' %}selected{% endif %}>🚒 Bomberos</option>
+              <option value="Cruz Roja" {% if n.categoria=='Cruz Roja' %}selected{% endif %}>🚑 Cruz Roja</option>
+              <option value="Municipalidad" {% if n.categoria=='Municipalidad' %}selected{% endif %}>🏛️ Municipalidad</option>
+              <option value="CCSS" {% if n.categoria=='CCSS' %}selected{% endif %}>🏥 CCSS / Clínica / Ebáis</option>
+              <option value="Parque" {% if n.categoria=='Parque' %}selected{% endif %}>🌳 Parque</option>
+              <option value="Polideportivo" {% if n.categoria=='Polideportivo' %}selected{% endif %}>🏟️ Polideportivo</option>
+              <option value="Edificio Gubernamental" {% if n.categoria=='Edificio Gubernamental' %}selected{% endif %}>🏢 Edificio Gubernamental</option>
+
+              <option disabled>────────────</option>
+
+              <!-- GENERALES -->
+              <option value="Restaurante" {% if n.categoria=='Restaurante' %}selected{% endif %}>🍔 Restaurante</option>
+              <option value="Comercio" {% if n.categoria=='Comercio' %}selected{% endif %}>🏪 Comercio</option>
+              <option value="Servicios" {% if n.categoria=='Servicios' %}selected{% endif %}>🧰 Servicios</option>
+              <option value="Automotriz" {% if n.categoria=='Automotriz' %}selected{% endif %}>🚗 Automotriz</option>
+              <option value="Educacion" {% if n.categoria=='Educacion' %}selected{% endif %}>🎓 Educación</option>
+              <option value="Salud" {% if n.categoria=='Salud' %}selected{% endif %}>🏥 Salud</option>
+              <option value="Turismo" {% if n.categoria=='Turismo' %}selected{% endif %}>🗺️ Turismo</option>
+              <option value="Otros" {% if n.categoria=='Otros' %}selected{% endif %}>✨ Otros</option>
+
+            </select>
+          </div>
+
+          <div class="col-md-7">
+            <label class="form-label fw-bold">Ubicación (texto)</label>
+            <input type="text" name="ubicacion" class="form-control" value="{{ n.ubicacion or '' }}" placeholder="Ej: Frente al parque, San Pedro de Poás" required>
+            <div class="hint mt-1">Esto es lo que verá la gente. Ejemplo: "200m norte de la iglesia".</div>
+          </div>
+
+          <div class="col-md-5">
+            <label class="form-label fw-bold">Link de Google Maps (opcional)</label>
+            <input type="url" name="maps_url" class="form-control" value="{{ n.maps_url or '' }}" placeholder="https://maps.app.goo.gl/...">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Teléfono (opcional)</label>
+            <input type="text" name="telefono" class="form-control" value="{{ n.telefono or '' }}">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">WhatsApp (opcional)</label>
+            <input type="text" name="whatsapp" class="form-control" value="{{ n.whatsapp or '' }}" placeholder="Ej: +506 8xxx-xxxx">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Foto / Logo (opcional)</label>
+            <input type="file" name="foto" class="form-control">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-bold">Descripción</label>
+            <textarea name="descripcion" class="form-control" rows="4" required>{{ n.descripcion or '' }}</textarea>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- MAPA -->
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="fw-bold">
+            <i class="fa-solid fa-map-location-dot me-2"></i> Ubicación en el mapa
+          </div>
+          <div class="hint">Tocá el mapa para colocar el pin ✅</div>
+        </div>
+
+        <div id="map"></div>
+
+        <!-- hidden lat/long (se llenan con el pin) -->
+        <input type="hidden" id="latitud" name="latitud" value="{{ n.latitud if n.latitud is not none else '' }}">
+        <input type="hidden" id="longitud" name="longitud" value="{{ n.longitud if n.longitud is not none else '' }}">
+
+        <div class="hint mt-2">
+          Si el usuario no sabe de coordenadas, no pasa nada: solo toca el mapa y listo.
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-success btn-lg fw-bold">
+            <i class="fa-solid fa-floppy-disk me-2"></i> Guardar cambios
+          </button>
+          <a href="/admin/comercios" class="btn btn-outline-secondary btn-lg">
+            Cancelar
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Centro por defecto (Costa Rica)
+  const defaultLat = 9.9281;
+  const defaultLng = -84.0907;
+
+  const latInput = document.getElementById("latitud");
+  const lngInput = document.getElementById("longitud");
+
+  const existingLat = parseFloat(latInput.value);
+  const existingLng = parseFloat(lngInput.value);
+
+  const startLat = Number.isFinite(existingLat) ? existingLat : defaultLat;
+  const startLng = Number.isFinite(existingLng) ? existingLng : defaultLng;
+
+  const map = L.map('map').setView([startLat, startLng], Number.isFinite(existingLat) ? 16 : 12);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  let marker = null;
+
+  function setMarker(lat, lng){
+    if(marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng]).addTo(map);
+    latInput.value = lat.toFixed(6);
+    lngInput.value = lng.toFixed(6);
+  }
+
+  // Si ya hay coordenadas, mostrar marker
+  if(Number.isFinite(existingLat) && Number.isFinite(existingLng)){
+    setMarker(existingLat, existingLng);
+  }
+
+  // Click para poner pin
+  map.on('click', function(e){
+    setMarker(e.latlng.lat, e.latlng.lng);
+  });
+</script>
+
 </body>
 </html>
+

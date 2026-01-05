@@ -3,98 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ negocio.nombre }} - Ubik2CR</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>{{ n.nombre }} | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
-        .profile-img { width: 100%; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .cat-badge { background: var(--verde); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; display: inline-block; margin-bottom: 20px; }
-        .btn-action { flex: 1; padding: 15px; border-radius: 10px; text-align: center; text-decoration: none; font-weight: bold; color: white; transition: transform 0.2s; min-width: 150px; display: inline-block; margin-right: 10px; margin-bottom: 10px;}
-        .btn-wa { background-color: #25D366; }
-        .btn-call { background-color: var(--azul); }
-        .data-row { margin-bottom: 15px; font-size: 1.1rem; color: #555; display: flex; align-items: center; }
+        :root { --brand-blue: #0056b3; --brand-green: #7ab800; }
+        body { background-color: #f8f9fa; }
 
-        /* ALERTAS (Nuevo) */
-        .alert-box { padding: 15px; margin-bottom: 20px; border-radius: 10px; font-weight: 600; text-align: center; }
-        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        /* NAVBAR CLEAN ESTILO (Público) */
+        .navbar {
+            background-color: white !important;
+            padding: 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-bottom: 3px solid var(--brand-green);
+        }
+        .btn-outline-custom { border-color: var(--brand-blue); color: var(--brand-blue); font-weight: bold; }
+        .btn-outline-custom:hover { background-color: var(--brand-blue); color: white; }
 
-        @media(max-width: 768px) { .profile-grid { grid-template-columns: 1fr; } .profile-img { height: 250px; } }
+        /* Estilos del Detalle */
+        .header-negocio { background-color: white; border-bottom: 1px solid #eee; padding: 40px 0; margin-bottom: 30px; }
+        .img-principal { width: 100%; height: 400px; object-fit: cover; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .badge-cat { background-color: var(--brand-blue); font-size: 1rem; padding: 8px 15px; border-radius: 20px; }
+
+        .btn-whatsapp { 
+            background-color: #25D366; color: white; border: none; font-weight: bold; padding: 12px 25px; border-radius: 50px; font-size: 1.1rem; 
+            text-decoration: none; display: inline-block;
+        }
+        .btn-whatsapp:hover { background-color: #1ebc57; color: white; transform: scale(1.05); transition: 0.3s; }
+
+        #map { height: 350px; width: 100%; border-radius: 15px; border: 2px solid #eee; }
+        h1 { color: var(--brand-blue); font-weight: 800; }
+        .info-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 4px solid var(--brand-green); }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="container nav-container">
-            <a href="/" class="logo-link"><img src="{{ url_for('static', filename='uploads/logo.png') }}" class="nav-logo"></a>
-            <a href="/" class="nav-link" style="font-weight: bold;">&larr; Volver</a>
-        </div>
-    </nav>
+<nav class="navbar navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <img src="/static/uploads/logo.png" alt="Ubik2CR" style="height: 85px; width: auto; object-fit: contain;">
+        </a>
+        <a href="/" class="btn btn-outline-custom btn-sm"><i class="fas fa-arrow-left"></i> Volver al Inicio</a>
+    </div>
+</nav>
 
-    <div class="container" style="margin-top: 40px; margin-bottom: 60px;">
+<div class="header-negocio">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3">
+                <span class="badge badge-cat mb-2"><i class="fas fa-tag"></i> {{ n.categoria }}</span>
+                <h1 class="display-4">{{ n.nombre }}</h1>
+                <p class="lead text-muted"><i class="fas fa-map-marker-alt text-danger"></i> {{ n.ubicacion }}</p>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert-box alert-{{ category }}">
-                  {{ message }}
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-
-        <div class="profile-grid">
-            <div>
-                <img src="{{ negocio.imagen_url }}" class="profile-img" onerror="this.src='https://placehold.co/600x600?text=Sin+Foto'">
-
-                <div class="rating-box">
-                    <p>¿Qué te pareció este lugar?</p>
-                    <span class="current-rating">⭐ {{ negocio.calificacion }} / 5.0</span>
-                    <span style="font-size: 0.8rem; color: #999;">({{ negocio.total_votos }} votos)</span>
-
-                    <div class="stars" style="margin-top: 10px;">
-                        <a href="/votar/{{ negocio.id}}/1" title="Malo">★</a>
-                        <a href="/votar/{{ negocio.id}}/2" title="Regular">★</a>
-                        <a href="/votar/{{ negocio.id}}/3" title="Bueno">★</a>
-                        <a href="/votar/{{ negocio.id}}/4" title="Muy Bueno">★</a>
-                        <a href="/votar/{{ negocio.id}}/5" title="Excelente">★</a>
-                    </div>
-                    <p style="font-size: 0.8rem; color: #aaa; margin-top: 5px;">Toca una estrella para calificar</p>
+                <div class="d-flex gap-2 mt-4 align-items-center">
+                    {% if n.whatsapp %}
+                    <a href="https://wa.me/{{ n.whatsapp }}" target="_blank" class="btn-whatsapp">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </a>
+                    {% endif %}
+                    {% if n.telefono %}
+                    <a href="tel:{{ n.telefono }}" class="btn btn-outline-dark rounded-pill px-4 py-2" style="font-weight: bold;">
+                        <i class="fas fa-phone"></i> Llamar
+                    </a>
+                    {% endif %}
                 </div>
             </div>
+            <div class="col-md-6 text-center">
+                <img src="{{ n.imagen_url }}" class="img-principal" alt="{{ n.nombre }}">
+            </div>
+        </div>
+    </div>
+</div>
 
-            <div class="profile-info">
-                <span class="cat-badge">{{ negocio.categoria }}</span>
-                <h1 style="font-size: 2.5rem; color: var(--azul); margin-bottom: 10px; line-height: 1.1;">{{ negocio.nombre }}</h1>
-                <p style="font-size: 1.1rem; line-height: 1.6; color: #666; margin-bottom: 30px;">
-                    {{ negocio.descripcion }}
-                </p>
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="info-card mb-4">
+                <h3 style="color: var(--brand-blue);">Sobre nosotros</h3>
+                <hr>
+                <p class="fs-5 text-secondary" style="white-space: pre-line;">{{ n.descripcion }}</p>
+            </div>
+        </div>
 
-                <div class="data-row">📍 {{ negocio.ubicacion }}</div>
-                {% if negocio.telefono %}<div class="data-row">📞 {{ negocio.telefono }}</div>{% endif %}
-
-                <div style="margin-top: 30px;">
-                    {% if negocio.whatsapp %}
-                    <a href="https://wa.me/506{{ negocio.whatsapp }}" target="_blank" class="btn-action btn-wa">💬 WhatsApp</a>
-                    {% endif %}
-                    {% if negocio.telefono %}
-                    <a href="tel:{{ negocio.telefono }}" class="btn-action btn-call">📞 Llamar</a>
-                    {% endif %}
-                </div>
-
-                {% if negocio.maps_url %}
-                <div style="margin-top: 20px;">
-                    <a href="{{ negocio.maps_url }}" target="_blank" style="color: #666; text-decoration: underline;">Ver ubicación en Mapa &rarr;</a>
-                </div>
+        <div class="col-lg-4">
+            <div class="info-card">
+                <h5 class="fw-bold mb-3">📍 Ubicación</h5>
+                <div id="map"></div>
+                {% if n.maps_url %}
+                <a href="{{ n.maps_url }}" target="_blank" class="btn btn-primary w-100 mt-3" style="background-color: var(--brand-blue); border: none;">
+                    <i class="fas fa-location-arrow"></i> Abrir en Waze / Maps
+                </a>
                 {% endif %}
             </div>
         </div>
     </div>
+</div>
 
-    <footer class="site-footer">
-        <p>&copy; 2025 Ubik2CR - El Directorio Oficial del Cantón.</p>
-    </footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+
+    var lat = {{ n.latitud }};
+    var lon = {{ n.longitud }};
+
+    if (lat && lon) {
+        var map = L.map('map').setView([lat, lon], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.marker([lat, lon]).addTo(map)
+            .bindPopup("<b>{{ n.nombre }}</b><br>¡Aquí estamos!")
+            .openPopup();
+    } else {
+        document.getElementById('map').innerHTML = "<p class='text-center text-muted p-5 bg-light rounded'>Ubicación exacta no disponible en el mapa.</p>";
+    }
+</script>
 
 </body>
 </html>
+

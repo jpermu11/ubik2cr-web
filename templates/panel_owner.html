@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel del Dueño | Ubik2CR</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    .container{max-width:1100px;margin:0 auto;padding:18px;}
+    .topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:16px;}
+    .brand{display:flex;flex-direction:column;gap:2px}
+    .brand h1{margin:0;font-size:22px}
+    .muted{opacity:.75;font-size:13px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{display:inline-block;padding:10px 14px;border-radius:10px;text-decoration:none;border:1px solid rgba(0,0,0,.14);background:#fff}
+    .btn-primary{background:#1f6feb;color:#fff;border-color:#1f6feb}
+    .btn-ghost{background:transparent}
+    .btn-danger{background:#b42318;color:#fff;border-color:#b42318}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0 18px;}
+    @media (max-width: 900px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width: 520px){.grid{grid-template-columns:repeat(1,1fr)}}
+    .card{border:1px solid rgba(0,0,0,.12);border-radius:14px;padding:14px;background:#fff}
+    .card h3{margin:0 0 6px 0;font-size:14px;opacity:.9}
+    .big{font-size:26px;font-weight:800}
+    .table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:14px;border:1px solid rgba(0,0,0,.12);background:#fff}
+    .table th,.table td{padding:12px 10px;border-bottom:1px solid rgba(0,0,0,.08);text-align:left;vertical-align:top}
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid rgba(0,0,0,.12)}
+    .b-ok{background:rgba(31,111,235,.10);border-color:rgba(31,111,235,.25)}
+    .b-warn{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.25)}
+    .b-vip{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.25)}
+    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .hint{margin-top:6px;font-size:13px;opacity:.75}
+    .empty{padding:18px;border:1px dashed rgba(0,0,0,.22);border-radius:14px;margin-top:12px;background:#fff}
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="topbar">
+      <div class="brand">
+        <h1>Panel del Dueño</h1>
+        <div class="muted">Cuenta: {{ user_email }}</div>
+      </div>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="/publicar">+ Publicar negocio</a>
+        <a class="btn btn-ghost" href="/">Ver Ubik2CR</a>
+        <a class="btn btn-danger" href="/owner/logout">Cerrar sesión</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Total negocios</h3>
+        <div class="big">{{ total }}</div>
+        <div class="hint">Creados por vos</div>
+      </div>
+      <div class="card">
+        <h3>Aprobados</h3>
+        <div class="big">{{ aprobados }}</div>
+        <div class="hint">Visibles al público</div>
+      </div>
+      <div class="card">
+        <h3>Pendientes</h3>
+        <div class="big">{{ pendientes }}</div>
+        <div class="hint">En revisión del admin</div>
+      </div>
+      <div class="card">
+        <h3>VIP</h3>
+        <div class="big">{{ vip }}</div>
+        <div class="hint">Destacados (si aplica)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 10px 0;">Mis negocios</h2>
+
+      {% if negocios and negocios|length > 0 %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Negocio</th>
+            <th>Categoría</th>
+            <th>Estado</th>
+            <th>VIP</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for n in negocios %}
+          <tr>
+            <td>
+              <strong>{{ n.nombre }}</strong><br>
+              <span class="muted">{{ n.ubicacion }}</span>
+            </td>
+            <td>{{ n.categoria }}</td>
+            <td>
+              {% if n.estado == "aprobado" %}
+                <span class="badge b-ok">Aprobado</span>
+              {% else %}
+                <span class="badge b-warn">Pendiente</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if n.es_vip and n.estado == "aprobado" %}
+                <span class="badge b-vip">VIP</span>
+              {% else %}
+                <span class="badge">Normal</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="row-actions">
+                <a class="btn btn-ghost" href="/negocio/{{ n.id }}">Ver</a>
+                <a class="btn btn-primary" href="/panel/negocio/{{ n.id }}/editar">Editar</a>
+              </div>
+              <div class="hint">Al editar, queda "Pendiente" para revisión.</div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="empty">
+          Aún no tenés negocios publicados.
+          <div class="hint">Empezá ahora: <a href="/publicar">Publicar negocio</a></div>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</body>
+</html>
+

@@ -1,264 +1,703 @@
 import os
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from werkzeug.utils import secure_filename
-from models import db, Usuario, Negocio, Noticia
-from sqlalchemy import or_
 
+from dotenv import load_dotenv
+load_dotenv()  # Carga variables del archivo .env
+
+from flask import (
+    Flask, render_template, request, redirect, url_for,
+    session, flash
+)
+from flask_migrate import Migrate
+from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+
+from sqlalchemy import text
+from sqlalchemy.pool import QueuePool
+
+from models import db, Negocio, Usuario, Noticia
+
+
+# =====================================================
+# APP
+# =====================================================
 app = Flask(__name__)
 
-# --- CONFIGURACIÓN ---
-# Usamos v2 para asegurar la base de datos correcta
-DB_NAME = "ubik2cr_v2.db"
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_NAME}"
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 300, "pool_pre_ping": True}
-app.secret_key = "clave_maestra_ubik2cr" 
-app.permanent_session_lifetime = 31536000 
 
-UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# =====================================================
+# SECURITY / SESSION
+# =====================================================
+app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
+
+# =====================================================
+# DATABASE (SOLO DATABASE_URL) + POOL ROBUSTO
+# =====================================================
+DATABASE_URL = (os.environ.get("DATABASE_URL") or "").strip()
+
+# Si no hay DATABASE_URL, usar SQLite para desarrollo local
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///app.db"
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    # SQLite no necesita pool options
+else:
+    # Para PostgreSQL: Configurar SSL
+    if "sslmode=" not in DATABASE_URL:
+        # Usar 'prefer' para desarrollo local, 'require' para producción
+        DATABASE_URL += ("&" if "?" in DATABASE_URL else "?") + "sslmode=prefer"
+    
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "poolclass": QueuePool,
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_timeout": 30,
+        "pool_recycle": 1800,
+        "pool_pre_ping": True,
+    }
+
+
+# =====================================================
+# UPLOADS
+# =====================================================
+app.config["UPLOAD_FOLDER"] = "static/uploads"
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+
+# =====================================================
+# INIT DB + MIGRATIONS
+# =====================================================
 db.init_app(app)
+migrate = Migrate(app, db)
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- INICIALIZADOR ---
-def inicializar_sistema():
-    with app.app_context():
-        db_path = os.path.join(app.root_path, DB_NAME)
-        try:
-            db.create_all()
-            print("✅ Base de datos verificada correctamente.")
-        except Exception as e:
-            print(f"⚠️ Error base de datos: {e}")
+# =====================================================
+# HELPERS
+# =====================================================
+def owner_logged_in() -> bool:
+    return "user_id" in session
 
-        # Crear admin si falta
-        try:
-            mi_email = "admin@ubik2cr.com"
-            mi_clave = "UjifamKJ252319@"
-            admin = Usuario.query.filter_by(email=mi_email).first()
-            if not admin:
-                nuevo = Usuario(email=mi_email, password=mi_clave, nombre="Jimmy CEO", rol="admin")
-                db.session.add(nuevo)
-                db.session.commit()
-        except Exception:
-            pass
+def admin_logged_in() -> bool:
+    return bool(session.get("admin_logged_in"))
 
-# --- RUTAS PÚBLICAS ---
-@app.route('/')
-def inicio():
+def owner_required() -> bool:
+    return "user_id" in session
+
+def normalize_password_check(stored: str, plain: str) -> bool:
+    if not stored:
+        return False
+    if stored.startswith(("pbkdf2:", "scrypt:")):
+        return check_password_hash(stored, plain)
+    return stored == plain
+
+def safe_float(value):
     try:
-        busqueda = request.args.get('q')
-        categoria = request.args.get('cat')
-        query = Negocio.query.filter_by(estado='aprobado').order_by(Negocio.es_vip.desc(), Negocio.calificacion.desc())
-
-        if busqueda:
-            query = query.filter(or_(Negocio.nombre.ilike(f'%{busqueda}%'), Negocio.descripcion.ilike(f'%{busqueda}%')))
-        if categoria and categoria != "Todas":
-            query = query.filter(Negocio.categoria == categoria)
-
-        negocios = query.all()
-        return render_template('index.html', negocios=negocios, categoria_actual=categoria)
-    except Exception as e:
-        return f"<h2>Iniciando sistema...</h2><p>Si ves esto, recarga en 30 segundos. ({e})</p>"
-
-@app.route('/mapa')
-def ver_mapa():
-    try:
-        negocios = Negocio.query.filter_by(estado='aprobado').filter(Negocio.latitud != None).all()
-        return render_template('mapa.html', negocios=negocios)
+        v = (value or "").strip()
+        return float(v) if v else None
     except Exception:
-        return redirect(url_for('inicio'))
+        return None
 
-@app.route('/noticias')
-def ver_noticias():
-    noticias = Noticia.query.order_by(Noticia.fecha.desc()).all()
-    return render_template('noticias.html', noticias=noticias)
+def save_upload(field_name: str) -> str:
+    """
+    Guarda imagen si viene. Devuelve URL.
+    """
+    imagen = request.files.get(field_name)
+    if imagen and imagen.filename:
+        filename = secure_filename(imagen.filename)
+        path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        imagen.save(path)
+        return f"/static/uploads/{filename}"
+    return "/static/uploads/logo.png"
 
-@app.route('/negocio/<int:id>')
-def ver_negocio(id):
+
+# =====================================================
+# EMAIL (para recuperar contraseña)
+# =====================================================
+def send_email(to_email: str, subject: str, text_body: str, html_body: str = None):
+    smtp_host = (os.environ.get("SMTP_HOST") or "").strip()
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = (os.environ.get("SMTP_USER") or "").strip()
+    smtp_pass = (os.environ.get("SMTP_PASS") or "").strip()
+
+    # Si tenés SMTP_FROM, lo usamos como display, pero el remitente REAL debe ser smtp_user
+    from_display = (os.environ.get("SMTP_FROM") or "Ubik2CR").strip()
+
+    if not (smtp_host and smtp_user and smtp_pass):
+        raise RuntimeError("SMTP no configurado (SMTP_HOST/SMTP_USER/SMTP_PASS).")
+
+    msg = EmailMessage()
+    # Usar solo el email real como remitente para evitar bloqueos
+    msg["From"] = smtp_user
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.set_content(text_body)
+
+    if html_body:
+        msg.add_alternative(html_body, subtype="html")
+
+    timeout = 20
+
+    if smtp_port == 465:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=timeout) as server:
+            server.ehlo()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+    else:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=timeout) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+
+def get_base_url_from_request():
+    return request.url_root.rstrip("/")
+
+
+# =====================================================
+# PASSWORD RESET TOKENS
+# =====================================================
+def generate_reset_token(email: str) -> str:
+    s = URLSafeTimedSerializer(app.secret_key)
+    return s.dumps(email, salt="password-reset")
+
+def verify_reset_token(token: str, expiration: int = 3600):
+    s = URLSafeTimedSerializer(app.secret_key)
+    try:
+        email = s.loads(token, salt="password-reset", max_age=expiration)
+        return email
+    except (SignatureExpired, BadSignature):
+        return None
+
+
+# =====================================================
+# HEALTH CHECK
+# =====================================================
+@app.route("/health")
+def health():
+    return {"status": "ok"}, 200
+
+@app.route("/health/db")
+def health_db():
+    try:
+        db.session.execute(text("SELECT 1"))
+        return {"status": "ok"}, 200
+    except Exception as e:
+        return {"status": "db_error", "error": str(e)}, 500
+
+
+# =====================================================
+# PUBLIC ROUTES
+# =====================================================
+@app.route("/")
+def inicio():
+    q = (request.args.get("q") or "").strip()
+    cat = (request.args.get("cat") or "Todas").strip()
+
+    try:
+        page = int(request.args.get("page", 1))
+    except ValueError:
+        page = 1
+    if page < 1:
+        page = 1
+
+    PER_PAGE = 24
+
+    query = Negocio.query.filter_by(estado="aprobado")
+
+    if q:
+        query = query.filter(Negocio.nombre.ilike(f"%{q}%"))
+    if cat and cat != "Todas":
+        query = query.filter_by(categoria=cat)
+
+    query = query.order_by(Negocio.es_vip.desc(), Negocio.id.desc())
+
+    total = query.count()
+    total_pages = (total + PER_PAGE - 1) // PER_PAGE if total > 0 else 1
+    if page > total_pages:
+        page = total_pages
+
+    negocios = query.offset((page - 1) * PER_PAGE).limit(PER_PAGE).all()
+
+    return render_template(
+        "index.html",
+        negocios=negocios,
+        categoria_actual=cat,
+        page=page,
+        total_pages=total_pages,
+        has_prev=page > 1,
+        has_next=page < total_pages,
+        prev_page=page - 1,
+        next_page=page + 1,
+        q=q,
+        cat=cat,
+        owner_logged_in=owner_logged_in(),
+        admin_logged_in=admin_logged_in(),
+    )
+
+@app.route("/cuenta")
+def cuenta():
+    return render_template("cuenta.html")
+
+@app.route("/mapa")
+def ver_mapa():
+    negocios = (
+        Negocio.query.filter_by(estado="aprobado")
+        .order_by(Negocio.es_vip.desc(), Negocio.id.desc())
+        .all()
+    )
+    return render_template("mapa.html", negocios=negocios)
+
+@app.route("/noticias")
+def noticias():
+    noticias_list = Noticia.query.order_by(Noticia.fecha.desc()).all()
+    return render_template("noticias.html", noticias=noticias_list)
+
+@app.route("/negocio/<int:id>")
+def detalle_negocio(id):
+    n = db.session.get(Negocio, id)
+    if not n:
+        return "Negocio no encontrado", 404
+    return render_template("detalle.html", n=n)
+
+
+# =====================================================
+# OWNER AUTH (DUEÑOS)
+# =====================================================
+@app.route("/owner/registro", methods=["GET", "POST"])
+def owner_registro():
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = (request.form.get("password") or "").strip()
+        nombre = (request.form.get("nombre") or "").strip()
+
+        if not email or not password:
+            flash("Por favor ingresá email y contraseña.")
+            return redirect("/owner/registro")
+
+        existe = Usuario.query.filter_by(email=email).first()
+        if existe:
+            flash("Ese correo ya existe. Iniciá sesión.")
+            return redirect("/owner/login")
+
+        pwd_hash = generate_password_hash(password)
+
+        nuevo = Usuario(email=email, password=pwd_hash, nombre=nombre, rol="OWNER")
+        db.session.add(nuevo)
+        db.session.commit()
+
+        session["user_id"] = nuevo.id
+        session["user_email"] = nuevo.email
+        session["user_rol"] = nuevo.rol
+
+        flash("Cuenta creada. Ahora podés crear tus negocios.")
+        return redirect("/panel")
+
+    return render_template("owner_registro.html")
+
+@app.route("/owner/login", methods=["GET", "POST"])
+def owner_login():
+    if request.method == "POST":
+        email = (request.form.get("usuario") or request.form.get("email") or "").strip().lower()
+        password = (request.form.get("password") or "").strip()
+
+        u = Usuario.query.filter_by(email=email).first()
+        if not u:
+            flash("No existe ese usuario.")
+            return redirect("/owner/login")
+
+        if not normalize_password_check(u.password, password):
+            flash("Contraseña incorrecta. Si la olvidaste, usá '¿Olvidaste tu contraseña?'.")
+            return redirect("/owner/login")
+
+        # Si venía en texto plano en algún momento, se actualiza a hash
+        if not (u.password.startswith(("pbkdf2:", "scrypt:"))):
+            u.password = generate_password_hash(password)
+            db.session.commit()
+
+        session["user_id"] = u.id
+        session["user_email"] = u.email
+        session["user_rol"] = u.rol
+
+        return redirect("/panel")
+
+    return render_template("owner_login.html")
+
+@app.route("/owner/logout")
+def owner_logout():
+    session.pop("user_id", None)
+    session.pop("user_email", None)
+    session.pop("user_rol", None)
+    return redirect("/")
+
+
+# =====================================================
+# OWNER PANEL
+# =====================================================
+@app.route("/panel")
+def panel_owner():
+    if not owner_required():
+        return redirect("/cuenta")
+
+    # Si por alguna razón el modelo no tiene owner_id todavía, evitamos crash
+    if not hasattr(Negocio, "owner_id"):
+        flash("Falta el campo owner_id en Negocio. Necesita migración.")
+        return render_template("panel_owner.html", negocios=[])
+
+    negocios = (
+        Negocio.query.filter_by(owner_id=session["user_id"])
+        .order_by(Negocio.id.desc())
+        .all()
+    )
+
+    total = len(negocios)
+    aprobados = len([n for n in negocios if n.estado == "aprobado"])
+    pendientes = len([n for n in negocios if n.estado == "pendiente"])
+    vip = len([n for n in negocios if n.es_vip and n.estado == "aprobado"])
+
+    return render_template(
+        "panel_owner.html",
+        negocios=negocios,
+        total=total,
+        aprobados=aprobados,
+        pendientes=pendientes,
+        vip=vip,
+        user_email=session.get("user_email"),
+    )
+
+@app.route("/panel/negocio/<int:id>/editar", methods=["GET", "POST"])
+def editar_negocio_owner(id):
+    if not owner_required():
+        return redirect("/cuenta")
+
     negocio = db.session.get(Negocio, id)
-    if not negocio: return render_template('404.html'), 404
-    return render_template('detalle.html', negocio=negocio)
+    if not negocio:
+        return "Negocio no encontrado", 404
 
-@app.route('/votar/<int:id>/<int:estrellas>')
-def votar_negocio(id, estrellas):
-    if estrellas < 1 or estrellas > 5: return redirect(url_for('inicio'))
-    clave_memoria = f'voto_guardado_{id}'
-    if clave_memoria in session:
-        flash("⚠️ Ya votaste antes.", "warning")
-        return redirect(url_for('ver_negocio', id=id))
+    if hasattr(negocio, "owner_id") and negocio.owner_id != session["user_id"]:
+        return "No tenés permiso para editar este negocio.", 403
+
+    if request.method == "POST":
+        negocio.nombre = request.form.get("nombre", negocio.nombre)
+        negocio.categoria = request.form.get("categoria", negocio.categoria)
+        negocio.ubicacion = request.form.get("ubicacion", negocio.ubicacion)
+        negocio.descripcion = request.form.get("descripcion", negocio.descripcion)
+        negocio.telefono = request.form.get("telefono", negocio.telefono)
+        negocio.whatsapp = request.form.get("whatsapp", negocio.whatsapp)
+        negocio.maps_url = request.form.get("maps_url", negocio.maps_url)
+
+        negocio.latitud = safe_float(request.form.get("latitud"))
+        negocio.longitud = safe_float(request.form.get("longitud"))
+
+        img = request.files.get("foto")
+        if img and img.filename:
+            negocio.imagen_url = save_upload("foto")
+
+        # Cada edición vuelve a pendiente para revisión
+        negocio.estado = "pendiente"
+
+        db.session.commit()
+        flash("Cambios guardados. Quedó pendiente de revisión.")
+        return redirect("/panel")
+
+    return render_template("editar_negocio.html", n=negocio)
+
+
+# =====================================================
+# PUBLICAR NEGOCIO (solo dueño logueado)
+# =====================================================
+@app.route("/publicar", methods=["GET", "POST"])
+def publicar():
+    if not owner_required():
+        flash("Creá tu cuenta o iniciá sesión para publicar tu negocio.")
+        return redirect("/cuenta")
+
+    if request.method == "POST":
+        nombre = request.form.get("nombre", "").strip()
+        categoria = request.form.get("categoria", "").strip()
+        ubicacion = request.form.get("ubicacion", "").strip()
+        descripcion = request.form.get("descripcion", "").strip()
+        telefono = request.form.get("telefono")
+        whatsapp = request.form.get("whatsapp")
+        maps_url = request.form.get("maps_url")
+
+        latitud = safe_float(request.form.get("latitud"))
+        longitud = safe_float(request.form.get("longitud"))
+
+        imagen_url = save_upload("foto")
+
+        nuevo_negocio = Negocio(
+            nombre=nombre,
+            categoria=categoria,
+            ubicacion=ubicacion,
+            latitud=latitud,
+            longitud=longitud,
+            maps_url=maps_url,
+            telefono=telefono,
+            whatsapp=whatsapp,
+            descripcion=descripcion,
+            imagen_url=imagen_url,
+            estado="pendiente",
+            es_vip=False,
+        )
+
+        # Si existe owner_id en el modelo, lo asignamos
+        if hasattr(Negocio, "owner_id"):
+            setattr(nuevo_negocio, "owner_id", session["user_id"])
+
+        db.session.add(nuevo_negocio)
+        db.session.commit()
+        return render_template("exito.html")
+
+    return render_template("registro.html")
+
+
+# =====================================================
+# ADMIN AUTH (PLATAFORMA)
+# =====================================================
+@app.route("/login", methods=["GET", "POST"])
+def login_admin():
+    if request.method == "POST":
+        user = (request.form.get("usuario") or "").strip()
+        password = (request.form.get("password") or "").strip()
+
+        admin_user = (os.environ.get("ADMIN_USER") or "").strip()
+        admin_pass = (os.environ.get("ADMIN_PASS") or "").strip()
+
+        if user == admin_user and password == admin_pass:
+            session["admin_logged_in"] = True
+            return redirect("/admin")
+
+        flash("Datos incorrectos. Verifica tu correo y contraseña.")
+
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout_admin():
+    session.clear()
+    return redirect("/")
+
+
+# =====================================================
+# ADMIN PANEL
+# =====================================================
+@app.route("/admin")
+def admin_panel():
+    if not admin_logged_in():
+        return redirect("/login")
+
+    total_pendientes = Negocio.query.filter_by(estado="pendiente").count()
+    total_activos = Negocio.query.filter_by(estado="aprobado").count()
+    total_vip = Negocio.query.filter_by(estado="aprobado", es_vip=True).count()
+
+    # 👇 Compatibilidad con tu dashboard viejo: p/a/v
+    return render_template("dashboard.html", p=total_pendientes, a=total_activos, v=total_vip)
+
+@app.route("/admin/comercios")
+def gestionar_comercios():
+    if not admin_logged_in():
+        return redirect("/login")
+
+    pendientes = Negocio.query.filter_by(estado="pendiente").order_by(Negocio.id.desc()).all()
+    activos = Negocio.query.filter_by(estado="aprobado").order_by(Negocio.es_vip.desc(), Negocio.id.desc()).all()
+
+    return render_template("comercios.html", pendientes=pendientes, activos=activos)
+
+@app.route("/admin/aprobar/<int:id>")
+def aprobar_negocio(id):
+    if not admin_logged_in():
+        return redirect("/login")
+
     negocio = db.session.get(Negocio, id)
     if negocio:
-        total = negocio.total_votos
-        promedio = negocio.calificacion
-        nuevo_total = total + 1
-        nuevo_promedio = ((promedio * total) + estrellas) / nuevo_total
-        negocio.total_votos = nuevo_total
-        negocio.calificacion = round(nuevo_promedio, 1)
+        negocio.estado = "aprobado"
         db.session.commit()
-        session[clave_memoria] = True
-        flash("✅ Voto registrado", "success")
-    return redirect(url_for('ver_negocio', id=id))
 
-@app.route('/publicar', methods=['GET', 'POST'])
-def publicar_negocio():
-    if request.method == 'POST':
-        try:
-            nombre = request.form['nombre']
-            categoria = request.form['categoria']
-            ubicacion = request.form['ubicacion']
-            descripcion = request.form['descripcion']
-            telefono = request.form.get('telefono', '')
-            whatsapp = request.form.get('whatsapp', '') 
-            maps_url = request.form.get('maps_url', '')
-            lat = request.form.get('latitud')
-            lon = request.form.get('longitud')
+    return redirect("/admin/comercios")
 
-            imagen_final = "/static/img/default_negocio.png"
-            if 'foto' in request.files:
-                file = request.files['foto']
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    imagen_final = f"/static/uploads/{filename}"
-
-            nuevo = Negocio(
-                nombre=nombre, categoria=categoria, ubicacion=ubicacion, maps_url=maps_url,
-                latitud=lat if lat else None, longitud=lon if lon else None,
-                descripcion=descripcion, telefono=telefono, whatsapp=whatsapp,
-                estado='pendiente', imagen_url=imagen_final, calificacion=5.0, total_votos=1 
-            )
-            db.session.add(nuevo)
-            db.session.commit()
-            return render_template('exito.html') 
-        except Exception as e:
-            return f"Error: {e}"
-    return render_template('registro.html') 
-
-# --- RUTAS ADMIN (Resumidas para ahorrar espacio, funcionan igual) ---
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        email = request.form['email'].strip() 
-        password = request.form['password'].strip()
-        user = Usuario.query.filter_by(email=email).first()
-        if user and user.password == password:
-            session['user_id'] = user.id; session['user_rol'] = user.rol
-            return redirect(url_for('admin_dashboard'))
-        else: error = "Credenciales incorrectas."
-    return render_template('login.html', error=error)
-
-@app.route('/logout')
-def logout(): session.clear(); return redirect(url_for('inicio'))
-
-@app.route('/admin')
-def admin_dashboard():
-    if 'user_id' not in session or session.get('user_rol') != 'admin': return redirect(url_for('login'))
-    return render_template('dashboard.html', total=Negocio.query.count(), pendientes=Negocio.query.filter_by(estado='pendiente').count(), activos=Negocio.query.filter_by(estado='aprobado').count())
-
-@app.route('/admin/moderacion')
-def admin_moderacion():
-    if 'user_id' not in session or session.get('user_rol') != 'admin': return redirect(url_for('login'))
-    return render_template('moderacion.html', negocios=Negocio.query.filter_by(estado='pendiente').all())
-
-@app.route('/admin/aprobar/<int:id>', methods=['POST'])
-def aprobar_negocio(id):
-    if 'user_id' not in session: return redirect(url_for('login'))
-    n = db.session.get(Negocio, id)
-    if n: n.estado = 'aprobado'; db.session.commit()
-    return redirect(url_for('admin_moderacion'))
-
-@app.route('/admin/eliminar/<int:id>', methods=['POST'])
+@app.route("/admin/eliminar/<int:id>")
 def eliminar_negocio(id):
-    if 'user_id' not in session: return redirect(url_for('login'))
-    n = db.session.get(Negocio, id)
-    if n: db.session.delete(n); db.session.commit()
-    return redirect(url_for('admin_moderacion'))
+    if not admin_logged_in():
+        return redirect("/login")
 
-@app.route('/admin/comercios')
-def admin_comercios():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    return render_template('comercios.html', negocios=Negocio.query.filter_by(estado='aprobado').all())
-
-@app.route('/admin/vip/<int:id>', methods=['POST'])
-def hacer_vip(id):
-    if 'user_id' not in session: return redirect(url_for('login'))
-    n = db.session.get(Negocio, id)
-    if n: n.es_vip = not n.es_vip; db.session.commit()
-    return redirect(url_for('admin_comercios'))
-
-@app.route('/admin/editar/<int:id>', methods=['GET', 'POST'])
-def editar_negocio(id):
-    if 'user_id' not in session: return redirect(url_for('login'))
-    n = db.session.get(Negocio, id)
-    if not n: return redirect(url_for('admin_comercios'))
-    if request.method == 'POST':
-        n.nombre = request.form['nombre']; n.categoria = request.form['categoria']
-        n.descripcion = request.form['descripcion']; n.telefono = request.form['telefono']
-        n.whatsapp = request.form['whatsapp']; n.ubicacion = request.form['ubicacion']
-        n.maps_url = request.form['maps_url']
-        lat = request.form.get('latitud'); lon = request.form.get('longitud')
-        if lat and lon: n.latitud = float(lat); n.longitud = float(lon)
-        if 'foto' in request.files:
-            f = request.files['foto']
-            if f and allowed_file(f.filename):
-                fname = secure_filename(f.filename)
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
-                n.imagen_url = f"/static/uploads/{fname}"
+    negocio = db.session.get(Negocio, id)
+    if negocio:
+        db.session.delete(negocio)
         db.session.commit()
-        return redirect(url_for('admin_comercios'))
-    return render_template('editar_negocio.html', n=n)
 
-@app.route('/admin/noticias')
-def admin_noticias():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    return render_template('admin_noticias.html', noticias=Noticia.query.all())
+    return redirect("/admin/comercios")
 
-@app.route('/admin/noticias/crear', methods=['POST'])
-def crear_noticia():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    img = ""
-    if 'foto' in request.files:
-        f = request.files['foto']
-        if f and allowed_file(f.filename):
-            fn = secure_filename(f.filename)
-            f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
-            img = f"/static/uploads/{fn}"
-    db.session.add(Noticia(titulo=request.form['titulo'], contenido=request.form['contenido'], imagen_url=img, fecha=datetime.now()))
-    db.session.commit()
-    return redirect(url_for('admin_noticias'))
+@app.route("/admin/vip/<int:id>")
+def toggle_vip(id):
+    if not admin_logged_in():
+        return redirect("/login")
 
-@app.route('/admin/noticias/borrar/<int:id>', methods=['POST'])
-def borrar_noticia(id):
-    n = db.session.get(Noticia, id)
-    if n: db.session.delete(n); db.session.commit()
-    return redirect(url_for('admin_noticias'))
+    n = db.session.get(Negocio, id)
+    if n:
+        n.es_vip = not bool(n.es_vip)
+        db.session.commit()
 
-@app.route('/sobre-nosotros')
-def sobre_nosotros(): return render_template('sobre_nosotros.html')
-@app.route('/contacto')
-def contacto(): return render_template('contacto.html')
-@app.route('/categorias')
-def categorias(): return redirect(url_for('inicio'))
+    return redirect("/admin/comercios")
+
+@app.route("/admin/editar/<int:id>", methods=["GET", "POST"])
+def editar_negocio_admin(id):
+    if not admin_logged_in():
+        return redirect("/login")
+
+    n = db.session.get(Negocio, id)
+    if not n:
+        return "Negocio no encontrado", 404
+
+    if request.method == "POST":
+        n.nombre = request.form.get("nombre", n.nombre)
+        n.categoria = request.form.get("categoria", n.categoria)
+        n.ubicacion = request.form.get("ubicacion", n.ubicacion)
+        n.descripcion = request.form.get("descripcion", n.descripcion)
+        n.telefono = request.form.get("telefono", n.telefono)
+        n.whatsapp = request.form.get("whatsapp", n.whatsapp)
+        n.maps_url = request.form.get("maps_url", n.maps_url)
+
+        n.latitud = safe_float(request.form.get("latitud"))
+        n.longitud = safe_float(request.form.get("longitud"))
+
+        img = request.files.get("foto")
+        if img and img.filename:
+            n.imagen_url = save_upload("foto")
+
+        db.session.commit()
+        return redirect("/admin/comercios")
+
+    return render_template("editar_negocio.html", n=n)
+
+
+# =====================================================
+# PASSWORD RESET ROUTES
+# =====================================================
+@app.route("/recuperar", methods=["GET", "POST"])
+def recuperar_password():
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+
+        flash("Si el correo existe, recibirás un enlace para restablecer tu contraseña.")
+
+        user = Usuario.query.filter_by(email=email).first()
+        if user:
+            token = generate_reset_token(email)
+            link = f"{get_base_url_from_request()}/reset/{token}"
+
+            text_body = (
+                "Hola,\n\n"
+                "Recibimos una solicitud para restablecer tu contraseña.\n"
+                "Abrí este enlace para crear una nueva:\n"
+                f"{link}\n\n"
+                "Este enlace expira en 1 hora.\n\n"
+                "Si no fuiste vos, ignorá este correo.\n\n"
+                "Ubik2CR"
+            )
+
+            html_body = f"""
+            <div style="font-family:Arial,sans-serif;background:#f5f7fa;padding:24px">
+              <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e6e8ee">
+                <div style="background:linear-gradient(90deg,#0b4fa3,#38b24d);color:#fff;padding:18px 20px">
+                  <div style="font-size:18px;font-weight:800">Ubik2CR</div>
+                  <div style="opacity:.9;font-size:13px;margin-top:4px">Restablecer contraseña</div>
+                </div>
+                <div style="padding:18px 20px;color:#111827">
+                  <p style="margin:0 0 10px 0">Hola,</p>
+                  <p style="margin:0 0 14px 0;line-height:1.5">
+                    Tocá el botón para crear una nueva contraseña.
+                  </p>
+                  <div style="text-align:center;margin:18px 0">
+                    <a href="{link}" style="display:inline-block;background:#0b4fa3;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700">
+                      Restablecer contraseña
+                    </a>
+                  </div>
+                  <p style="margin:0 0 10px 0;font-size:13px;opacity:.85;line-height:1.5">
+                    Este enlace expira en <b>1 hora</b>. Si no fuiste vos, ignorá este correo.
+                  </p>
+                  <div style="margin-top:14px;font-size:12px;color:#6b7280;word-break:break-all">
+                    Si el botón no abre, copiá este enlace:<br>
+                    <a href="{link}">{link}</a>
+                  </div>
+                </div>
+              </div>
+              <div style="max-width:520px;margin:10px auto 0 auto;font-size:12px;color:#6b7280;text-align:center">
+                © {datetime.now().year} Ubik2CR
+              </div>
+            </div>
+            """
+
+            try:
+                send_email(email, "Recuperar contraseña - Ubik2CR", text_body, html_body)
+                print(f"[RESET] Email enviado a {email}")
+            except Exception as e:
+                print(f"[RESET][ERROR] {repr(e)}")
+                flash("No se pudo enviar el correo (SMTP). Revisá credenciales/puerto en Secrets.")
+                if (os.environ.get("SHOW_RESET_LINK") or "0") == "1":
+                    flash(f"(DEV) Link de reseteo: {link}")
+
+        return redirect("/owner/login")
+
+    return render_template("recuperar.html")
+
+@app.route("/reset/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    email = verify_reset_token(token, expiration=3600)
+    if not email:
+        return "Enlace inválido o expirado", 400
+
+    user = Usuario.query.filter_by(email=email).first()
+    if not user:
+        return "Usuario no encontrado", 404
+
+    if request.method == "POST":
+        new_password = (request.form.get("password") or "").strip()
+        new_password2 = (request.form.get("password2") or "").strip()
+
+        if len(new_password) < 6:
+            flash("La contraseña debe tener al menos 6 caracteres.")
+            return redirect(f"/reset/{token}")
+
+        if new_password != new_password2:
+            flash("Las contraseñas no coinciden.")
+            return redirect(f"/reset/{token}")
+
+        user.password = generate_password_hash(new_password)
+        db.session.commit()
+
+        flash("Contraseña actualizada correctamente. Iniciá sesión.")
+        return redirect("/owner/login")
+
+    return render_template("reset_password.html", token=token, email=email)
+
+
+# =====================================================
+# ERROR PAGES (si existen tus templates)
+# =====================================================
 @app.errorhandler(404)
-def p404(e): return render_template('404.html'), 404
+def not_found(e):
+    try:
+        return render_template("404.html"), 404
+    except Exception:
+        return "404", 404
+
 @app.errorhandler(500)
-def p500(e): return render_template('500.html'), 500
+def server_error(e):
+    try:
+        return render_template("500.html"), 500
+    except Exception:
+        return "500", 500
 
-# --- ESTO CORRIGE EL ERROR DE RENDER ---
-# Forzamos la creación de DB al importar el archivo
-try:
-    with app.app_context():
-        db.create_all()
-        print("✅ DB Inicializada en Render")
-except:
-    pass
 
-if __name__ == '__main__':
-    # Aquí es donde fallaba el espacio antes, ya está corregido:
-    app.run(host='0.0.0.0', port=5000)
+# =====================================================
+# RUN
+# =====================================================
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)

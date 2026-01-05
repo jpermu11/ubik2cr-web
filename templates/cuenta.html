@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tu cuenta | Ubik2CR</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --brand-blue:#0056b3;
+      --brand-green:#7ab800;
+      --bg:#f2f4f8;
+    }
+    body{background:var(--bg);}
+
+    .card-wrap{max-width:520px;margin:70px auto;}
+    .card-pro{
+      border:0;
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 10px 25px rgba(0,0,0,.10);
+    }
+
+    .header{
+      background:linear-gradient(135deg,var(--brand-blue), #0b3f82);
+      color:#fff;
+      padding:22px 22px 18px 22px;
+      text-align:center;
+    }
+    .header img{
+      height:72px;
+      width:auto;
+      margin-bottom:10px;
+    }
+    .header h1{
+      font-size:22px;
+      margin:0;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .header .sub{
+      margin-top:6px;
+      font-size:13px;
+      opacity:.9;
+    }
+
+    .btn-primary{
+      background:var(--brand-green);
+      border:none;
+      font-weight:700;
+      padding:12px 14px;
+      border-radius:12px;
+    }
+    .btn-primary:hover{background:#679e00;}
+    .btn-outline{
+      border:2px solid var(--brand-blue);
+      color:var(--brand-blue);
+      font-weight:700;
+      padding:12px 14px;
+      border-radius:12px;
+      background:#fff;
+    }
+    .btn-outline:hover{
+      background:rgba(0,86,179,.08);
+      color:var(--brand-blue);
+    }
+
+    .tip{
+      background:#ffffff;
+      border:1px dashed rgba(0,0,0,.15);
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:13px;
+      color:#333;
+    }
+    .tip strong{color:var(--brand-blue);}
+    .muted{color:#6b7280;font-size:13px;}
+    .link-muted{color:#6b7280;text-decoration:none;}
+    .link-muted:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+
+  <div class="container card-wrap">
+    <div class="card card-pro">
+      <div class="header">
+        <img src="/static/uploads/logo.png" alt="Ubik2CR">
+        <h1>Tu cuenta Ubik2CR</h1>
+        <div class="sub">Creá tu perfil y administrá tus negocios fácil</div>
+      </div>
+
+      <div class="p-4">
+
+        <!-- Flash messages (bonito, no rojo agresivo) -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert alert-info text-center rounded-3" role="alert">
+              {{ messages[0] }}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% if session.get("user_id") %}
+          <div class="tip mb-3">
+            ✅ Ya tenés sesión iniciada como <strong>{{ session.get("user_email","") }}</strong>.
+          </div>
+
+          <div class="d-grid gap-2">
+            <a class="btn btn-primary" href="/panel">📋 Ir a mi panel</a>
+            <a class="btn btn-outline" href="/owner/logout">🚪 Cerrar sesión</a>
+          </div>
+        {% else %}
+          <div class="tip mb-3">
+            <strong>¿Cómo funciona?</strong><br>
+            1) Creás tu cuenta con tu correo y contraseña.<br>
+            2) Entrás a tu panel y podés crear <strong>1 o más negocios</strong>.<br>
+            3) Tus negocios quedan <strong>pendientes</strong> hasta aprobación.
+          </div>
+
+          <div class="d-grid gap-2">
+            <a class="btn btn-primary" href="/owner/registro">✅ Crear cuenta de dueño</a>
+            <a class="btn btn-outline" href="/owner/login">🔐 Iniciar sesión (dueño)</a>
+          </div>
+        {% endif %}
+
+        <hr class="my-4">
+
+        <div class="text-center">
+          <div class="muted mb-2">¿Solo querés explorar el directorio?</div>
+          <a href="/" class="link-muted">← Volver al inicio</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
+
