@@ -584,6 +584,61 @@ def aprobar_negocio(id):
     if negocio:
         negocio.estado = "aprobado"
         db.session.commit()
+        
+        # Enviar email de notificación al dueño
+        if hasattr(negocio, "owner_id") and negocio.owner_id:
+            owner = db.session.get(Usuario, negocio.owner_id)
+            if owner and owner.email:
+                try:
+                    base_url = get_base_url_from_request()
+                    negocio_url = f"{base_url}/negocio/{negocio.id}"
+                    
+                    text_body = (
+                        f"Hola {owner.nombre or 'dueño del negocio'},\n\n"
+                        f"¡Excelentes noticias! Tu negocio '{negocio.nombre}' ha sido aprobado y ya está visible en Ubik2CR.\n\n"
+                        f"Puedes verlo aquí: {negocio_url}\n\n"
+                        f"Gracias por ser parte de Ubik2CR.\n\n"
+                        f"Saludos,\n"
+                        f"El equipo de Ubik2CR"
+                    )
+                    
+                    html_body = f"""
+                    <div style="font-family:Arial,sans-serif;background:#f5f7fa;padding:24px">
+                        <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e6e8ee">
+                            <div style="background:linear-gradient(90deg,#0b4fa3,#38b24d);color:#fff;padding:18px 20px">
+                                <div style="font-size:18px;font-weight:800">Ubik2CR</div>
+                                <div style="opacity:.9;font-size:13px;margin-top:4px">Tu negocio fue aprobado</div>
+                            </div>
+                            <div style="padding:18px 20px;color:#111827">
+                                <p style="margin:0 0 10px 0">Hola {owner.nombre or 'dueño del negocio'},</p>
+                                <p style="margin:0 0 14px 0;line-height:1.5">
+                                    ¡Excelentes noticias! Tu negocio <strong>"{negocio.nombre}"</strong> ha sido aprobado y ya está visible en Ubik2CR.
+                                </p>
+                                <div style="text-align:center;margin:18px 0">
+                                    <a href="{negocio_url}" style="display:inline-block;background:#0b4fa3;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700">
+                                        Ver mi negocio
+                                    </a>
+                                </div>
+                                <p style="margin:0 0 10px 0;font-size:13px;opacity:.85;line-height:1.5">
+                                    Gracias por ser parte de Ubik2CR.
+                                </p>
+                            </div>
+                        </div>
+                        <div style="max-width:520px;margin:10px auto 0 auto;font-size:12px;color:#6b7280;text-align:center">
+                            © {datetime.now().year} Ubik2CR
+                        </div>
+                    </div>
+                    """
+                    
+                    send_email(
+                        owner.email,
+                        f"¡Tu negocio '{negocio.nombre}' fue aprobado! - Ubik2CR",
+                        text_body,
+                        html_body
+                    )
+                    print(f"[NOTIFICACION] Email enviado a {owner.email} - Negocio aprobado: {negocio.nombre}")
+                except Exception as e:
+                    print(f"[NOTIFICACION][ERROR] No se pudo enviar email: {repr(e)}")
 
     return redirect("/admin/comercios")
 
