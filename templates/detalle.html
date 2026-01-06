@@ -56,7 +56,7 @@
                 <h1 class="display-4">{{ n.nombre }}</h1>
                 <p class="lead text-muted"><i class="fas fa-map-marker-alt text-danger"></i> {{ n.ubicacion }}</p>
 
-                <div class="d-flex gap-2 mt-4 align-items-center">
+                <div class="d-flex gap-2 mt-4 align-items-center flex-wrap">
                     {% if n.whatsapp %}
                     <a href="https://wa.me/{{ n.whatsapp }}" target="_blank" class="btn-whatsapp">
                         <i class="fab fa-whatsapp"></i> WhatsApp
@@ -66,6 +66,11 @@
                     <a href="tel:{{ n.telefono }}" class="btn btn-outline-dark rounded-pill px-4 py-2" style="font-weight: bold;">
                         <i class="fas fa-phone"></i> Llamar
                     </a>
+                    {% endif %}
+                    {% if session.get('user_id') %}
+                    <button id="btn-favorito" class="btn btn-outline-danger rounded-pill px-4 py-2" style="font-weight: bold;" onclick="toggleFavorito({{ n.id }})">
+                        <i class="far fa-heart" id="icon-favorito"></i> <span id="text-favorito">Agregar a favoritos</span>
+                    </button>
                     {% endif %}
                 </div>
             </div>
@@ -124,6 +129,52 @@
     } else {
         document.getElementById('map').innerHTML = "<p class='text-center text-muted p-5 bg-light rounded'>Ubicación exacta no disponible en el mapa.</p>";
     }
+
+    // Verificar si es favorito al cargar
+    {% if session.get('user_id') %}
+    fetch('/api/favoritos/{{ n.id }}')
+        .then(r => r.json())
+        .then(data => {
+            if (data.es_favorito) {
+                document.getElementById('icon-favorito').classList.remove('far');
+                document.getElementById('icon-favorito').classList.add('fas');
+                document.getElementById('text-favorito').textContent = 'En favoritos';
+                document.getElementById('btn-favorito').classList.remove('btn-outline-danger');
+                document.getElementById('btn-favorito').classList.add('btn-danger');
+            }
+        });
+    
+    function toggleFavorito(negocioId) {
+        fetch('/api/favoritos/' + negocioId)
+            .then(r => r.json())
+            .then(data => {
+                const esFavorito = data.es_favorito;
+                const url = esFavorito ? '/favoritos/quitar/' : '/favoritos/agregar/';
+                
+                fetch(url + negocioId)
+                    .then(r => r.json())
+                    .then(result => {
+                        const icon = document.getElementById('icon-favorito');
+                        const text = document.getElementById('text-favorito');
+                        const btn = document.getElementById('btn-favorito');
+                        
+                        if (result.es_favorito) {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            text.textContent = 'En favoritos';
+                            btn.classList.remove('btn-outline-danger');
+                            btn.classList.add('btn-danger');
+                        } else {
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            text.textContent = 'Agregar a favoritos';
+                            btn.classList.remove('btn-danger');
+                            btn.classList.add('btn-outline-danger');
+                        }
+                    });
+            });
+    }
+    {% endif %}
 </script>
 
 </body>

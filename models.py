@@ -68,3 +68,11 @@ class Noticia(db.Model):
     contenido = db.Column(db.Text, nullable=False)
     imagen_url = db.Column(db.String(500))
     fecha = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+# --- MODELO FAVORITOS (relación muchos-a-muchos) ---
+favoritos = db.Table(
+    'favoritos',
+    db.Column('usuario_id', db.Integer, db.ForeignKey('usuarios.id'), primary_key=True),
+    db.Column('negocio_id', db.Integer, db.ForeignKey('negocios.id'), primary_key=True),
+    db.Column('created_at', db.DateTime, default=datetime.utcnow)
+)

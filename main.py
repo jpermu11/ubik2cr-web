@@ -25,7 +25,7 @@ try:
 except ImportError:
     CLOUDINARY_AVAILABLE = False
 
-from models import db, Negocio, Usuario, Noticia
+from models import db, Negocio, Usuario, Noticia, favoritos
 
 
 # =====================================================
@@ -310,6 +310,97 @@ def inicio():
 @app.route("/cuenta")
 def cuenta():
     return render_template("cuenta.html")
+
+@app.route("/favoritos")
+def ver_favoritos():
+    """Muestra los negocios favoritos del usuario"""
+    if not owner_logged_in():
+        flash("Iniciá sesión para ver tus favoritos.")
+        return redirect("/cuenta")
+    
+    # Obtener IDs de negocios favoritos del usuario
+    user_id = session.get("user_id")
+    favoritos_query = db.session.execute(
+        text("SELECT negocio_id FROM favoritos WHERE usuario_id = :user_id"),
+        {"user_id": user_id}
+    ).fetchall()
+    favoritos_ids = [f[0] for f in favoritos_query]
+    
+    if not favoritos_ids:
+        negocios = []
+    else:
+        negocios = Negocio.query.filter(
+            Negocio.id.in_(favoritos_ids),
+            Negocio.estado == "aprobado"
+        ).order_by(Negocio.es_vip.desc(), Negocio.id.desc()).all()
+    
+    return render_template(
+        "favoritos.html",
+        negocios=negocios,
+        total=len(negocios),
+        get_safe_image_url=get_safe_image_url
+    )
+
+@app.route("/favoritos/agregar/<int:negocio_id>")
+def agregar_favorito(negocio_id):
+    """Agrega un negocio a favoritos"""
+    if not owner_logged_in():
+        return {"error": "Debes iniciar sesión"}, 401
+    
+    user_id = session.get("user_id")
+    negocio = db.session.get(Negocio, negocio_id)
+    
+    if not negocio:
+        return {"error": "Negocio no encontrado"}, 404
+    
+    # Verificar si ya está en favoritos
+    existe = db.session.execute(
+        text("SELECT 1 FROM favoritos WHERE usuario_id = :user_id AND negocio_id = :negocio_id"),
+        {"user_id": user_id, "negocio_id": negocio_id}
+    ).fetchone()
+    
+    if existe:
+        return {"message": "Ya está en favoritos", "es_favorito": True}, 200
+    
+    # Agregar a favoritos
+    db.session.execute(
+        text("INSERT INTO favoritos (usuario_id, negocio_id, created_at) VALUES (:user_id, :negocio_id, :created_at)"),
+        {"user_id": user_id, "negocio_id": negocio_id, "created_at": datetime.utcnow()}
+    )
+    db.session.commit()
+    
+    return {"message": "Agregado a favoritos", "es_favorito": True}, 200
+
+@app.route("/favoritos/quitar/<int:negocio_id>")
+def quitar_favorito(negocio_id):
+    """Quita un negocio de favoritos"""
+    if not owner_logged_in():
+        return {"error": "Debes iniciar sesión"}, 401
+    
+    user_id = session.get("user_id")
+    
+    # Quitar de favoritos
+    db.session.execute(
+        text("DELETE FROM favoritos WHERE usuario_id = :user_id AND negocio_id = :negocio_id"),
+        {"user_id": user_id, "negocio_id": negocio_id}
+    )
+    db.session.commit()
+    
+    return {"message": "Eliminado de favoritos", "es_favorito": False}, 200
+
+@app.route("/api/favoritos/<int:negocio_id>")
+def es_favorito(negocio_id):
+    """Verifica si un negocio está en favoritos"""
+    if not owner_logged_in():
+        return {"es_favorito": False}, 200
+    
+    user_id = session.get("user_id")
+    existe = db.session.execute(
+        text("SELECT 1 FROM favoritos WHERE usuario_id = :user_id AND negocio_id = :negocio_id"),
+        {"user_id": user_id, "negocio_id": negocio_id}
+    ).fetchone()
+    
+    return {"es_favorito": bool(existe)}, 200
 
 @app.route("/mapa")
 def ver_mapa():

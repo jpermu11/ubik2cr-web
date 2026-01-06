@@ -48,7 +48,9 @@
             <a href="/cuenta" class="btn btn-outline-light fw-bold">
                 👤 Cuenta
             </a>
-
+            {% if session.get('user_id') %}
+            <a href="/favoritos" class="btn btn-outline-light fw-bold"> ❤️ Favoritos </a>
+            {% endif %}
             {% if session.get('admin_logged_in') %}
                 <a href="/admin" class="btn btn-light fw-bold">Panel Admin</a>
                 <a href="/logout" class="btn btn-outline-light">Salir</a>
