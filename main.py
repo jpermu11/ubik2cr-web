@@ -111,9 +111,31 @@ def save_upload(field_name: str) -> str:
     if imagen and imagen.filename:
         filename = secure_filename(imagen.filename)
         path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        imagen.save(path)
-        return f"/static/uploads/{filename}"
+        try:
+            imagen.save(path)
+            return f"/static/uploads/{filename}"
+        except Exception:
+            # Si falla guardar, usar logo por defecto
+            return "/static/uploads/logo.png"
     return "/static/uploads/logo.png"
+
+def get_safe_image_url(imagen_url: str) -> str:
+    """
+    Devuelve una URL segura para la imagen, con fallback.
+    """
+    if not imagen_url:
+        return "https://via.placeholder.com/600x400?text=Ubik2CR"
+    
+    # Si es una URL completa, usarla directamente
+    if imagen_url.startswith("http://") or imagen_url.startswith("https://"):
+        return imagen_url
+    
+    # Si es una ruta local, verificar si existe
+    if imagen_url.startswith("/static/"):
+        return imagen_url
+    
+    # Fallback
+    return "https://via.placeholder.com/600x400?text=Ubik2CR"
 
 
 # =====================================================
@@ -239,6 +261,7 @@ def inicio():
         cat=cat,
         owner_logged_in=owner_logged_in(),
         admin_logged_in=admin_logged_in(),
+        get_safe_image_url=get_safe_image_url,
     )
 
 @app.route("/cuenta")

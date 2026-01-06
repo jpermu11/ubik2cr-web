@@ -108,11 +108,12 @@
         {% for n in negocios %}
         <div class="col-md-4">
             <div class="card card-negocio h-100">
-                <img src="{{ n.imagen_url if n.imagen_url else url_for('static', filename='uploads/logo.png') }}"
+                <img src="{{ get_safe_image_url(n.imagen_url) if get_safe_image_url else (n.imagen_url if n.imagen_url else 'https://via.placeholder.com/600x400?text=Ubik2CR') }}"
                      class="card-img-top"
-                     style="height:200px; object-fit:cover;"
+                     style="height:200px; object-fit:cover; background-color:#f0f0f0;"
                      alt="{{ n.nombre }}"
-                     onerror="this.src='https://via.placeholder.com/600x400?text=Sin+Imagen'">
+                     onerror="if(this.src.indexOf('placeholder') === -1) { this.src='https://via.placeholder.com/600x400?text=Ubik2CR'; this.onerror=null; }"
+                     loading="lazy">
                 <div class="card-body">
                     <span class="badge bg-primary">{{ n.categoria }}</span>
                     <h5 class="mt-2 fw-bold">{{ n.nombre }}</h5>
