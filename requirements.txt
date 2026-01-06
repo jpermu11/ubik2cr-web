@@ -7,4 +7,5 @@ itsdangerous
 Werkzeug
 SQLAlchemy
 python-dotenv
+cloudinary
 

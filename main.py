@@ -18,6 +18,13 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from sqlalchemy import text
 from sqlalchemy.pool import QueuePool
 
+try:
+    import cloudinary
+    import cloudinary.uploader
+    CLOUDINARY_AVAILABLE = True
+except ImportError:
+    CLOUDINARY_AVAILABLE = False
+
 from models import db, Negocio, Usuario, Noticia
 
 
@@ -64,7 +71,27 @@ else:
 
 
 # =====================================================
-# UPLOADS
+# CLOUDINARY (para almacenar imágenes permanentemente)
+# =====================================================
+if CLOUDINARY_AVAILABLE:
+    cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "").strip()
+    api_key = os.environ.get("CLOUDINARY_API_KEY", "").strip()
+    api_secret = os.environ.get("CLOUDINARY_API_SECRET", "").strip()
+    
+    if cloud_name and api_key and api_secret:
+        cloudinary.config(
+            cloud_name=cloud_name,
+            api_key=api_key,
+            api_secret=api_secret
+        )
+        USE_CLOUDINARY = True
+    else:
+        USE_CLOUDINARY = False
+else:
+    USE_CLOUDINARY = False
+
+# =====================================================
+# UPLOADS (fallback local)
 # =====================================================
 app.config["UPLOAD_FOLDER"] = "static/uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
@@ -106,12 +133,28 @@ def safe_float(value):
 def save_upload(field_name: str) -> str:
     """
     Guarda imagen si viene. Devuelve URL.
+    Usa Cloudinary si está configurado, sino guarda localmente.
     """
     imagen = request.files.get(field_name)
     if imagen and imagen.filename:
-        filename = secure_filename(imagen.filename)
-        path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        # Intentar subir a Cloudinary primero
+        if USE_CLOUDINARY:
+            try:
+                result = cloudinary.uploader.upload(
+                    imagen,
+                    folder="ubik2cr",
+                    resource_type="image"
+                )
+                return result.get("secure_url", "/static/uploads/logo.png")
+            except Exception as e:
+                print(f"[CLOUDINARY ERROR] {e}")
+                # Si falla Cloudinary, intentar guardar localmente
+        
+        # Fallback: guardar localmente
         try:
+            filename = secure_filename(imagen.filename)
+            path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            imagen.seek(0)  # Resetear el archivo para leerlo de nuevo
             imagen.save(path)
             return f"/static/uploads/{filename}"
         except Exception:
