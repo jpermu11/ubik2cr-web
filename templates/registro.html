@@ -125,28 +125,103 @@
           <div class="col-md-4">
             <label class="form-label fw-bold required">Categoría</label>
             <select name="categoria" class="form-select form-select-lg" required>
-
-              <!-- NUEVAS (CR) -->
-              <option value="Iglesia">⛪ Iglesia</option>
-              <option value="Bomberos">🚒 Bomberos</option>
-              <option value="Cruz Roja">🚑 Cruz Roja</option>
-              <option value="Municipalidad">🏛️ Municipalidad</option>
-              <option value="CCSS">🏥 CCSS / Clínica / Ebáis</option>
-              <option value="Parque">🌳 Parque</option>
-              <option value="Polideportivo">🏟️ Polideportivo</option>
-              <option value="Edificio Gubernamental">🏢 Edificio Gubernamental</option>
-
-              <option disabled>────────────</option>
-
-              <!-- GENERALES -->
-              <option value="Restaurante">🍔 Restaurante</option>
-              <option value="Comercio">🏪 Comercio</option>
-              <option value="Servicios">🧰 Servicios</option>
-              <option value="Automotriz">🚗 Automotriz</option>
-              <option value="Educacion">🎓 Educación</option>
-              <option value="Salud">🏥 Salud</option>
-              <option value="Turismo">🗺️ Turismo</option>
-              <option value="Otros">✨ Otros</option>
+              
+              <optgroup label="🍽️ Comida y Bebidas">
+                <option value="Sodas y Rest.">🍴 Sodas y Rest.</option>
+                <option value="Comida Rápida">🍕 Comida Rápida</option>
+                <option value="Cafeterías">☕ Cafeterías</option>
+                <option value="Bares y Licores">🍺 Bares y Licores</option>
+                <option value="Heladerías">🍦 Heladerías</option>
+                <option value="Restaurante">🍔 Restaurantes</option>
+              </optgroup>
+              
+              <optgroup label="🛒 Alimentos">
+                <option value="Verdurerías">🥬 Verdurerías</option>
+                <option value="Carnicerías">🥩 Carnicerías</option>
+                <option value="Panaderías">🥐 Panaderías</option>
+                <option value="Super y Pulpes">🛒 Super y Pulpes</option>
+              </optgroup>
+              
+              <optgroup label="🏥 Salud">
+                <option value="Farmacias">💊 Farmacias</option>
+                <option value="Clínicas y Dr.">🩺 Clínicas y Dr.</option>
+                <option value="Dentistas">🦷 Dentistas</option>
+                <option value="Laboratorios">🧪 Laboratorios</option>
+                <option value="Veterinarias">🐾 Veterinarias</option>
+                <option value="Ópticas">👓 Ópticas</option>
+                <option value="CCSS">🏥 CCSS / Clínica / Ebáis</option>
+              </optgroup>
+              
+              <optgroup label="💅 Belleza y Fitness">
+                <option value="Gimnasios">💪 Gimnasios</option>
+                <option value="Spas y Masajes">🧘 Spas y Masajes</option>
+                <option value="Belleza y Barbería">✂️ Belleza y Barbería</option>
+              </optgroup>
+              
+              <optgroup label="👕 Ropa y Tecnología">
+                <option value="Ropa y Calzado">👗 Ropa y Calzado</option>
+                <option value="Tecnología y Cel.">📱 Tecnología y Cel.</option>
+                <option value="Reparaciones Tech">💻 Reparaciones Tech</option>
+              </optgroup>
+              
+              <optgroup label="🔧 Construcción y Automotriz">
+                <option value="Ferreterías">🔨 Ferreterías</option>
+                <option value="Materiales Construcción">🧱 Materiales Construcción</option>
+                <option value="Mecánica y Llantas">🔧 Mecánica y Llantas</option>
+                <option value="Transporte">🚕 Transporte</option>
+                <option value="Gasolineras">⛽ Gasolineras</option>
+                <option value="Automotriz">🚗 Automotriz</option>
+              </optgroup>
+              
+              <optgroup label="📚 Educación y Cultura">
+                <option value="Librerías y Bazar">📖 Librerías y Bazar</option>
+                <option value="Escuelas">🏫 Escuelas</option>
+                <option value="Bibliotecas">📚 Bibliotecas</option>
+                <option value="Academias">🎓 Academias</option>
+                <option value="Educacion">🎓 Educación</option>
+              </optgroup>
+              
+              <optgroup label="🏨 Turismo y Entretenimiento">
+                <option value="Hoteles y Hospedaje">🏨 Hoteles y Hospedaje</option>
+                <option value="Parques">🌳 Parques</option>
+                <option value="Plazas">🏞️ Plazas</option>
+                <option value="Polideportivo">🏟️ Polideportivos</option>
+                <option value="Cines y Entretenimiento">🎬 Cines y Entretenimiento</option>
+                <option value="Turismo">🗺️ Turismo</option>
+              </optgroup>
+              
+              <optgroup label="💰 Finanzas">
+                <option value="Bancos">🏦 Bancos</option>
+                <option value="Cooperativas">💵 Cooperativas</option>
+              </optgroup>
+              
+              <optgroup label="🏛️ Servicios Públicos">
+                <option value="Cruz Roja">🚑 Cruz Roja</option>
+                <option value="Bomberos">🚒 Bomberos</option>
+                <option value="Policía">🚓 Policía</option>
+                <option value="Municipalidad">🏛️ Municipalidad</option>
+                <option value="Iglesia">⛪ Iglesias</option>
+                <option value="Instituciones Públicas">🏢 Instituciones Públicas</option>
+                <option value="Edificio Gubernamental">🏢 Edificio Gubernamental</option>
+              </optgroup>
+              
+              <optgroup label="💼 Servicios Profesionales">
+                <option value="Servicios Pro">💼 Servicios Pro</option>
+                <option value="Consultoría">📊 Consultoría</option>
+                <option value="Abogados">⚖️ Abogados</option>
+                <option value="Contables">📋 Contables</option>
+                <option value="Salones de Eventos">🎉 Salones de Eventos</option>
+                <option value="Mudanzas y Transporte">🚚 Mudanzas y Transporte</option>
+                <option value="Plomería y Electricidad">⚡ Plomería y Electricidad</option>
+                <option value="Jardinería">🌱 Jardinería</option>
+                <option value="Mascotas y Suministros">🐕 Mascotas y Suministros</option>
+                <option value="Servicios">🧰 Servicios</option>
+              </optgroup>
+              
+              <optgroup label="🏪 Otros">
+                <option value="Comercio">🏪 Comercios</option>
+                <option value="Otros">✨ Otros</option>
+              </optgroup>
 
             </select>
           </div>

@@ -103,28 +103,103 @@
           <div class="col-md-4">
             <label class="form-label fw-bold">Categoría</label>
             <select name="categoria" class="form-select form-select-lg" required>
-
-              <!-- NUEVAS (CR) -->
-              <option value="Iglesia" {% if n.categoria=='Iglesia' %}selected{% endif %}>⛪ Iglesia</option>
-              <option value="Bomberos" {% if n.categoria=='Bomberos' %}selected{% endif %}>🚒 Bomberos</option>
-              <option value="Cruz Roja" {% if n.categoria=='Cruz Roja' %}selected{% endif %}>🚑 Cruz Roja</option>
-              <option value="Municipalidad" {% if n.categoria=='Municipalidad' %}selected{% endif %}>🏛️ Municipalidad</option>
-              <option value="CCSS" {% if n.categoria=='CCSS' %}selected{% endif %}>🏥 CCSS / Clínica / Ebáis</option>
-              <option value="Parque" {% if n.categoria=='Parque' %}selected{% endif %}>🌳 Parque</option>
-              <option value="Polideportivo" {% if n.categoria=='Polideportivo' %}selected{% endif %}>🏟️ Polideportivo</option>
-              <option value="Edificio Gubernamental" {% if n.categoria=='Edificio Gubernamental' %}selected{% endif %}>🏢 Edificio Gubernamental</option>
-
-              <option disabled>────────────</option>
-
-              <!-- GENERALES -->
-              <option value="Restaurante" {% if n.categoria=='Restaurante' %}selected{% endif %}>🍔 Restaurante</option>
-              <option value="Comercio" {% if n.categoria=='Comercio' %}selected{% endif %}>🏪 Comercio</option>
-              <option value="Servicios" {% if n.categoria=='Servicios' %}selected{% endif %}>🧰 Servicios</option>
-              <option value="Automotriz" {% if n.categoria=='Automotriz' %}selected{% endif %}>🚗 Automotriz</option>
-              <option value="Educacion" {% if n.categoria=='Educacion' %}selected{% endif %}>🎓 Educación</option>
-              <option value="Salud" {% if n.categoria=='Salud' %}selected{% endif %}>🏥 Salud</option>
-              <option value="Turismo" {% if n.categoria=='Turismo' %}selected{% endif %}>🗺️ Turismo</option>
-              <option value="Otros" {% if n.categoria=='Otros' %}selected{% endif %}>✨ Otros</option>
+              
+              <optgroup label="🍽️ Comida y Bebidas">
+                <option value="Sodas y Rest." {% if n.categoria=='Sodas y Rest.' %}selected{% endif %}>🍴 Sodas y Rest.</option>
+                <option value="Comida Rápida" {% if n.categoria=='Comida Rápida' %}selected{% endif %}>🍕 Comida Rápida</option>
+                <option value="Cafeterías" {% if n.categoria=='Cafeterías' %}selected{% endif %}>☕ Cafeterías</option>
+                <option value="Bares y Licores" {% if n.categoria=='Bares y Licores' %}selected{% endif %}>🍺 Bares y Licores</option>
+                <option value="Heladerías" {% if n.categoria=='Heladerías' %}selected{% endif %}>🍦 Heladerías</option>
+                <option value="Restaurante" {% if n.categoria=='Restaurante' %}selected{% endif %}>🍔 Restaurantes</option>
+              </optgroup>
+              
+              <optgroup label="🛒 Alimentos">
+                <option value="Verdurerías" {% if n.categoria=='Verdurerías' %}selected{% endif %}>🥬 Verdurerías</option>
+                <option value="Carnicerías" {% if n.categoria=='Carnicerías' %}selected{% endif %}>🥩 Carnicerías</option>
+                <option value="Panaderías" {% if n.categoria=='Panaderías' %}selected{% endif %}>🥐 Panaderías</option>
+                <option value="Super y Pulpes" {% if n.categoria=='Super y Pulpes' %}selected{% endif %}>🛒 Super y Pulpes</option>
+              </optgroup>
+              
+              <optgroup label="🏥 Salud">
+                <option value="Farmacias" {% if n.categoria=='Farmacias' %}selected{% endif %}>💊 Farmacias</option>
+                <option value="Clínicas y Dr." {% if n.categoria=='Clínicas y Dr.' %}selected{% endif %}>🩺 Clínicas y Dr.</option>
+                <option value="Dentistas" {% if n.categoria=='Dentistas' %}selected{% endif %}>🦷 Dentistas</option>
+                <option value="Laboratorios" {% if n.categoria=='Laboratorios' %}selected{% endif %}>🧪 Laboratorios</option>
+                <option value="Veterinarias" {% if n.categoria=='Veterinarias' %}selected{% endif %}>🐾 Veterinarias</option>
+                <option value="Ópticas" {% if n.categoria=='Ópticas' %}selected{% endif %}>👓 Ópticas</option>
+                <option value="CCSS" {% if n.categoria=='CCSS' %}selected{% endif %}>🏥 CCSS / Clínica / Ebáis</option>
+              </optgroup>
+              
+              <optgroup label="💅 Belleza y Fitness">
+                <option value="Gimnasios" {% if n.categoria=='Gimnasios' %}selected{% endif %}>💪 Gimnasios</option>
+                <option value="Spas y Masajes" {% if n.categoria=='Spas y Masajes' %}selected{% endif %}>🧘 Spas y Masajes</option>
+                <option value="Belleza y Barbería" {% if n.categoria=='Belleza y Barbería' %}selected{% endif %}>✂️ Belleza y Barbería</option>
+              </optgroup>
+              
+              <optgroup label="👕 Ropa y Tecnología">
+                <option value="Ropa y Calzado" {% if n.categoria=='Ropa y Calzado' %}selected{% endif %}>👗 Ropa y Calzado</option>
+                <option value="Tecnología y Cel." {% if n.categoria=='Tecnología y Cel.' %}selected{% endif %}>📱 Tecnología y Cel.</option>
+                <option value="Reparaciones Tech" {% if n.categoria=='Reparaciones Tech' %}selected{% endif %}>💻 Reparaciones Tech</option>
+              </optgroup>
+              
+              <optgroup label="🔧 Construcción y Automotriz">
+                <option value="Ferreterías" {% if n.categoria=='Ferreterías' %}selected{% endif %}>🔨 Ferreterías</option>
+                <option value="Materiales Construcción" {% if n.categoria=='Materiales Construcción' %}selected{% endif %}>🧱 Materiales Construcción</option>
+                <option value="Mecánica y Llantas" {% if n.categoria=='Mecánica y Llantas' %}selected{% endif %}>🔧 Mecánica y Llantas</option>
+                <option value="Transporte" {% if n.categoria=='Transporte' %}selected{% endif %}>🚕 Transporte</option>
+                <option value="Gasolineras" {% if n.categoria=='Gasolineras' %}selected{% endif %}>⛽ Gasolineras</option>
+                <option value="Automotriz" {% if n.categoria=='Automotriz' %}selected{% endif %}>🚗 Automotriz</option>
+              </optgroup>
+              
+              <optgroup label="📚 Educación y Cultura">
+                <option value="Librerías y Bazar" {% if n.categoria=='Librerías y Bazar' %}selected{% endif %}>📖 Librerías y Bazar</option>
+                <option value="Escuelas" {% if n.categoria=='Escuelas' %}selected{% endif %}>🏫 Escuelas</option>
+                <option value="Bibliotecas" {% if n.categoria=='Bibliotecas' %}selected{% endif %}>📚 Bibliotecas</option>
+                <option value="Academias" {% if n.categoria=='Academias' %}selected{% endif %}>🎓 Academias</option>
+                <option value="Educacion" {% if n.categoria=='Educacion' %}selected{% endif %}>🎓 Educación</option>
+              </optgroup>
+              
+              <optgroup label="🏨 Turismo y Entretenimiento">
+                <option value="Hoteles y Hospedaje" {% if n.categoria=='Hoteles y Hospedaje' %}selected{% endif %}>🏨 Hoteles y Hospedaje</option>
+                <option value="Parques" {% if n.categoria=='Parques' %}selected{% endif %}>🌳 Parques</option>
+                <option value="Plazas" {% if n.categoria=='Plazas' %}selected{% endif %}>🏞️ Plazas</option>
+                <option value="Polideportivo" {% if n.categoria=='Polideportivo' %}selected{% endif %}>🏟️ Polideportivos</option>
+                <option value="Cines y Entretenimiento" {% if n.categoria=='Cines y Entretenimiento' %}selected{% endif %}>🎬 Cines y Entretenimiento</option>
+                <option value="Turismo" {% if n.categoria=='Turismo' %}selected{% endif %}>🗺️ Turismo</option>
+              </optgroup>
+              
+              <optgroup label="💰 Finanzas">
+                <option value="Bancos" {% if n.categoria=='Bancos' %}selected{% endif %}>🏦 Bancos</option>
+                <option value="Cooperativas" {% if n.categoria=='Cooperativas' %}selected{% endif %}>💵 Cooperativas</option>
+              </optgroup>
+              
+              <optgroup label="🏛️ Servicios Públicos">
+                <option value="Cruz Roja" {% if n.categoria=='Cruz Roja' %}selected{% endif %}>🚑 Cruz Roja</option>
+                <option value="Bomberos" {% if n.categoria=='Bomberos' %}selected{% endif %}>🚒 Bomberos</option>
+                <option value="Policía" {% if n.categoria=='Policía' %}selected{% endif %}>🚓 Policía</option>
+                <option value="Municipalidad" {% if n.categoria=='Municipalidad' %}selected{% endif %}>🏛️ Municipalidad</option>
+                <option value="Iglesia" {% if n.categoria=='Iglesia' %}selected{% endif %}>⛪ Iglesias</option>
+                <option value="Instituciones Públicas" {% if n.categoria=='Instituciones Públicas' %}selected{% endif %}>🏢 Instituciones Públicas</option>
+                <option value="Edificio Gubernamental" {% if n.categoria=='Edificio Gubernamental' %}selected{% endif %}>🏢 Edificio Gubernamental</option>
+              </optgroup>
+              
+              <optgroup label="💼 Servicios Profesionales">
+                <option value="Servicios Pro" {% if n.categoria=='Servicios Pro' %}selected{% endif %}>💼 Servicios Pro</option>
+                <option value="Consultoría" {% if n.categoria=='Consultoría' %}selected{% endif %}>📊 Consultoría</option>
+                <option value="Abogados" {% if n.categoria=='Abogados' %}selected{% endif %}>⚖️ Abogados</option>
+                <option value="Contables" {% if n.categoria=='Contables' %}selected{% endif %}>📋 Contables</option>
+                <option value="Salones de Eventos" {% if n.categoria=='Salones de Eventos' %}selected{% endif %}>🎉 Salones de Eventos</option>
+                <option value="Mudanzas y Transporte" {% if n.categoria=='Mudanzas y Transporte' %}selected{% endif %}>🚚 Mudanzas y Transporte</option>
+                <option value="Plomería y Electricidad" {% if n.categoria=='Plomería y Electricidad' %}selected{% endif %}>⚡ Plomería y Electricidad</option>
+                <option value="Jardinería" {% if n.categoria=='Jardinería' %}selected{% endif %}>🌱 Jardinería</option>
+                <option value="Mascotas y Suministros" {% if n.categoria=='Mascotas y Suministros' %}selected{% endif %}>🐕 Mascotas y Suministros</option>
+                <option value="Servicios" {% if n.categoria=='Servicios' %}selected{% endif %}>🧰 Servicios</option>
+              </optgroup>
+              
+              <optgroup label="🏪 Otros">
+                <option value="Comercio" {% if n.categoria=='Comercio' %}selected{% endif %}>🏪 Comercios</option>
+                <option value="Otros" {% if n.categoria=='Otros' %}selected{% endif %}>✨ Otros</option>
+              </optgroup>
 
             </select>
           </div>
