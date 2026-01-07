@@ -76,3 +76,29 @@ favoritos = db.Table(
     db.Column('negocio_id', db.Integer, db.ForeignKey('negocios.id'), primary_key=True),
     db.Column('created_at', db.DateTime, default=datetime.utcnow)
 )
+
+# --- MODELO RESEÑA ---
+class Resena(db.Model):
+    __tablename__ = "resenas"
+
+    id = db.Column(db.Integer, primary_key=True)
+    negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=False, index=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True, index=True)
+    
+    nombre_usuario = db.Column(db.String(100))  # Para reseñas anónimas
+    email_usuario = db.Column(db.String(180))  # Para reseñas anónimas
+    
+    calificacion = db.Column(db.Integer, nullable=False)  # 1-5 estrellas
+    comentario = db.Column(db.Text, nullable=True)
+    estado = db.Column(db.String(20), default="aprobado", index=True)  # aprobado, pendiente, rechazado
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relaciones
+    negocio = db.relationship("Negocio", backref="resenas")
+    usuario = db.relationship("Usuario", backref="resenas")
+    
+    __table_args__ = (
+        db.Index("ix_resenas_negocio_estado", "negocio_id", "estado"),
+    )

@@ -208,8 +208,25 @@
                      loading="lazy">
                 <div class="card-body">
                     <span class="badge bg-primary">{{ n.categoria }}</span>
+                    {% if n.es_vip %}
+                    <span class="badge bg-warning text-dark">⭐ VIP</span>
+                    {% endif %}
                     <h5 class="mt-2 fw-bold">{{ n.nombre }}</h5>
-                    <p class="text-muted small mb-3">{{ n.ubicacion }}</p>
+                    <p class="text-muted small mb-2">{{ n.ubicacion }}</p>
+                    {% if n.calificacion and n.calificacion > 0 %}
+                    <div class="mb-2">
+                        {% for i in range(5) %}
+                            {% if i < n.calificacion|int %}
+                                <i class="fas fa-star text-warning" style="font-size: 0.9rem;"></i>
+                            {% elif i < n.calificacion|round %}
+                                <i class="fas fa-star-half-alt text-warning" style="font-size: 0.9rem;"></i>
+                            {% else %}
+                                <i class="far fa-star text-warning" style="font-size: 0.9rem;"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span class="text-muted small ms-1">{{ n.calificacion }} ({{ n.total_votos }})</span>
+                    </div>
+                    {% endif %}
                     <a href="/negocio/{{ n.id }}" class="btn btn-outline-primary w-100">Ver detalles</a>
                 </div>
             </div>

@@ -25,7 +25,7 @@ try:
 except ImportError:
     CLOUDINARY_AVAILABLE = False
 
-from models import db, Negocio, Usuario, Noticia, favoritos
+from models import db, Negocio, Usuario, Noticia, Resena, favoritos
 
 
 # =====================================================
@@ -421,7 +421,88 @@ def detalle_negocio(id):
     n = db.session.get(Negocio, id)
     if not n:
         return "Negocio no encontrado", 404
-    return render_template("detalle.html", n=n)
+    
+    # Obtener reseñas aprobadas
+    resenas = Resena.query.filter_by(
+        negocio_id=id,
+        estado="aprobado"
+    ).order_by(Resena.created_at.desc()).limit(50).all()
+    
+    # Calcular estadísticas
+    total_resenas = len(resenas)
+    promedio = n.calificacion if n.calificacion else 0.0
+    
+    return render_template(
+        "detalle.html",
+        n=n,
+        resenas=resenas,
+        total_resenas=total_resenas,
+        promedio=promedio,
+        get_safe_image_url=get_safe_image_url
+    )
+
+@app.route("/negocio/<int:negocio_id>/resena", methods=["POST"])
+def crear_resena(negocio_id):
+    """Crear una nueva reseña"""
+    negocio = db.session.get(Negocio, negocio_id)
+    if not negocio:
+        return redirect("/")
+    
+    if negocio.estado != "aprobado":
+        flash("Este negocio aún no está aprobado.")
+        return redirect(f"/negocio/{negocio_id}")
+    
+    calificacion = int(request.form.get("calificacion", 0))
+    comentario = (request.form.get("comentario") or "").strip()
+    nombre = (request.form.get("nombre") or "").strip()
+    email = (request.form.get("email") or "").strip().lower()
+    
+    # Validaciones
+    if calificacion < 1 or calificacion > 5:
+        flash("La calificación debe ser entre 1 y 5 estrellas.")
+        return redirect(f"/negocio/{negocio_id}")
+    
+    if not comentario or len(comentario) < 10:
+        flash("El comentario debe tener al menos 10 caracteres.")
+        return redirect(f"/negocio/{negocio_id}")
+    
+    # Obtener usuario si está logueado
+    usuario_id = session.get("user_id") if owner_logged_in() else None
+    
+    # Si no está logueado, requiere nombre y email
+    if not usuario_id:
+        if not nombre or not email:
+            flash("Para dejar una reseña anónima, necesitás nombre y email.")
+            return redirect(f"/negocio/{negocio_id}")
+    
+    # Crear reseña
+    nueva_resena = Resena(
+        negocio_id=negocio_id,
+        usuario_id=usuario_id,
+        nombre_usuario=nombre if not usuario_id else None,
+        email_usuario=email if not usuario_id else None,
+        calificacion=calificacion,
+        comentario=comentario,
+        estado="aprobado"  # Por ahora aprobamos automáticamente, luego se puede moderar
+    )
+    
+    db.session.add(nueva_resena)
+    
+    # Actualizar calificación promedio del negocio
+    todas_resenas = Resena.query.filter_by(
+        negocio_id=negocio_id,
+        estado="aprobado"
+    ).all()
+    
+    if todas_resenas:
+        promedio = sum(r.calificacion for r in todas_resenas) / len(todas_resenas)
+        negocio.calificacion = round(promedio, 1)
+        negocio.total_votos = len(todas_resenas)
+    
+    db.session.commit()
+    
+    flash("¡Gracias por tu reseña!")
+    return redirect(f"/negocio/{negocio_id}")
 
 
 # =====================================================

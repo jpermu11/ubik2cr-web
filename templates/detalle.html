@@ -89,6 +89,107 @@
                 <hr>
                 <p class="fs-5 text-secondary" style="white-space: pre-line;">{{ n.descripcion }}</p>
             </div>
+            
+            <!-- CALIFICACIÓN Y RESEÑAS -->
+            <div class="info-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 style="color: var(--brand-blue);">Calificaciones y Reseñas</h3>
+                    {% if promedio %}
+                    <div class="text-center">
+                        <div class="display-4 fw-bold text-primary">{{ promedio }}</div>
+                        <div class="text-muted small">
+                            {% for i in range(5) %}
+                                {% if i < promedio|int %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% elif i < promedio|round %}
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div class="text-muted small">{{ total_resenas }} reseña{{ 's' if total_resenas != 1 else '' }}</div>
+                    </div>
+                    {% else %}
+                    <div class="text-muted">Aún no hay calificaciones</div>
+                    {% endif %}
+                </div>
+                <hr>
+                
+                <!-- FORMULARIO DE RESEÑA -->
+                <div class="mb-4 p-3" style="background-color: #f8f9fa; border-radius: 10px;">
+                    <h5 class="mb-3">Dejá tu reseña</h5>
+                    <form method="POST" action="/negocio/{{ n.id }}/resena">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Calificación (1-5 estrellas)</label>
+                            <div class="d-flex gap-2 mb-2" id="star-container">
+                                {% for i in range(1, 6) %}
+                                <label class="star-rating" style="cursor: pointer; font-size: 2rem; color: #ddd;">
+                                    <input type="radio" name="calificacion" value="{{ i }}" required style="display: none;">
+                                    <i class="far fa-star"></i>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted">Seleccioná la cantidad de estrellas</small>
+                        </div>
+                        
+                        {% if not session.get('user_id') %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tu nombre</label>
+                                <input type="text" name="nombre" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tu email</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tu comentario</label>
+                            <textarea name="comentario" class="form-control" rows="3" placeholder="Compartí tu experiencia..." required minlength="10"></textarea>
+                            <small class="text-muted">Mínimo 10 caracteres</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i> Publicar reseña
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- LISTA DE RESEÑAS -->
+                {% if resenas and resenas|length > 0 %}
+                <div class="mt-4">
+                    <h5 class="mb-3">Reseñas ({{ total_resenas }})</h5>
+                    {% for resena in resenas %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <strong>{{ resena.nombre_usuario or (resena.usuario.nombre if resena.usuario else 'Usuario') }}</strong>
+                                <span class="text-muted small ms-2">{{ resena.created_at.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                            <div>
+                                {% for i in range(5) %}
+                                    {% if i < resena.calificacion %}
+                                        <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-warning"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="mb-0">{{ resena.comentario }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="far fa-comments fa-3x mb-3"></i>
+                    <p>No hay reseñas aún. ¡Sé el primero en dejar una!</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
 
         <div class="col-lg-4">
@@ -175,6 +276,61 @@
             });
     }
     {% endif %}
+    
+    // Sistema de estrellas para reseñas
+    let selectedRating = 0;
+    const starContainer = document.getElementById('star-container');
+    if (starContainer) {
+        const starInputs = document.querySelectorAll('input[name="calificacion"]');
+        const starLabels = document.querySelectorAll('.star-rating');
+        
+        starInputs.forEach((input, index) => {
+            input.addEventListener('change', function() {
+                selectedRating = parseInt(this.value);
+                updateStars(selectedRating);
+            });
+            
+            const label = input.parentElement;
+            label.addEventListener('mouseenter', function() {
+                const rating = parseInt(input.value);
+                highlightStars(rating);
+            });
+        });
+        
+        starContainer.addEventListener('mouseleave', function() {
+            updateStars(selectedRating);
+        });
+        
+        function highlightStars(rating) {
+            starLabels.forEach((label, index) => {
+                const icon = label.querySelector('i');
+                if (index < rating) {
+                    icon.classList.add('fas');
+                    icon.classList.remove('far');
+                    icon.style.color = '#ffc107';
+                } else {
+                    icon.classList.add('far');
+                    icon.classList.remove('fas');
+                    icon.style.color = '#ddd';
+                }
+            });
+        }
+        
+        function updateStars(rating) {
+            starLabels.forEach((label, index) => {
+                const icon = label.querySelector('i');
+                if (index < rating) {
+                    icon.classList.add('fas');
+                    icon.classList.remove('far');
+                    icon.style.color = '#ffc107';
+                } else {
+                    icon.classList.add('far');
+                    icon.classList.remove('fas');
+                    icon.style.color = '#ddd';
+                }
+            });
+        }
+    }
 </script>
 
 </body>
