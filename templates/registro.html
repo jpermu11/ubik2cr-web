@@ -248,18 +248,47 @@
             <input type="text" name="whatsapp" class="form-control form-control-lg" placeholder="Ej: +506 8888-8888">
           </div>
 
-          <div class="col-md-4">
-            <label class="form-label fw-bold">Horario (opcional)</label>
-            <input type="text" id="horario" name="horario" class="form-control form-control-lg"
-                   placeholder="Ej: Lun-Vie 8:00-18:00, Sáb 9:00-14:00">
-            <div class="hint mt-1">Si marcás 24 horas, el horario se ignora.</div>
-          </div>
-
-          <div class="col-md-4 d-flex align-items-end">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="abierto_24h" name="abierto_24h" value="1">
+          <div class="col-12">
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="abierto_24h" name="abierto_24h" value="1" onchange="toggleHorarios()">
               <label class="form-check-label fw-bold" for="abierto_24h">Abierto 24 horas</label>
             </div>
+          </div>
+
+          <div class="col-12" id="horarios-container">
+            <label class="form-label fw-bold mb-3">Horario por día (opcional)</label>
+            <div class="row g-2">
+              {% set dias = [
+                ('lunes', 'Lunes'),
+                ('martes', 'Martes'),
+                ('miercoles', 'Miércoles'),
+                ('jueves', 'Jueves'),
+                ('viernes', 'Viernes'),
+                ('sabado', 'Sábado'),
+                ('domingo', 'Domingo')
+              ] %}
+              {% for dia_key, dia_nombre in dias %}
+              <div class="col-md-6 col-lg-4">
+                <div class="card p-2" style="border: 1px solid #ddd; border-radius: 8px;">
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="horario_{{ dia_key }}_abierto" name="horario_{{ dia_key }}_abierto" value="1" onchange="toggleDia('{{ dia_key }}')">
+                    <label class="form-check-label fw-bold" for="horario_{{ dia_key }}_abierto">{{ dia_nombre }}</label>
+                  </div>
+                  <div id="horario_{{ dia_key }}_times" style="display:none;">
+                    <div class="row g-1">
+                      <div class="col-6">
+                        <input type="time" class="form-control form-control-sm" name="horario_{{ dia_key }}_apertura" placeholder="Apertura">
+                      </div>
+                      <div class="col-6">
+                        <input type="time" class="form-control form-control-sm" name="horario_{{ dia_key }}_cierre" placeholder="Cierre">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="hint mt-2">Marcá los días que está abierto y especificá las horas de apertura y cierre.</div>
           </div>
 
           <div class="col-md-4">
@@ -343,14 +372,49 @@
   // Horario vs 24h
   const chk24 = document.getElementById("abierto_24h");
   const horarioInput = document.getElementById("horario");
-  if (chk24 && horarioInput) {
-    function syncHorario() {
-      const is24 = chk24.checked;
-      horarioInput.disabled = is24;
-      if (is24) horarioInput.value = "";
+  function toggleHorarios() {
+    const abierto24h = document.getElementById('abierto_24h');
+    const container = document.getElementById('horarios-container');
+    if (!abierto24h || !container) return;
+    
+    if (abierto24h.checked) {
+      container.style.display = 'none';
+      // Desmarcar todos los días
+      document.querySelectorAll('[id^="horario_"][id$="_abierto"]').forEach(cb => {
+        cb.checked = false;
+        const diaKey = cb.id.replace('horario_', '').replace('_abierto', '');
+        const timesDiv = document.getElementById(`horario_${diaKey}_times`);
+        if (timesDiv) {
+          timesDiv.style.display = 'none';
+        }
+      });
+    } else {
+      container.style.display = 'block';
     }
-    chk24.addEventListener("change", syncHorario);
-    syncHorario();
+  }
+
+  function toggleDia(diaKey) {
+    const checkbox = document.getElementById(`horario_${diaKey}_abierto`);
+    const timesDiv = document.getElementById(`horario_${diaKey}_times`);
+    if (checkbox && timesDiv) {
+      if (checkbox.checked) {
+        timesDiv.style.display = 'block';
+      } else {
+        timesDiv.style.display = 'none';
+        // Limpiar los campos de hora
+        const apertura = timesDiv.querySelector(`input[name="horario_${diaKey}_apertura"]`);
+        const cierre = timesDiv.querySelector(`input[name="horario_${diaKey}_cierre"]`);
+        if (apertura) apertura.value = '';
+        if (cierre) cierre.value = '';
+      }
+    }
+  }
+
+  // Inicializar
+  const chk24 = document.getElementById('abierto_24h');
+  if (chk24) {
+    chk24.addEventListener('change', toggleHorarios);
+    toggleHorarios(); // Ejecutar al cargar
   }
 </script>
 

@@ -1,6 +1,7 @@
 import os
 import smtplib
 import threading
+import json
 from email.message import EmailMessage
 from datetime import datetime
 
@@ -180,6 +181,80 @@ def get_safe_image_url(imagen_url: str) -> str:
     
     # Fallback
     return "https://via.placeholder.com/600x400?text=Ubik2CR"
+
+def parse_horario_from_form(request_form) -> str:
+    """
+    Parsea el formulario de horarios por día y devuelve JSON string.
+    """
+    dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+    horario_dict = {}
+    
+    for dia in dias:
+        abierto = bool(request_form.get(f"horario_{dia}_abierto"))
+        if abierto:
+            apertura = (request_form.get(f"horario_{dia}_apertura") or "").strip()
+            cierre = (request_form.get(f"horario_{dia}_cierre") or "").strip()
+            horario_dict[dia] = {
+                "abierto": True,
+                "apertura": apertura if apertura else None,
+                "cierre": cierre if cierre else None
+            }
+        else:
+            horario_dict[dia] = {"abierto": False}
+    
+    return json.dumps(horario_dict, ensure_ascii=False)
+
+def format_horario_display(horario_json: str, abierto_24h: bool = False) -> str:
+    """
+    Formatea el horario JSON para mostrar en la vista.
+    """
+    if abierto_24h:
+        return "Abierto 24 horas"
+    
+    if not horario_json:
+        return "Horario no especificado"
+    
+    try:
+        horario_dict = json.loads(horario_json)
+    except:
+        # Si no es JSON válido, devolver el texto original (compatibilidad)
+        return horario_json or "Horario no especificado"
+    
+    dias_nombres = {
+        'lunes': 'Lunes',
+        'martes': 'Martes',
+        'miercoles': 'Miércoles',
+        'jueves': 'Jueves',
+        'viernes': 'Viernes',
+        'sabado': 'Sábado',
+        'domingo': 'Domingo'
+    }
+    
+    partes = []
+    for dia, datos in horario_dict.items():
+        if datos.get("abierto"):
+            apertura = datos.get("apertura", "")
+            cierre = datos.get("cierre", "")
+            if apertura and cierre:
+                partes.append(f"{dias_nombres.get(dia, dia)}: {apertura} - {cierre}")
+            elif apertura:
+                partes.append(f"{dias_nombres.get(dia, dia)}: {apertura}")
+    
+    if not partes:
+        return "Cerrado"
+    
+    return "<br>".join(partes)
+
+def get_horario_dict(horario_json: str):
+    """
+    Obtiene el diccionario de horarios desde JSON.
+    """
+    if not horario_json:
+        return {}
+    try:
+        return json.loads(horario_json)
+    except:
+        return {}
 
 
 # =====================================================
@@ -448,7 +523,9 @@ def detalle_negocio(id):
         resenas=resenas,
         total_resenas=total_resenas,
         promedio=promedio,
-        get_safe_image_url=get_safe_image_url
+        get_safe_image_url=get_safe_image_url,
+        format_horario_display=format_horario_display,
+        get_horario_dict=get_horario_dict
     )
 
 @app.route("/negocio/<int:negocio_id>/resena", methods=["POST"])
@@ -650,7 +727,10 @@ def editar_negocio_owner(id):
         negocio.whatsapp = request.form.get("whatsapp", negocio.whatsapp)
         # Horario
         negocio.abierto_24h = bool(request.form.get("abierto_24h"))
-        negocio.horario = (request.form.get("horario") or "").strip() or None
+        if negocio.abierto_24h:
+            negocio.horario = None  # Si está 24h, no guardar horario específico
+        else:
+            negocio.horario = parse_horario_from_form(request.form)
         negocio.maps_url = request.form.get("maps_url", negocio.maps_url)
 
         negocio.latitud = safe_float(request.form.get("latitud"))
@@ -796,7 +876,10 @@ def publicar():
         whatsapp = request.form.get("whatsapp")
         # Horario
         abierto_24h = bool(request.form.get("abierto_24h"))
-        horario = (request.form.get("horario") or "").strip() or None
+        if abierto_24h:
+            horario = None  # Si está 24h, no guardar horario específico
+        else:
+            horario = parse_horario_from_form(request.form)
         maps_url = request.form.get("maps_url")
 
         latitud = safe_float(request.form.get("latitud"))
@@ -1146,7 +1229,10 @@ def editar_negocio_admin(id):
         n.whatsapp = request.form.get("whatsapp", n.whatsapp)
         # Horario
         n.abierto_24h = bool(request.form.get("abierto_24h"))
-        n.horario = (request.form.get("horario") or "").strip() or None
+        if n.abierto_24h:
+            n.horario = None  # Si está 24h, no guardar horario específico
+        else:
+            n.horario = parse_horario_from_form(request.form)
         n.maps_url = request.form.get("maps_url", n.maps_url)
 
         n.latitud = safe_float(request.form.get("latitud"))
