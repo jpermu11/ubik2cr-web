@@ -102,3 +102,28 @@ class Resena(db.Model):
     __table_args__ = (
         db.Index("ix_resenas_negocio_estado", "negocio_id", "estado"),
     )
+
+# --- MODELO OFERTA ---
+class Oferta(db.Model):
+    __tablename__ = "ofertas"
+
+    id = db.Column(db.Integer, primary_key=True)
+    negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=False, index=True)
+    
+    titulo = db.Column(db.String(200), nullable=False)
+    descripcion = db.Column(db.Text, nullable=True)
+    imagen_url = db.Column(db.String(500), nullable=False)
+    
+    fecha_inicio = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    fecha_caducidad = db.Column(db.DateTime, nullable=False, index=True)
+    
+    estado = db.Column(db.String(20), default="activa", index=True)  # activa, expirada
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Relación
+    negocio = db.relationship("Negocio", backref="ofertas")
+    
+    __table_args__ = (
+        db.Index("ix_ofertas_negocio_fecha", "negocio_id", "fecha_caducidad"),
+        db.Index("ix_ofertas_estado_fecha", "estado", "fecha_caducidad"),
+    )

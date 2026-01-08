@@ -25,7 +25,7 @@ try:
 except ImportError:
     CLOUDINARY_AVAILABLE = False
 
-from models import db, Negocio, Usuario, Noticia, Resena, favoritos
+from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos
 
 
 # =====================================================
@@ -262,6 +262,14 @@ def health_db():
 # =====================================================
 @app.route("/")
 def inicio():
+    # Obtener ofertas activas (no expiradas y de negocios aprobados)
+    ahora = datetime.utcnow()
+    ofertas_activas = Oferta.query.join(Negocio).filter(
+        Negocio.estado == "aprobado",
+        Oferta.fecha_caducidad >= ahora,
+        Oferta.estado == "activa"
+    ).order_by(Oferta.fecha_inicio.desc()).limit(10).all()
+    
     q = (request.args.get("q") or "").strip()
     cat = (request.args.get("cat") or "Todas").strip()
 
@@ -302,6 +310,7 @@ def inicio():
         next_page=page + 1,
         q=q,
         cat=cat,
+        ofertas_activas=ofertas_activas,
         owner_logged_in=owner_logged_in(),
         admin_logged_in=admin_logged_in(),
         get_safe_image_url=get_safe_image_url,
@@ -599,6 +608,14 @@ def panel_owner():
     pendientes = len([n for n in negocios if n.estado == "pendiente"])
     vip = len([n for n in negocios if n.es_vip and n.estado == "aprobado"])
 
+    # Obtener ofertas de los negocios del dueño
+    negocios_ids = [n.id for n in negocios]
+    ofertas = Oferta.query.filter(Oferta.negocio_id.in_(negocios_ids)).order_by(Oferta.created_at.desc()).all() if negocios_ids else []
+    
+    # Pasar datetime actual al template
+    from datetime import datetime as dt
+    ahora = dt.utcnow()
+    
     return render_template(
         "panel_owner.html",
         negocios=negocios,
@@ -606,7 +623,9 @@ def panel_owner():
         aprobados=aprobados,
         pendientes=pendientes,
         vip=vip,
+        ofertas=ofertas,
         user_email=session.get("user_email"),
+        ahora=ahora,
     )
 
 @app.route("/panel/negocio/<int:id>/editar", methods=["GET", "POST"])
@@ -694,6 +713,149 @@ def publicar():
         return render_template("exito.html")
 
     return render_template("registro.html")
+
+
+# =====================================================
+# GESTIONAR OFERTAS (DUEÑOS)
+# =====================================================
+@app.route("/panel/oferta/nueva", methods=["GET", "POST"])
+def crear_oferta():
+    """Crear una nueva oferta"""
+    if not owner_required():
+        return redirect("/cuenta")
+    
+    if request.method == "POST":
+        negocio_id = int(request.form.get("negocio_id", 0))
+        titulo = (request.form.get("titulo") or "").strip()
+        descripcion = (request.form.get("descripcion") or "").strip()
+        fecha_caducidad_str = (request.form.get("fecha_caducidad") or "").strip()
+        
+        # Validar que el negocio pertenece al dueño
+        negocio = db.session.get(Negocio, negocio_id)
+        if not negocio or negocio.owner_id != session["user_id"]:
+            flash("No tenés permiso para crear ofertas en ese negocio.")
+            return redirect("/panel")
+        
+        if not titulo or not fecha_caducidad_str:
+            flash("Título y fecha de caducidad son obligatorios.")
+            return redirect("/panel/oferta/nueva")
+        
+        try:
+            fecha_caducidad = datetime.strptime(fecha_caducidad_str, "%Y-%m-%d")
+        except ValueError:
+            flash("Fecha de caducidad inválida.")
+            return redirect("/panel/oferta/nueva")
+        
+        # Validar que no exceda 2 meses
+        from datetime import timedelta
+        ahora = datetime.utcnow()
+        dos_meses_despues = ahora + timedelta(days=60)  # Aproximadamente 2 meses
+        
+        if fecha_caducidad > dos_meses_despues:
+            flash("La fecha de caducidad no puede ser mayor a 2 meses desde hoy.")
+            return redirect("/panel/oferta/nueva")
+        
+        if fecha_caducidad <= ahora:
+            flash("La fecha de caducidad debe ser mayor a hoy.")
+            return redirect("/panel/oferta/nueva")
+        
+        # Guardar imagen
+        imagen_url = save_upload("imagen")
+        if not imagen_url or imagen_url == "/static/uploads/logo.png":
+            flash("Debés subir una imagen para la oferta.")
+            return redirect("/panel/oferta/nueva")
+        
+        nueva_oferta = Oferta(
+            negocio_id=negocio_id,
+            titulo=titulo,
+            descripcion=descripcion,
+            imagen_url=imagen_url,
+            fecha_caducidad=fecha_caducidad,
+            estado="activa"
+        )
+        
+        db.session.add(nueva_oferta)
+        db.session.commit()
+        
+        flash("¡Oferta creada exitosamente!")
+        return redirect("/panel")
+    
+    # GET: mostrar formulario
+    negocios = Negocio.query.filter_by(
+        owner_id=session["user_id"],
+        estado="aprobado"
+    ).all()
+    
+    return render_template("crear_oferta.html", negocios=negocios)
+
+@app.route("/panel/oferta/<int:id>/editar", methods=["GET", "POST"])
+def editar_oferta(id):
+    """Editar una oferta existente"""
+    if not owner_required():
+        return redirect("/cuenta")
+    
+    oferta = db.session.get(Oferta, id)
+    if not oferta:
+        return "Oferta no encontrada", 404
+    
+    # Validar que el negocio pertenece al dueño
+    negocio = db.session.get(Negocio, oferta.negocio_id)
+    if not negocio or negocio.owner_id != session["user_id"]:
+        return "No tenés permiso para editar esta oferta.", 403
+    
+    if request.method == "POST":
+        oferta.titulo = (request.form.get("titulo") or "").strip()
+        oferta.descripcion = (request.form.get("descripcion") or "").strip()
+        fecha_caducidad_str = (request.form.get("fecha_caducidad") or "").strip()
+        
+        if fecha_caducidad_str:
+            try:
+                fecha_caducidad = datetime.strptime(fecha_caducidad_str, "%Y-%m-%d")
+                
+                # Validar que no exceda 2 meses desde la fecha de inicio
+                from datetime import timedelta
+                dos_meses_despues = oferta.fecha_inicio + timedelta(days=60)  # Aproximadamente 2 meses
+                
+                if fecha_caducidad > dos_meses_despues:
+                    flash("La fecha de caducidad no puede ser mayor a 2 meses desde la fecha de inicio.")
+                    return redirect(f"/panel/oferta/{id}/editar")
+                
+                oferta.fecha_caducidad = fecha_caducidad
+            except ValueError:
+                flash("Fecha de caducidad inválida.")
+                return redirect(f"/panel/oferta/{id}/editar")
+        
+        # Actualizar imagen si se sube una nueva
+        img = request.files.get("imagen")
+        if img and img.filename:
+            oferta.imagen_url = save_upload("imagen")
+        
+        db.session.commit()
+        flash("Oferta actualizada.")
+        return redirect("/panel")
+    
+    return render_template("editar_oferta.html", oferta=oferta)
+
+@app.route("/panel/oferta/<int:id>/eliminar")
+def eliminar_oferta(id):
+    """Eliminar una oferta"""
+    if not owner_required():
+        return redirect("/cuenta")
+    
+    oferta = db.session.get(Oferta, id)
+    if not oferta:
+        return "Oferta no encontrada", 404
+    
+    # Validar que el negocio pertenece al dueño
+    negocio = db.session.get(Negocio, oferta.negocio_id)
+    if not negocio or negocio.owner_id != session["user_id"]:
+        return "No tenés permiso para eliminar esta oferta.", 403
+    
+    db.session.delete(oferta)
+    db.session.commit()
+    
+    flash("Oferta eliminada.")
+    return redirect("/panel")
 
 
 # =====================================================

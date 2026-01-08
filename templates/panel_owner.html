@@ -45,6 +45,7 @@
 
       <div class="actions">
         <a class="btn btn-primary" href="/publicar">+ Publicar negocio</a>
+        <a class="btn btn-primary" href="/panel/oferta/nueva" style="background:#ffc107; color:#000;">🎯 Nueva Oferta</a>
         <a class="btn btn-ghost" href="/">Ver Ubik2CR</a>
         <a class="btn btn-danger" href="/owner/logout">Cerrar sesión</a>
       </div>
@@ -124,6 +125,63 @@
         <div class="empty">
           Aún no tenés negocios publicados.
           <div class="hint">Empezá ahora: <a href="/publicar">Publicar negocio</a></div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- SECCIÓN DE OFERTAS -->
+    <div class="card" style="margin-top: 18px;">
+      <h2 style="margin:0 0 10px 0;">Mis Ofertas</h2>
+
+      {% if ofertas and ofertas|length > 0 %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Imagen</th>
+            <th>Título</th>
+            <th>Negocio</th>
+            <th>Fecha Caducidad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for oferta in ofertas %}
+          <tr>
+            <td>
+              <img src="{{ oferta.imagen_url }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" alt="{{ oferta.titulo }}">
+            </td>
+            <td>
+              <strong>{{ oferta.titulo }}</strong><br>
+              {% if oferta.descripcion %}
+              <span class="muted">{{ oferta.descripcion[:50] }}{% if oferta.descripcion|length > 50 %}...{% endif %}</span>
+              {% endif %}
+            </td>
+            <td>{{ oferta.negocio.nombre }}</td>
+            <td>
+              {{ oferta.fecha_caducidad.strftime('%d/%m/%Y') }}
+            </td>
+            <td>
+              {% if oferta.estado == "activa" and oferta.fecha_caducidad > ahora %}
+                <span class="badge b-ok">Activa</span>
+              {% else %}
+                <span class="badge" style="background:#dc3545; color:#fff;">Expirada</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="row-actions">
+                <a class="btn btn-primary" href="/panel/oferta/{{ oferta.id }}/editar">Editar</a>
+                <a class="btn btn-danger" href="/panel/oferta/{{ oferta.id }}/eliminar" onclick="return confirm('¿Eliminar esta oferta?');">Eliminar</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="empty">
+          Aún no tenés ofertas publicadas.
+          <div class="hint">Creá ofertas especiales para promocionar tus negocios: <a href="/panel/oferta/nueva">Nueva Oferta</a></div>
         </div>
       {% endif %}
     </div>
