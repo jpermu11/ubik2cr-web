@@ -1,5 +1,6 @@
 import os
 import smtplib
+import threading
 from email.message import EmailMessage
 from datetime import datetime
 
@@ -668,6 +669,114 @@ def editar_negocio_owner(id):
 
     return render_template("editar_negocio.html", n=negocio)
 
+@app.route("/panel/negocio/<int:id>/ceder", methods=["GET", "POST"])
+def ceder_negocio(id):
+    """Ceder un negocio a otro usuario por email"""
+    if not owner_required():
+        return redirect("/cuenta")
+
+    negocio = db.session.get(Negocio, id)
+    if not negocio:
+        return "Negocio no encontrado", 404
+
+    if hasattr(negocio, "owner_id") and negocio.owner_id != session["user_id"]:
+        return "No tenés permiso para ceder este negocio.", 403
+
+    if request.method == "POST":
+        nuevo_owner_email = (request.form.get("email") or "").strip().lower()
+        
+        if not nuevo_owner_email:
+            flash("Debés ingresar un correo electrónico.")
+            return redirect(f"/panel/negocio/{id}/ceder")
+        
+        # Buscar el usuario por email
+        nuevo_owner = Usuario.query.filter_by(email=nuevo_owner_email).first()
+        
+        if not nuevo_owner:
+            flash(f"No existe un usuario con el correo {nuevo_owner_email}. El usuario debe estar registrado en Ubik2CR.")
+            return redirect(f"/panel/negocio/{id}/ceder")
+        
+        if nuevo_owner.id == session["user_id"]:
+            flash("No podés ceder el negocio a vos mismo.")
+            return redirect(f"/panel/negocio/{id}/ceder")
+        
+        # Guardar datos para el email
+        antiguo_owner_email = session.get("user_email")
+        antiguo_owner_nombre = Usuario.query.get(session["user_id"]).nombre or "Dueño anterior"
+        negocio_nombre = negocio.nombre
+        nuevo_owner_nombre = nuevo_owner.nombre or nuevo_owner.email
+        
+        # Transferir el negocio
+        negocio.owner_id = nuevo_owner.id
+        db.session.commit()
+        
+        # Enviar email de notificación al nuevo dueño (en segundo plano)
+        base_url = get_base_url_from_request()
+        negocio_url = f"{base_url}/negocio/{negocio.id}"
+        
+        text_body = (
+            f"Hola {nuevo_owner_nombre},\n\n"
+            f"¡Felicidades! El negocio '{negocio_nombre}' te ha sido cedido por {antiguo_owner_nombre}.\n\n"
+            f"Ahora sos el dueño de este negocio en Ubik2CR.\n\n"
+            f"Podés verlo y administrarlo aquí: {negocio_url}\n\n"
+            f"Accedé a tu panel para gestionarlo: {base_url}/panel\n\n"
+            f"Saludos,\n"
+            f"El equipo de Ubik2CR"
+        )
+        
+        html_body = f"""
+        <div style="font-family:Arial,sans-serif;background:#f5f7fa;padding:24px">
+            <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e6e8ee">
+                <div style="background:linear-gradient(90deg,#0b4fa3,#38b24d);color:#fff;padding:18px 20px">
+                    <div style="font-size:18px;font-weight:800">Ubik2CR</div>
+                    <div style="opacity:.9;font-size:13px;margin-top:4px">Negocio Cedido</div>
+                </div>
+                <div style="padding:18px 20px;color:#111827">
+                    <p style="margin:0 0 10px 0">Hola {nuevo_owner_nombre},</p>
+                    <p style="margin:0 0 14px 0;line-height:1.5">
+                        ¡Felicidades! El negocio <strong>"{negocio_nombre}"</strong> te ha sido cedido por <strong>{antiguo_owner_nombre}</strong>.
+                    </p>
+                    <p style="margin:0 0 14px 0;line-height:1.5">
+                        Ahora sos el dueño de este negocio en Ubik2CR y podés administrarlo desde tu panel.
+                    </p>
+                    <div style="text-align:center;margin:18px 0">
+                        <a href="{negocio_url}" style="display:inline-block;background:#0b4fa3;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700;margin-right:10px">
+                            Ver negocio
+                        </a>
+                        <a href="{base_url}/panel" style="display:inline-block;background:#38b24d;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700">
+                            Ir a mi panel
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div style="max-width:520px;margin:10px auto 0 auto;font-size:12px;color:#6b7280;text-align:center">
+                © {datetime.now().year} Ubik2CR
+            </div>
+        </div>
+        """
+        
+        def enviar_email_background():
+            try:
+                send_email(
+                    nuevo_owner_email,
+                    f"¡Te han cedido el negocio '{negocio_nombre}' en Ubik2CR!",
+                    text_body,
+                    html_body
+                )
+                print(f"[NOTIFICACION] Email enviado a {nuevo_owner_email} - Negocio cedido: {negocio_nombre}")
+            except Exception as e:
+                print(f"[NOTIFICACION][ERROR] No se pudo enviar email a {nuevo_owner_email}: {repr(e)}")
+        
+        # Enviar email en segundo plano
+        thread = threading.Thread(target=enviar_email_background)
+        thread.daemon = True
+        thread.start()
+        
+        flash(f"¡Negocio '{negocio_nombre}' cedido exitosamente a {nuevo_owner_nombre} ({nuevo_owner_email})!")
+        return redirect("/panel")
+    
+    return render_template("ceder_negocio.html", negocio=negocio)
+
 
 # =====================================================
 # PUBLICAR NEGOCIO (solo dueño logueado)
@@ -927,60 +1036,71 @@ def aprobar_negocio(id):
         negocio.estado = "aprobado"
         db.session.commit()
         
-        # Enviar email de notificación al dueño
+        # Enviar email de notificación al dueño EN SEGUNDO PLANO (no bloquea)
         if hasattr(negocio, "owner_id") and negocio.owner_id:
             owner = db.session.get(Usuario, negocio.owner_id)
             if owner and owner.email:
-                try:
-                    base_url = get_base_url_from_request()
-                    negocio_url = f"{base_url}/negocio/{negocio.id}"
-                    
-                    text_body = (
-                        f"Hola {owner.nombre or 'dueño del negocio'},\n\n"
-                        f"¡Excelentes noticias! Tu negocio '{negocio.nombre}' ha sido aprobado y ya está visible en Ubik2CR.\n\n"
-                        f"Puedes verlo aquí: {negocio_url}\n\n"
-                        f"Gracias por ser parte de Ubik2CR.\n\n"
-                        f"Saludos,\n"
-                        f"El equipo de Ubik2CR"
-                    )
-                    
-                    html_body = f"""
-                    <div style="font-family:Arial,sans-serif;background:#f5f7fa;padding:24px">
-                        <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e6e8ee">
-                            <div style="background:linear-gradient(90deg,#0b4fa3,#38b24d);color:#fff;padding:18px 20px">
-                                <div style="font-size:18px;font-weight:800">Ubik2CR</div>
-                                <div style="opacity:.9;font-size:13px;margin-top:4px">Tu negocio fue aprobado</div>
-                            </div>
-                            <div style="padding:18px 20px;color:#111827">
-                                <p style="margin:0 0 10px 0">Hola {owner.nombre or 'dueño del negocio'},</p>
-                                <p style="margin:0 0 14px 0;line-height:1.5">
-                                    ¡Excelentes noticias! Tu negocio <strong>"{negocio.nombre}"</strong> ha sido aprobado y ya está visible en Ubik2CR.
-                                </p>
-                                <div style="text-align:center;margin:18px 0">
-                                    <a href="{negocio_url}" style="display:inline-block;background:#0b4fa3;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700">
-                                        Ver mi negocio
-                                    </a>
-                                </div>
-                                <p style="margin:0 0 10px 0;font-size:13px;opacity:.85;line-height:1.5">
-                                    Gracias por ser parte de Ubik2CR.
-                                </p>
-                            </div>
+                # Preparar datos para el email (antes de crear el hilo)
+                base_url = get_base_url_from_request()
+                negocio_url = f"{base_url}/negocio/{negocio.id}"
+                negocio_nombre = negocio.nombre
+                owner_nombre = owner.nombre or 'dueño del negocio'
+                owner_email = owner.email
+                
+                text_body = (
+                    f"Hola {owner_nombre},\n\n"
+                    f"¡Excelentes noticias! Tu negocio '{negocio_nombre}' ha sido aprobado y ya está visible en Ubik2CR.\n\n"
+                    f"Puedes verlo aquí: {negocio_url}\n\n"
+                    f"Gracias por ser parte de Ubik2CR.\n\n"
+                    f"Saludos,\n"
+                    f"El equipo de Ubik2CR"
+                )
+                
+                html_body = f"""
+                <div style="font-family:Arial,sans-serif;background:#f5f7fa;padding:24px">
+                    <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e6e8ee">
+                        <div style="background:linear-gradient(90deg,#0b4fa3,#38b24d);color:#fff;padding:18px 20px">
+                            <div style="font-size:18px;font-weight:800">Ubik2CR</div>
+                            <div style="opacity:.9;font-size:13px;margin-top:4px">Tu negocio fue aprobado</div>
                         </div>
-                        <div style="max-width:520px;margin:10px auto 0 auto;font-size:12px;color:#6b7280;text-align:center">
-                            © {datetime.now().year} Ubik2CR
+                        <div style="padding:18px 20px;color:#111827">
+                            <p style="margin:0 0 10px 0">Hola {owner_nombre},</p>
+                            <p style="margin:0 0 14px 0;line-height:1.5">
+                                ¡Excelentes noticias! Tu negocio <strong>"{negocio_nombre}"</strong> ha sido aprobado y ya está visible en Ubik2CR.
+                            </p>
+                            <div style="text-align:center;margin:18px 0">
+                                <a href="{negocio_url}" style="display:inline-block;background:#0b4fa3;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700">
+                                    Ver mi negocio
+                                </a>
+                            </div>
+                            <p style="margin:0 0 10px 0;font-size:13px;opacity:.85;line-height:1.5">
+                                Gracias por ser parte de Ubik2CR.
+                            </p>
                         </div>
                     </div>
-                    """
-                    
-                    send_email(
-                        owner.email,
-                        f"¡Tu negocio '{negocio.nombre}' fue aprobado! - Ubik2CR",
-                        text_body,
-                        html_body
-                    )
-                    print(f"[NOTIFICACION] Email enviado a {owner.email} - Negocio aprobado: {negocio.nombre}")
-                except Exception as e:
-                    print(f"[NOTIFICACION][ERROR] No se pudo enviar email: {repr(e)}")
+                    <div style="max-width:520px;margin:10px auto 0 auto;font-size:12px;color:#6b7280;text-align:center">
+                        © {datetime.now().year} Ubik2CR
+                    </div>
+                </div>
+                """
+                
+                # Enviar email en un hilo separado (no bloquea la respuesta)
+                def enviar_email_background():
+                    try:
+                        send_email(
+                            owner_email,
+                            f"¡Tu negocio '{negocio_nombre}' fue aprobado! - Ubik2CR",
+                            text_body,
+                            html_body
+                        )
+                        print(f"[NOTIFICACION] Email enviado a {owner_email} - Negocio aprobado: {negocio_nombre}")
+                    except Exception as e:
+                        print(f"[NOTIFICACION][ERROR] No se pudo enviar email a {owner_email}: {repr(e)}")
+                
+                # Iniciar el hilo en segundo plano
+                thread = threading.Thread(target=enviar_email_background)
+                thread.daemon = True  # Se cierra cuando termina la app
+                thread.start()
 
     return redirect("/admin/comercios")
 
