@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Noticia | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background:#f5f7fa; }
+        .topbar {
+            background: linear-gradient(90deg,#0b4fa3,#38b24d);
+            color:#fff;
+            padding: 15px 0;
+        }
+        .cardx {
+            border:none;
+            border-radius:18px;
+            box-shadow:0 10px 25px rgba(0,0,0,.08);
+            overflow:hidden;
+        }
+        .btn-primary { background:#0b4fa3; border:none; font-weight:800; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar topbar">
+    <div class="container d-flex align-items-center justify-content-between">
+        <a class="navbar-brand text-white fw-bold" href="/admin/noticias">← Volver a Noticias</a>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <div class="cardx">
+        <div class="card-header bg-primary text-white p-3">
+            <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Noticia</h4>
+        </div>
+        <div class="card-body p-4">
+            {% if noticia.imagen_url %}
+            <div class="mb-3">
+                <img src="{{ noticia.imagen_url }}" class="img-fluid" style="max-height: 200px; border-radius: 10px;" alt="{{ noticia.titulo }}">
+            </div>
+            {% endif %}
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-warning">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Título</label>
+                        <input type="text" name="titulo" class="form-control form-control-lg" 
+                               value="{{ noticia.titulo }}" required maxlength="200">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Contenido</label>
+                        <textarea name="contenido" class="form-control" rows="8" required>{{ noticia.contenido }}</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Nueva Imagen (opcional)</label>
+                        <input type="file" name="imagen" class="form-control" accept="image/*">
+                        <small class="text-muted">Si no subís una nueva imagen, se mantiene la actual.</small>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                    <a href="/admin/noticias" class="btn btn-outline-secondary px-4">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

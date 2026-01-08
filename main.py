@@ -1255,6 +1255,85 @@ def editar_negocio_admin(id):
         get_horario_dict=get_horario_dict
     )
 
+@app.route("/admin/noticias")
+def gestionar_noticias():
+    """Gestionar noticias (listar, crear, editar, eliminar)"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    noticias_list = Noticia.query.order_by(Noticia.fecha.desc()).all()
+    return render_template("admin_noticias.html", noticias=noticias_list)
+
+@app.route("/admin/noticias/nueva", methods=["GET", "POST"])
+def crear_noticia():
+    """Crear una nueva noticia"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    if request.method == "POST":
+        titulo = (request.form.get("titulo") or "").strip()
+        contenido = (request.form.get("contenido") or "").strip()
+        
+        if not titulo or not contenido:
+            flash("Título y contenido son obligatorios.")
+            return redirect("/admin/noticias/nueva")
+        
+        imagen_url = save_upload("imagen")
+        
+        nueva_noticia = Noticia(
+            titulo=titulo,
+            contenido=contenido,
+            imagen_url=imagen_url if imagen_url != "/static/uploads/logo.png" else None
+        )
+        
+        db.session.add(nueva_noticia)
+        db.session.commit()
+        
+        flash("¡Noticia publicada exitosamente!")
+        return redirect("/admin/noticias")
+    
+    return render_template("crear_noticia.html")
+
+@app.route("/admin/noticias/<int:id>/editar", methods=["GET", "POST"])
+def editar_noticia(id):
+    """Editar una noticia existente"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    noticia = db.session.get(Noticia, id)
+    if not noticia:
+        return "Noticia no encontrada", 404
+    
+    if request.method == "POST":
+        noticia.titulo = (request.form.get("titulo") or "").strip()
+        noticia.contenido = (request.form.get("contenido") or "").strip()
+        
+        img = request.files.get("imagen")
+        if img and img.filename:
+            noticia.imagen_url = save_upload("imagen")
+        
+        db.session.commit()
+        flash("Noticia actualizada.")
+        return redirect("/admin/noticias")
+    
+    return render_template("editar_noticia.html", noticia=noticia)
+
+@app.route("/admin/noticias/<int:id>/eliminar")
+def eliminar_noticia(id):
+    """Eliminar una noticia"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    noticia = db.session.get(Noticia, id)
+    if not noticia:
+        return "Noticia no encontrada", 404
+    
+    db.session.delete(noticia)
+    db.session.commit()
+    
+    flash("Noticia eliminada.")
+    return redirect("/admin/noticias")
+
 
 # =====================================================
 # PASSWORD RESET ROUTES
