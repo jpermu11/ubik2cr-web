@@ -83,14 +83,17 @@
     <div id="ofertasCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000">
         <div class="carousel-inner rounded" style="border-radius: 15px !important; overflow: hidden;">
             {% for oferta in ofertas_activas %}
-            <div class="carousel-item {% if loop.first %}active{% endif %}" style="height: 400px; cursor: pointer;" onclick="window.location.href='/negocio/{{ oferta.negocio_id }}'">
-                <img src="{{ get_safe_image_url(oferta.imagen_url) }}" class="d-block w-100" alt="{{ oferta.titulo }}" style="height: 400px; object-fit: cover;">
-                <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 10px;">
-                    <h4 class="fw-bold">{{ oferta.titulo }}</h4>
-                    {% if oferta.descripcion %}
-                    <p>{{ oferta.descripcion[:100] }}{% if oferta.descripcion|length > 100 %}...{% endif %}</p>
-                    {% endif %}
-                    <small>Válido hasta: {{ oferta.fecha_caducidad.strftime('%d/%m/%Y') }}</small>
+            <div class="carousel-item {% if loop.first %}active{% endif %}" style="cursor: pointer;" onclick="window.location.href='/negocio/{{ oferta.negocio_id }}'">
+                <div class="position-relative">
+                    <img src="{{ get_safe_image_url(oferta.imagen_url) }}" class="d-block w-100" alt="{{ oferta.titulo }}" style="height: 300px; object-fit: cover;">
+                    <!-- Overlay con información (visible en todos los tamaños) -->
+                    <div class="position-absolute bottom-0 start-0 end-0" style="background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.5), transparent); padding: 15px 20px;">
+                        <h5 class="fw-bold text-white mb-1">{{ oferta.titulo }}</h5>
+                        {% if oferta.descripcion %}
+                        <p class="text-white mb-1" style="font-size: 0.9rem; line-height: 1.3;">{{ oferta.descripcion[:80] }}{% if oferta.descripcion|length > 80 %}...{% endif %}</p>
+                        {% endif %}
+                        <small class="text-white-50">Válido hasta: {{ oferta.fecha_caducidad.strftime('%d/%m/%Y') }}</small>
+                    </div>
                 </div>
             </div>
             {% endfor %}
