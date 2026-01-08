@@ -747,7 +747,11 @@ def editar_negocio_owner(id):
         flash("Cambios guardados. Quedó pendiente de revisión.")
         return redirect("/panel")
 
-    return render_template("editar_negocio.html", n=negocio)
+    return render_template(
+        "editar_negocio.html", 
+        n=negocio,
+        get_horario_dict=get_horario_dict
+    )
 
 @app.route("/panel/negocio/<int:id>/ceder", methods=["GET", "POST"])
 def ceder_negocio(id):
@@ -1245,7 +1249,11 @@ def editar_negocio_admin(id):
         db.session.commit()
         return redirect("/admin/comercios")
 
-    return render_template("editar_negocio.html", n=n)
+    return render_template(
+        "editar_negocio.html", 
+        n=n,
+        get_horario_dict=get_horario_dict
+    )
 
 
 # =====================================================
