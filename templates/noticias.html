@@ -3,29 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noticias del Pueblo - Ubik2CR</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Noticias - Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .news-container { max-width: 800px; margin: 40px auto; }
-        .news-card { background: white; border-radius: 15px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        body { background-color: #f5f7fa; }
+        .news-container { max-width: 900px; margin: 40px auto; padding: 0 15px; }
+        .news-card { 
+            background: white; 
+            border-radius: 15px; 
+            overflow: hidden; 
+            margin-bottom: 30px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .news-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
         .news-img { width: 100%; height: 300px; object-fit: cover; }
         .news-body { padding: 30px; }
-        .news-date { color: #888; font-size: 0.9rem; margin-bottom: 10px; display: block; }
-        .news-title { font-size: 1.8rem; color: var(--azul); margin-bottom: 15px; }
-        .news-content { line-height: 1.6; color: #444; }
+        .news-date { color: #6b7280; font-size: 0.9rem; margin-bottom: 10px; display: block; }
+        .news-title { font-size: 1.8rem; color: #0b4fa3; margin-bottom: 15px; font-weight: 700; }
+        .news-content { line-height: 1.8; color: #374151; white-space: pre-line; }
+        .navbar {
+            background: linear-gradient(90deg, #0b4fa3, #38b24d);
+            padding: 15px 0;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container nav-container">
-            <a href="/" class="logo-link"><img src="{{ url_for('static', filename='uploads/logo.png') }}" class="nav-logo"></a>
-            <a href="/" class="nav-link" style="font-weight: bold;">&larr; Volver al Directorio</a>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 text-white" href="/">
+                <img src="{{ url_for('static', filename='uploads/logo.png') }}" height="55" alt="Ubik2CR">
+                <strong class="fs-4">Ubik2CR</strong>
+            </a>
+            <div class="ms-auto">
+                <a href="/" class="btn btn-outline-light fw-bold">
+                    <i class="fas fa-home me-1"></i> Inicio
+                </a>
+            </div>
         </div>
     </nav>
 
     <div class="container news-container">
-        <h1 style="text-align: center; margin-bottom: 40px; color: #e74c3c;">📢 Noticias de la Comunidad</h1>
+        <div class="text-center mb-5 mt-4">
+            <h1 class="display-5 fw-bold" style="color: #0b4fa3;">📢 Noticias de la Comunidad</h1>
+            <p class="text-muted">Mantente informado sobre novedades, eventos y avisos importantes</p>
+        </div>
 
         {% if noticias %}
             {% for noticia in noticias %}
@@ -41,12 +67,22 @@
             </div>
             {% endfor %}
         {% else %}
-            <div class="empty-state-box">
-                <h3>Sin noticias recientes</h3>
-                <p>No hay avisos publicados en este momento.</p>
+            <div class="text-center py-5">
+                <i class="far fa-newspaper fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">Sin noticias recientes</h3>
+                <p class="text-muted">No hay avisos publicados en este momento.</p>
+                <a href="/" class="btn btn-primary mt-3">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al inicio
+                </a>
             </div>
         {% endif %}
     </div>
+
+    <footer class="text-center py-4 bg-dark text-white mt-5">
+        © 2025 Ubik2CR — Todos los derechos reservados
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 
