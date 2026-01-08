@@ -647,6 +647,9 @@ def editar_negocio_owner(id):
         negocio.descripcion = request.form.get("descripcion", negocio.descripcion)
         negocio.telefono = request.form.get("telefono", negocio.telefono)
         negocio.whatsapp = request.form.get("whatsapp", negocio.whatsapp)
+        # Horario
+        negocio.abierto_24h = bool(request.form.get("abierto_24h"))
+        negocio.horario = (request.form.get("horario") or "").strip() or None
         negocio.maps_url = request.form.get("maps_url", negocio.maps_url)
 
         negocio.latitud = safe_float(request.form.get("latitud"))
@@ -682,6 +685,9 @@ def publicar():
         descripcion = request.form.get("descripcion", "").strip()
         telefono = request.form.get("telefono")
         whatsapp = request.form.get("whatsapp")
+        # Horario
+        abierto_24h = bool(request.form.get("abierto_24h"))
+        horario = (request.form.get("horario") or "").strip() or None
         maps_url = request.form.get("maps_url")
 
         latitud = safe_float(request.form.get("latitud"))
@@ -698,6 +704,8 @@ def publicar():
             maps_url=maps_url,
             telefono=telefono,
             whatsapp=whatsapp,
+            horario=horario,
+            abierto_24h=abierto_24h,
             descripcion=descripcion,
             imagen_url=imagen_url,
             estado="pendiente",
@@ -1016,6 +1024,9 @@ def editar_negocio_admin(id):
         n.descripcion = request.form.get("descripcion", n.descripcion)
         n.telefono = request.form.get("telefono", n.telefono)
         n.whatsapp = request.form.get("whatsapp", n.whatsapp)
+        # Horario
+        n.abierto_24h = bool(request.form.get("abierto_24h"))
+        n.horario = (request.form.get("horario") or "").strip() or None
         n.maps_url = request.form.get("maps_url", n.maps_url)
 
         n.latitud = safe_float(request.form.get("latitud"))

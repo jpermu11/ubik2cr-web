@@ -44,6 +44,9 @@ class Negocio(db.Model):
 
     telefono = db.Column(db.String(20), nullable=True)
     whatsapp = db.Column(db.String(20), nullable=True)
+    # Horario (simple): texto libre + flag 24h
+    horario = db.Column(db.String(300), nullable=True)
+    abierto_24h = db.Column(db.Boolean, default=False, index=True)
     descripcion = db.Column(db.Text, nullable=False)
     imagen_url = db.Column(db.String(500), nullable=True)
 

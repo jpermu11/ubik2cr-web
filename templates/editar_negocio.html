@@ -226,6 +226,22 @@
           </div>
 
           <div class="col-md-4">
+            <label class="form-label fw-bold">Horario (opcional)</label>
+            <input type="text" id="horario" name="horario" class="form-control"
+                   value="{{ n.horario or '' }}"
+                   placeholder="Ej: Lun-Vie 8:00-18:00, Sáb 9:00-14:00">
+            <div class="hint mt-1">Si marcás 24 horas, el horario se ignora.</div>
+          </div>
+
+          <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="abierto_24h" name="abierto_24h" value="1"
+                     {% if n.abierto_24h %}checked{% endif %}>
+              <label class="form-check-label fw-bold" for="abierto_24h">Abierto 24 horas</label>
+            </div>
+          </div>
+
+          <div class="col-md-4">
             <label class="form-label fw-bold">Foto / Logo (opcional)</label>
             <input type="file" name="foto" class="form-control">
           </div>
@@ -309,6 +325,19 @@
   map.on('click', function(e){
     setMarker(e.latlng.lat, e.latlng.lng);
   });
+
+  // Horario vs 24h
+  const chk24 = document.getElementById("abierto_24h");
+  const horarioInput = document.getElementById("horario");
+  if (chk24 && horarioInput) {
+    function syncHorario() {
+      const is24 = chk24.checked;
+      horarioInput.disabled = is24;
+      if (is24) horarioInput.value = "";
+    }
+    chk24.addEventListener("change", syncHorario);
+    syncHorario();
+  }
 </script>
 
 </body>
