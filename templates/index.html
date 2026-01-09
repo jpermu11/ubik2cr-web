@@ -94,9 +94,8 @@
                     <div class="position-absolute bottom-0 start-0 end-0" style="background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.5), transparent); padding: 15px 20px;">
                         <h5 class="fw-bold text-white mb-1">{{ oferta.titulo }}</h5>
                         {% if oferta.descripcion %}
-                        <p class="text-white mb-1" style="font-size: 0.9rem; line-height: 1.3;">{{ oferta.descripcion[:80] }}{% if oferta.descripcion|length > 80 %}...{% endif %}</p>
+                        <p class="text-white mb-0" style="font-size: 0.9rem; line-height: 1.3;">{{ oferta.descripcion[:80] }}{% if oferta.descripcion|length > 80 %}...{% endif %}</p>
                         {% endif %}
-                        <small class="text-white-50">Válido hasta: {{ oferta.fecha_caducidad.strftime('%d/%m/%Y') }}</small>
                     </div>
                 </div>
             </div>
