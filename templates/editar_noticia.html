@@ -68,6 +68,23 @@
                         <input type="file" name="imagen" class="form-control" accept="image/*">
                         <small class="text-muted">Si no subís una nueva imagen, se mantiene la actual.</small>
                     </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-bold">
+                            <i class="far fa-calendar-alt me-1"></i>Fecha de Desaparición (opcional)
+                        </label>
+                        <input type="datetime-local" name="fecha_caducidad" class="form-control" 
+                               value="{% if noticia.fecha_caducidad %}{{ noticia.fecha_caducidad.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                        <small class="text-muted">
+                            Si especificás una fecha, la noticia desaparecerá automáticamente después de esa fecha. 
+                            {% if noticia.fecha_caducidad %}
+                                <strong>Fecha actual: {{ noticia.fecha_caducidad.strftime('%d/%m/%Y %H:%M') }}</strong>
+                            {% else %}
+                                Actualmente no tiene fecha de caducidad (permanente).
+                            {% endif %}
+                            Dejá el campo vacío para que la noticia permanezca visible indefinidamente.
+                        </small>
+                    </div>
                 </div>
 
                 <div class="d-flex gap-2 mt-4">

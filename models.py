@@ -71,6 +71,7 @@ class Noticia(db.Model):
     contenido = db.Column(db.Text, nullable=False)
     imagen_url = db.Column(db.String(500))
     fecha = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    fecha_caducidad = db.Column(db.DateTime, nullable=True, index=True)  # Fecha de desaparición automática
 
 # --- MODELO FAVORITOS (relación muchos-a-muchos) ---
 favoritos = db.Table(

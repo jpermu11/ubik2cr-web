@@ -71,7 +71,7 @@
                 </thead>
                 <tbody>
                     {% for noticia in noticias %}
-                    <tr>
+                    <tr class="{% if noticia.es_caducada %}opacity-75{% endif %}">
                         <td>
                             {% if noticia.imagen_url %}
                             <img src="{{ noticia.imagen_url }}" class="img-noticia" alt="{{ noticia.titulo }}">
@@ -82,14 +82,36 @@
                             {% endif %}
                         </td>
                         <td>
-                            <div class="fw-bold">{{ noticia.titulo }}</div>
+                            <div class="fw-bold">
+                                {{ noticia.titulo }}
+                                {% if noticia.es_caducada %}
+                                    <span class="badge bg-danger ms-2">Caducada</span>
+                                {% endif %}
+                            </div>
                             <div class="text-muted small d-md-none">{{ noticia.fecha.strftime('%d/%m/%Y') }}</div>
                             <div class="text-muted small" style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 {{ noticia.contenido[:100] }}{% if noticia.contenido|length > 100 %}...{% endif %}
                             </div>
                         </td>
                         <td class="d-none d-md-table-cell">
-                            {{ noticia.fecha.strftime('%d/%m/%Y %H:%M') }}
+                            <div>{{ noticia.fecha.strftime('%d/%m/%Y %H:%M') }}</div>
+                            {% if noticia.fecha_caducidad %}
+                                {% if noticia.es_caducada %}
+                                    <small class="text-danger">
+                                        <i class="far fa-calendar-alt me-1"></i>
+                                        <span class="badge bg-danger">Caducada el {{ noticia.fecha_caducidad.strftime('%d/%m/%Y') }}</span>
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted">
+                                        <i class="far fa-calendar-alt me-1"></i>
+                                        Vence: {{ noticia.fecha_caducidad.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                {% endif %}
+                            {% else %}
+                                <small class="text-success">
+                                    <i class="fas fa-infinity me-1"></i>Permanente
+                                </small>
+                            {% endif %}
                         </td>
                         <td class="text-end">
                             <div class="d-flex gap-2 justify-content-end">

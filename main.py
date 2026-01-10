@@ -17,7 +17,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
-from sqlalchemy import text
+from sqlalchemy import text, or_
 from sqlalchemy.pool import QueuePool
 
 try:
@@ -498,7 +498,14 @@ def ver_mapa():
 
 @app.route("/noticias")
 def noticias():
-    noticias_list = Noticia.query.order_by(Noticia.fecha.desc()).all()
+    # Filtrar noticias que no han caducado (fecha_caducidad es None o es futura)
+    ahora = datetime.utcnow()
+    noticias_list = Noticia.query.filter(
+        or_(
+            Noticia.fecha_caducidad.is_(None),
+            Noticia.fecha_caducidad >= ahora
+        )
+    ).order_by(Noticia.fecha.desc()).all()
     return render_template("noticias.html", noticias=noticias_list)
 
 @app.route("/negocio/<int:id>")
@@ -1261,8 +1268,15 @@ def gestionar_noticias():
     if not admin_logged_in():
         return redirect("/login")
     
+    ahora = datetime.utcnow()
     noticias_list = Noticia.query.order_by(Noticia.fecha.desc()).all()
-    return render_template("admin_noticias.html", noticias=noticias_list)
+    # Agregar información sobre si están caducadas
+    for noticia in noticias_list:
+        noticia.es_caducada = False
+        if noticia.fecha_caducidad and noticia.fecha_caducidad <= ahora:
+            noticia.es_caducada = True
+    
+    return render_template("admin_noticias.html", noticias=noticias_list, ahora=ahora)
 
 @app.route("/admin/noticias/nueva", methods=["GET", "POST"])
 def crear_noticia():
@@ -1273,6 +1287,7 @@ def crear_noticia():
     if request.method == "POST":
         titulo = (request.form.get("titulo") or "").strip()
         contenido = (request.form.get("contenido") or "").strip()
+        fecha_caducidad_str = request.form.get("fecha_caducidad", "").strip()
         
         if not titulo or not contenido:
             flash("Título y contenido son obligatorios.")
@@ -1280,10 +1295,21 @@ def crear_noticia():
         
         imagen_url = save_upload("imagen")
         
+        # Procesar fecha de caducidad (opcional)
+        fecha_caducidad = None
+        if fecha_caducidad_str:
+            try:
+                # Convertir de formato HTML datetime-local a datetime
+                fecha_caducidad = datetime.strptime(fecha_caducidad_str, "%Y-%m-%dT%H:%M")
+                # Convertir a UTC si es necesario
+            except ValueError:
+                flash("Fecha de caducidad inválida. La noticia se creará sin fecha de desaparición.")
+        
         nueva_noticia = Noticia(
             titulo=titulo,
             contenido=contenido,
-            imagen_url=imagen_url if imagen_url != "/static/uploads/logo.png" else None
+            imagen_url=imagen_url if imagen_url != "/static/uploads/logo.png" else None,
+            fecha_caducidad=fecha_caducidad
         )
         
         db.session.add(nueva_noticia)
@@ -1307,10 +1333,22 @@ def editar_noticia(id):
     if request.method == "POST":
         noticia.titulo = (request.form.get("titulo") or "").strip()
         noticia.contenido = (request.form.get("contenido") or "").strip()
+        fecha_caducidad_str = request.form.get("fecha_caducidad", "").strip()
         
         img = request.files.get("imagen")
         if img and img.filename:
             noticia.imagen_url = save_upload("imagen")
+        
+        # Procesar fecha de caducidad (opcional)
+        if fecha_caducidad_str:
+            try:
+                # Convertir de formato HTML datetime-local a datetime
+                noticia.fecha_caducidad = datetime.strptime(fecha_caducidad_str, "%Y-%m-%dT%H:%M")
+            except ValueError:
+                flash("Fecha de caducidad inválida. Se mantendrá la fecha anterior.")
+        else:
+            # Si no se proporciona fecha, eliminar la fecha de caducidad (None = permanente)
+            noticia.fecha_caducidad = None
         
         db.session.commit()
         flash("Noticia actualizada.")
