@@ -74,21 +74,25 @@
 
                 <div class="d-flex gap-2 mt-4 align-items-center flex-wrap">
                     {% if n.whatsapp %}
-                    <a href="https://wa.me/{{ n.whatsapp }}" target="_blank" class="btn-whatsapp">
-                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    <a href="https://wa.me/{{ n.whatsapp }}" target="_blank" class="btn-whatsapp" style="min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;">
+                        <i class="fab fa-whatsapp me-1"></i> <span>WhatsApp</span>
                     </a>
                     {% endif %}
                     {% if n.telefono %}
-                    <a href="tel:{{ n.telefono }}" class="btn btn-outline-dark rounded-pill px-4 py-2" style="font-weight: bold;">
-                        <i class="fas fa-phone"></i> Llamar
+                    <a href="tel:{{ n.telefono }}" class="btn btn-outline-dark rounded-pill px-4 py-2" style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;">
+                        <i class="fas fa-phone me-1"></i> <span>Llamar</span>
                     </a>
                     {% endif %}
-                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2" style="font-weight: bold;" data-bs-toggle="modal" data-bs-target="#mensajeModal">
-                        <i class="fas fa-envelope"></i> Enviar Mensaje
+                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2" 
+                            style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;" 
+                            data-bs-toggle="modal" data-bs-target="#mensajeModal">
+                        <i class="fas fa-envelope me-1"></i> <span>Enviar Mensaje</span>
                     </button>
                     {% if session.get('user_id') %}
-                    <button id="btn-favorito" class="btn btn-outline-danger rounded-pill px-4 py-2" style="font-weight: bold;" onclick="toggleFavorito({{ n.id }})">
-                        <i class="far fa-heart" id="icon-favorito"></i> <span id="text-favorito">Agregar a favoritos</span>
+                    <button type="button" id="btn-favorito" class="btn btn-outline-danger rounded-pill px-4 py-2" 
+                            style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;" 
+                            onclick="toggleFavorito({{ n.id }})">
+                        <i class="far fa-heart me-1" id="icon-favorito"></i> <span id="text-favorito">Agregar a favoritos</span>
                     </button>
                     {% endif %}
                 </div>
@@ -265,33 +269,59 @@
         });
     
     function toggleFavorito(negocioId) {
+        const btn = document.getElementById('btn-favorito');
+        const icon = document.getElementById('icon-favorito');
+        const text = document.getElementById('text-favorito');
+        
+        // Prevenir múltiples clicks
+        if (btn.disabled) return;
+        btn.disabled = true;
+        
+        // Feedback visual inmediato
+        btn.style.opacity = '0.6';
+        
         fetch('/api/favoritos/' + negocioId)
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error('Error en la respuesta');
+                return r.json();
+            })
             .then(data => {
                 const esFavorito = data.es_favorito;
                 const url = esFavorito ? '/favoritos/quitar/' : '/favoritos/agregar/';
                 
-                fetch(url + negocioId)
-                    .then(r => r.json())
-                    .then(result => {
-                        const icon = document.getElementById('icon-favorito');
-                        const text = document.getElementById('text-favorito');
-                        const btn = document.getElementById('btn-favorito');
-                        
-                        if (result.es_favorito) {
-                            icon.classList.remove('far');
-                            icon.classList.add('fas');
-                            text.textContent = 'En favoritos';
-                            btn.classList.remove('btn-outline-danger');
-                            btn.classList.add('btn-danger');
-                        } else {
-                            icon.classList.remove('fas');
-                            icon.classList.add('far');
-                            text.textContent = 'Agregar a favoritos';
-                            btn.classList.remove('btn-danger');
-                            btn.classList.add('btn-outline-danger');
-                        }
-                    });
+                return fetch(url + negocioId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Error al actualizar favorito');
+                return r.json();
+            })
+            .then(result => {
+                if (result.es_favorito) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    text.textContent = 'En favoritos';
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    text.textContent = 'Agregar a favoritos';
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-outline-danger');
+                }
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al actualizar favoritos. Por favor, intentá nuevamente.');
+                btn.style.opacity = '1';
+                btn.disabled = false;
             });
     }
     {% endif %}
@@ -354,15 +384,15 @@
 
 <!-- Modal de Mensaje -->
 <div class="modal fade" id="mensajeModal" tabindex="-1" aria-labelledby="mensajeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(90deg, var(--brand-blue), var(--brand-green)); color: white;">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; box-shadow: var(--shadow-xl);">
+            <div class="modal-header" style="background: linear-gradient(90deg, var(--brand-blue), var(--brand-green)); color: white; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
                 <h5 class="modal-title fw-bold" id="mensajeModalLabel">
                     <i class="fas fa-envelope me-2"></i>Enviar Mensaje a {{ n.nombre }}
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="min-height: 44px; min-width: 44px;"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding: 24px;">
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}
                         {% for message in messages %}
@@ -398,10 +428,10 @@
                         <small class="text-muted">Mínimo 10 caracteres.</small>
                     </div>
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary fw-bold">
+                        <button type="submit" class="btn btn-primary fw-bold" style="min-height: 48px; touch-action: manipulation;">
                             <i class="fas fa-paper-plane me-2"></i>Enviar Mensaje
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="min-height: 48px; touch-action: manipulation;">Cancelar</button>
                     </div>
                 </form>
             </div>

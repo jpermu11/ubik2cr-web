@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Ubik2CR - Tu cantón en tu mano</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,27 +21,43 @@
         <div class="d-flex align-items-center justify-content-between w-100">
             <a class="navbar-brand-premium" href="/">
                 <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
-                <span>Ubik2CR</span>
+                <span class="d-none d-sm-inline">Ubik2CR</span>
             </a>
 
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-                <a href="/noticias" class="nav-link-premium">
-                    <i class="fas fa-newspaper me-1"></i>Noticias
-                </a>
-                <a href="/cuenta" class="nav-link-premium">
-                    <i class="fas fa-user me-1"></i>Cuenta
-                </a>
-                {% if session.get('user_id') %}
-                <a href="/favoritos" class="nav-link-premium">
-                    <i class="fas fa-heart me-1"></i>Favoritos
-                </a>
-                {% endif %}
-                {% if session.get('admin_logged_in') %}
-                    <a href="/admin" class="btn-modern btn-modern-primary">Panel Admin</a>
-                    <a href="/logout" class="btn-modern btn-modern-ghost">Salir</a>
-                {% else %}
-                    <a href="/login" class="btn-modern btn-modern-primary">Administración</a>
-                {% endif %}
+            <!-- Botón hamburger para móvil -->
+            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
+                    style="border: 2px solid var(--gray-300); border-radius: var(--radius-md); padding: 8px 12px; background: transparent; color: var(--gray-700);">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Menú colapsable -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="d-flex align-items-center gap-3 flex-wrap justify-content-end w-100 mt-3 mt-lg-0">
+                    <a href="/noticias" class="nav-link-premium">
+                        <i class="fas fa-newspaper me-1"></i><span>Noticias</span>
+                    </a>
+                    <a href="/cuenta" class="nav-link-premium">
+                        <i class="fas fa-user me-1"></i><span>Cuenta</span>
+                    </a>
+                    {% if session.get('user_id') %}
+                    <a href="/favoritos" class="nav-link-premium">
+                        <i class="fas fa-heart me-1"></i><span>Favoritos</span>
+                    </a>
+                    {% endif %}
+                    {% if session.get('admin_logged_in') %}
+                        <a href="/admin" class="btn-modern btn-modern-primary">
+                            <i class="fas fa-cog me-1"></i><span>Panel Admin</span>
+                        </a>
+                        <a href="/logout" class="btn-modern btn-modern-ghost">
+                            <i class="fas fa-sign-out-alt me-1"></i><span>Salir</span>
+                        </a>
+                    {% else %}
+                        <a href="/login" class="btn-modern btn-modern-primary">
+                            <i class="fas fa-lock me-1"></i><span>Administración</span>
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -68,20 +87,33 @@
 {% if ofertas_activas and ofertas_activas|length > 0 %}
 <div class="section-modern" style="padding-top: 24px; padding-bottom: 24px;">
     <div class="container-modern">
-        <div id="ofertasCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000" style="border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-lg);">
+        <div id="ofertasCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000" 
+             style="border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-lg); touch-action: pan-y;">
             <div class="carousel-inner" style="border-radius: var(--radius-xl); overflow: hidden;">
             {% for oferta in ofertas_activas %}
-            <div class="carousel-item {% if loop.first %}active{% endif %}" style="cursor: pointer;" onclick="window.location.href='/negocio/{{ oferta.negocio_id }}'">
+            <div class="carousel-item {% if loop.first %}active{% endif %}" 
+                 style="cursor: pointer; touch-action: manipulation;" 
+                 onclick="window.location.href='/negocio/{{ oferta.negocio_id }}'"
+                 ontouchstart="this.style.opacity='0.9'" 
+                 ontouchend="this.style.opacity='1'">
                 <div class="position-relative">
-                    <img src="{{ get_safe_image_url(oferta.imagen_url) }}" class="d-block w-100" alt="{{ oferta.titulo }}" style="height: 300px; object-fit: cover;">
+                    <img src="{{ get_safe_image_url(oferta.imagen_url) }}" 
+                         class="d-block w-100" 
+                         alt="{{ oferta.titulo }}" 
+                         style="height: 300px; object-fit: cover; width: 100%;"
+                         loading="lazy">
                     <!-- Overlay con información (visible en todos los tamaños) -->
-                    <div class="position-absolute bottom-0 start-0 end-0" style="background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.5), transparent); padding: 15px 20px;">
-                        <h5 class="fw-bold text-white mb-1">{{ oferta.titulo }}</h5>
+                    <div class="position-absolute bottom-0 start-0 end-0" 
+                         style="background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.6), transparent); padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end;">
+                        <h5 class="fw-bold text-white mb-2" style="font-size: 1.25rem; line-height: 1.3;">{{ oferta.titulo }}</h5>
                         {% if oferta.descripcion %}
-                        <p class="text-white mb-1" style="font-size: 0.9rem; line-height: 1.3;">{{ oferta.descripcion[:80] }}{% if oferta.descripcion|length > 80 %}...{% endif %}</p>
+                        <p class="text-white mb-2" style="font-size: 0.9375rem; line-height: 1.4; opacity: 0.95;">
+                            {{ oferta.descripcion[:100] }}{% if oferta.descripcion|length > 100 %}...{% endif %}
+                        </p>
                         {% endif %}
-                        <small class="text-white-50 d-block mt-1">
-                            <i class="far fa-calendar-alt me-1"></i>Válido hasta: {{ oferta.fecha_caducidad.strftime('%d/%m/%Y') }}
+                        <small class="text-white-50 d-flex align-items-center" style="font-size: 0.8125rem;">
+                            <i class="far fa-calendar-alt me-1"></i>
+                            <span>Válido hasta: {{ oferta.fecha_caducidad.strftime('%d/%m/%Y') }}</span>
                         </small>
                     </div>
                 </div>
@@ -89,11 +121,13 @@
             {% endfor %}
         </div>
         {% if ofertas_activas|length > 1 %}
-        <button class="carousel-control-prev" type="button" data-bs-target="#ofertasCarousel" data-bs-slide="prev">
+        <button class="carousel-control-prev" type="button" data-bs-target="#ofertasCarousel" data-bs-slide="prev"
+                style="min-width: 50px; min-height: 50px; width: 50px; height: 50px; background: rgba(0,0,0,0.3); border-radius: 50%; top: 50%; transform: translateY(-50%); left: 15px; opacity: 0.8; touch-action: manipulation;">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Anterior</span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#ofertasCarousel" data-bs-slide="next">
+        <button class="carousel-control-next" type="button" data-bs-target="#ofertasCarousel" data-bs-slide="next"
+                style="min-width: 50px; min-height: 50px; width: 50px; height: 50px; background: rgba(0,0,0,0.3); border-radius: 50%; top: 50%; transform: translateY(-50%); right: 15px; opacity: 0.8; touch-action: manipulation;">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Siguiente</span>
         </button>
@@ -105,17 +139,20 @@
 <!-- BUSCADOR PREMIUM -->
 <div class="section-modern" style="padding-top: 48px; padding-bottom: 24px;">
     <div class="container-modern">
-        <form method="get" class="row g-3">
-            <div class="col-md-5">
+        <form method="get" class="row g-3" id="searchForm">
+            <div class="col-12 col-md-5">
                 <div class="search-bar-premium">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" name="q" placeholder="¿Qué estás buscando?"
-                           value="{{ request.args.get('q','') }}">
+                           value="{{ request.args.get('q','') }}" 
+                           autocomplete="off"
+                           style="width: 100%;">
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <select name="cat" class="form-select" style="padding: 16px 20px; border: 2px solid var(--gray-300); border-radius: var(--radius-xl); font-size: 1rem; transition: all var(--transition-base);">
+            <div class="col-12 col-md-4">
+                <select name="cat" class="form-select" 
+                        style="padding: 16px 20px; border: 2px solid var(--gray-300); border-radius: var(--radius-xl); font-size: 1rem; transition: all var(--transition-base); width: 100%; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\"><path fill=\"%23666\" d=\"M6 9L1 4h10z\"/></svg>'); background-repeat: no-repeat; background-position: right 20px center; padding-right: 50px;">
                 <option value="Todas" {% if categoria_actual == 'Todas' %}selected{% endif %}>Todas las categorías</option>
                 
                 <optgroup label="🍽️ Comida y Bebidas">
@@ -217,9 +254,9 @@
             </select>
         </div>
 
-            <div class="col-md-3">
-                <button type="submit" class="btn-modern btn-modern-primary w-100">
-                    <i class="fas fa-search me-2"></i>Buscar
+            <div class="col-12 col-md-3">
+                <button type="submit" class="btn-modern btn-modern-primary w-100" style="min-height: 52px;">
+                    <i class="fas fa-search me-2"></i><span>Buscar</span>
                 </button>
             </div>
         </form>
@@ -382,6 +419,43 @@
 </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script para mejorar experiencia móvil -->
+    <script>
+        // Prevenir zoom doble-tap en botones (iOS)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Mejorar feedback táctil en botones
+        document.querySelectorAll('button, .btn, a.btn').forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.98)';
+                this.style.opacity = '0.9';
+            }, { passive: true });
+            
+            btn.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.transform = '';
+                    this.style.opacity = '';
+                }, 150);
+            }, { passive: true });
+        });
+        
+        // Asegurar que los modales funcionen en móvil
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar tooltips y popovers si existen
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
 </body>
 </html>
 

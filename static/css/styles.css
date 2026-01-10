@@ -152,6 +152,9 @@ p {
     border-radius: var(--radius-md);
     transition: all var(--transition-fast);
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
 .nav-link-premium:hover {
@@ -162,6 +165,39 @@ p {
 .nav-link-premium.active {
     color: var(--primary);
     background-color: var(--primary-light);
+}
+
+/* Navbar Toggler para móvil */
+.navbar-toggler {
+    border: 2px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    background: transparent;
+    color: var(--gray-700);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.navbar-toggler:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.navbar-toggler:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Menú colapsable en móvil */
+.navbar-collapse {
+    margin-top: var(--spacing-md);
+}
+
+@media (min-width: 992px) {
+    .navbar-collapse {
+        margin-top: 0;
+    }
 }
 
 /* ============================================
@@ -459,6 +495,117 @@ p {
     
     .section-modern {
         padding: var(--spacing-2xl) 0;
+    }
+    
+    /* Botones más grandes en móvil para mejor usabilidad táctil */
+    .btn-modern {
+        min-height: 48px;
+        padding: 14px 24px;
+        font-size: 16px; /* Prevenir zoom en iOS */
+    }
+    
+    /* Cards de negocios en móvil */
+    .card-modern {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-modern-image {
+        height: 180px;
+    }
+    
+    /* Navbar en móvil */
+    .navbar-brand-premium span {
+        font-size: 1.25rem;
+    }
+    
+    .navbar-brand-premium img {
+        height: 40px;
+    }
+    
+    /* Footer en móvil */
+    footer {
+        padding: 48px 0 32px !important;
+    }
+    
+    /* Mejorar área táctil en móvil */
+    .nav-link-premium {
+        padding: 12px 16px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Botones de acción en móvil */
+    button, .btn, a.btn {
+        min-height: 44px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    }
+}
+
+/* Mejoras adicionales para móviles pequeños */
+@media (max-width: 480px) {
+    .hero-premium {
+        padding: 48px 0;
+    }
+    
+    .hero-premium h1 {
+        font-size: 1.75rem;
+    }
+    
+    .hero-premium p {
+        font-size: 1rem;
+    }
+    
+    .btn-modern {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+    
+    .card-modern-footer {
+        flex-direction: column;
+    }
+    
+    .card-modern-footer .btn-modern {
+        width: 100%;
+    }
+    
+    /* Carrusel en móvil pequeño */
+    .carousel-item img {
+        height: 250px !important;
+    }
+    
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+    }
+}
+
+/* Mejoras generales para touch devices */
+@media (hover: none) and (pointer: coarse) {
+    /* Dispositivos táctiles */
+    button, .btn, a.btn, .nav-link-premium {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Mejor feedback táctil */
+    button:active, .btn:active, a.btn:active {
+        transform: scale(0.98);
+        opacity: 0.8;
+    }
+    
+    /* Prevenir zoom en inputs en iOS */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="search"],
+    textarea,
+    select {
+        font-size: 16px !important;
     }
 }
 
