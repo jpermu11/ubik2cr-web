@@ -286,7 +286,7 @@
 
           <div class="col-12">
             <label class="form-label fw-bold">
-              <i class="fas fa-tags me-2" style="color: var(--blue);"></i>
+              <i class="fas fa-tags me-2" style="color: #0b4fa3;"></i>
               Productos / Servicios que ofrecés (Tags) <small class="text-muted">(Opcional)</small>
             </label>
             <input type="text" name="productos_tags" id="productos_tags" class="form-control form-control-lg"
@@ -428,14 +428,19 @@
   const tagsDisplay = document.getElementById('tags-display');
   let tagsArray = [];
 
-  // Cargar tags existentes si hay
+  // Cargar tags existentes si hay (solo si el campo existe y tiene valor)
   {% if n.productos_tags %}
   try {
-    const tagsRaw = {{ n.productos_tags|tojson }};
+    {% set tags_json = n.productos_tags|tojson %}
+    const tagsRaw = {{ tags_json|safe }};
     let tagsExistentes = [];
     
     if (typeof tagsRaw === 'string') {
-      tagsExistentes = JSON.parse(tagsRaw);
+      try {
+        tagsExistentes = JSON.parse(tagsRaw);
+      } catch(parseErr) {
+        console.error('Error al parsear tags:', parseErr);
+      }
     } else if (Array.isArray(tagsRaw)) {
       tagsExistentes = tagsRaw;
     }
@@ -444,16 +449,20 @@
       tagsArray = tagsExistentes.map(t => String(t).toLowerCase().trim()).filter(t => t);
       if (tagsArray.length > 0 && tagsDisplay && tagsContainer) {
         tagsDisplay.style.display = 'block';
-        tagsContainer.innerHTML = tagsArray.map((tag, index) => `
-          <span class="badge bg-primary" style="font-size: 0.875rem; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" onclick="eliminarTag(${index})">
-            #${tag}
-            <i class="fas fa-times" style="font-size: 0.75rem;"></i>
-          </span>
-        `).join('');
+        tagsContainer.innerHTML = tagsArray.map((tag, index) => {
+          const safeTag = String(tag).replace(/['"]/g, '').replace(/[<>]/g, ''); // Eliminar caracteres problemáticos
+          return `
+            <span class="badge bg-primary" style="font-size: 0.875rem; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" onclick="eliminarTag(${index})">
+              #${safeTag}
+              <i class="fas fa-times" style="font-size: 0.75rem;"></i>
+            </span>
+          `;
+        }).join('');
       }
     }
   } catch(e) {
     console.error('Error al cargar tags:', e);
+    // Continuar sin tags si hay error
   }
   {% endif %}
 

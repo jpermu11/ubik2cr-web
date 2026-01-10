@@ -1247,7 +1247,18 @@ def editar_negocio_owner(id):
         if negocio.abierto_24h:
             negocio.horario = None  # Si está 24h, no guardar horario específico
         else:
-            negocio.horario = parse_horario_from_form(request.form)
+            try:
+                horario_parsed = parse_horario_from_form(request.form)
+                # Solo guardar si hay al menos un día abierto
+                horario_dict = json.loads(horario_parsed) if horario_parsed else {}
+                tiene_dias_abiertos = any(dia.get("abierto", False) for dia in horario_dict.values())
+                if tiene_dias_abiertos:
+                    negocio.horario = horario_parsed
+                else:
+                    negocio.horario = None  # Si no hay días marcados, dejar None
+            except Exception as e:
+                print(f"[ERROR] Error al parsear horario: {e}")
+                negocio.horario = None  # En caso de error, dejar None
         negocio.maps_url = request.form.get("maps_url", negocio.maps_url)
         
         # Procesar productos_tags (opcional)
@@ -1287,9 +1298,8 @@ def editar_negocio_owner(id):
 
     return render_template(
         "editar_negocio.html", 
-        n=negocio,
-        get_horario_dict=get_horario_dict,
-        get_productos_tags_list=get_productos_tags_list
+        n=n,
+        get_horario_dict=get_horario_dict
     )
 
 @app.route("/panel/negocio/<int:id>/ceder", methods=["GET", "POST"])
@@ -1792,34 +1802,46 @@ def editar_negocio_admin(id):
         if n.abierto_24h:
             n.horario = None  # Si está 24h, no guardar horario específico
         else:
-            n.horario = parse_horario_from_form(request.form)
+            try:
+                horario_parsed = parse_horario_from_form(request.form)
+                # Solo guardar si hay al menos un día abierto
+                horario_dict = json.loads(horario_parsed) if horario_parsed else {}
+                tiene_dias_abiertos = any(dia.get("abierto", False) for dia in horario_dict.values())
+                if tiene_dias_abiertos:
+                    n.horario = horario_parsed
+                else:
+                    n.horario = None  # Si no hay días marcados, dejar None
+            except Exception as e:
+                print(f"[ERROR] Error al parsear horario: {e}")
+                n.horario = None  # En caso de error, dejar None
         n.maps_url = request.form.get("maps_url", n.maps_url)
         
-        # Procesar productos_tags (opcional)
-        productos_tags_str = request.form.get("productos_tags_json", "").strip()
-        if productos_tags_str:
-            try:
-                productos_tags_list = json.loads(productos_tags_str)
-                if productos_tags_list and isinstance(productos_tags_list, list):
-                    n.productos_tags = json.dumps([tag.lower().strip() for tag in productos_tags_list if tag.strip()])
-                else:
-                    n.productos_tags = None
-            except:
-                # Fallback: procesar como string separado por comas
+        # Procesar productos_tags (opcional) - Solo si el campo existe en el modelo
+        if hasattr(Negocio, 'productos_tags'):
+            productos_tags_str = request.form.get("productos_tags_json", "").strip()
+            if productos_tags_str:
+                try:
+                    productos_tags_list = json.loads(productos_tags_str)
+                    if productos_tags_list and isinstance(productos_tags_list, list):
+                        n.productos_tags = json.dumps([tag.lower().strip() for tag in productos_tags_list if tag.strip()])
+                    else:
+                        n.productos_tags = None
+                except:
+                    # Fallback: procesar como string separado por comas
+                    productos_tags_raw = request.form.get("productos_tags", "").strip()
+                    if productos_tags_raw:
+                        productos_tags_list = [tag.lower().strip() for tag in productos_tags_raw.split(",") if tag.strip()]
+                        n.productos_tags = json.dumps(productos_tags_list) if productos_tags_list else None
+                    else:
+                        n.productos_tags = None
+            else:
+                # Procesar desde input de texto
                 productos_tags_raw = request.form.get("productos_tags", "").strip()
                 if productos_tags_raw:
                     productos_tags_list = [tag.lower().strip() for tag in productos_tags_raw.split(",") if tag.strip()]
                     n.productos_tags = json.dumps(productos_tags_list) if productos_tags_list else None
                 else:
                     n.productos_tags = None
-        else:
-            # Procesar desde input de texto
-            productos_tags_raw = request.form.get("productos_tags", "").strip()
-            if productos_tags_raw:
-                productos_tags_list = [tag.lower().strip() for tag in productos_tags_raw.split(",") if tag.strip()]
-                n.productos_tags = json.dumps(productos_tags_list) if productos_tags_list else None
-            else:
-                n.productos_tags = None
 
         n.latitud = safe_float(request.form.get("latitud"))
         n.longitud = safe_float(request.form.get("longitud"))
@@ -1829,13 +1851,13 @@ def editar_negocio_admin(id):
             n.imagen_url = save_upload("foto")
 
         db.session.commit()
+        flash("Negocio actualizado exitosamente.")
         return redirect("/admin/comercios")
 
     return render_template(
         "editar_negocio.html", 
         n=n,
-        get_horario_dict=get_horario_dict,
-        get_productos_tags_list=get_productos_tags_list
+        get_horario_dict=get_horario_dict
     )
 
 @app.route("/admin/noticias")
