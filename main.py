@@ -27,7 +27,7 @@ try:
 except ImportError:
     CLOUDINARY_AVAILABLE = False
 
-from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos
+from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje
 
 
 # =====================================================
@@ -600,6 +600,303 @@ def crear_resena(negocio_id):
 
 
 # =====================================================
+# MENSAJERÍA PRIVADA
+# =====================================================
+@app.route("/negocio/<int:negocio_id>/mensaje", methods=["POST"])
+def enviar_mensaje(negocio_id):
+    """Enviar mensaje a un negocio"""
+    negocio = db.session.get(Negocio, negocio_id)
+    if not negocio or negocio.estado != "aprobado":
+        flash("Negocio no encontrado o no disponible.")
+        return redirect("/")
+    
+    nombre = (request.form.get("nombre") or "").strip()
+    email = (request.form.get("email") or "").strip().lower()
+    asunto = (request.form.get("asunto") or "").strip()
+    mensaje_texto = (request.form.get("mensaje") or "").strip()
+    
+    # Validaciones
+    if not nombre or len(nombre) < 2:
+        flash("El nombre debe tener al menos 2 caracteres.")
+        return redirect(f"/negocio/{negocio_id}")
+    
+    if not email or "@" not in email:
+        flash("Debés proporcionar un email válido.")
+        return redirect(f"/negocio/{negocio_id}")
+    
+    if not asunto or len(asunto) < 3:
+        flash("El asunto debe tener al menos 3 caracteres.")
+        return redirect(f"/negocio/{negocio_id}")
+    
+    if not mensaje_texto or len(mensaje_texto) < 10:
+        flash("El mensaje debe tener al menos 10 caracteres.")
+        return redirect(f"/negocio/{negocio_id}")
+    
+    # Obtener usuario si está logueado
+    usuario_id = session.get("user_id") if owner_logged_in() else None
+    
+    # Crear mensaje
+    nuevo_mensaje = Mensaje(
+        negocio_id=negocio_id,
+        usuario_id=usuario_id,
+        nombre_remitente=nombre,
+        email_remitente=email,
+        asunto=asunto,
+        mensaje=mensaje_texto,
+        leido=False,
+        respondido=False
+    )
+    
+    db.session.add(nuevo_mensaje)
+    db.session.commit()
+    
+    # Enviar notificación por email al dueño del negocio
+    owner = db.session.get(Usuario, negocio.owner_id) if negocio.owner_id else None
+    if owner and owner.email:
+        try:
+            base_url = get_base_url_from_request()
+            mensajes_url = f"{base_url}/panel/mensajes"
+            negocio_url = f"{base_url}/negocio/{negocio.id}"
+            
+            text_body = (
+                f"Hola {owner.nombre or 'dueño del negocio'},\n\n"
+                f"Has recibido un nuevo mensaje para tu negocio '{negocio.nombre}'.\n\n"
+                f"Remitente: {nombre} ({email})\n"
+                f"Asunto: {asunto}\n\n"
+                f"Mensaje:\n{mensaje_texto}\n\n"
+                f"Podés ver y responder el mensaje desde tu panel:\n{mensajes_url}\n\n"
+                f"Negocio: {negocio_url}\n\n"
+                "El equipo de Ubik2CR"
+            )
+            
+            html_body = f"""
+            <div style="font-family:Arial,sans-serif;background:#f5f7fa;padding:24px">
+                <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e6e8ee">
+                    <div style="background:linear-gradient(90deg,#0b4fa3,#38b24d);color:#fff;padding:18px 20px">
+                        <div style="font-size:18px;font-weight:800">Ubik2CR</div>
+                        <div style="opacity:.9;font-size:13px;margin-top:4px">Nuevo Mensaje</div>
+                    </div>
+                    <div style="padding:18px 20px;color:#111827">
+                        <p style="margin:0 0 10px 0">Hola {owner.nombre or 'dueño del negocio'},</p>
+                        <p style="margin:0 0 14px 0;line-height:1.5">
+                            Has recibido un nuevo mensaje para tu negocio <b>{negocio.nombre}</b>.
+                        </p>
+                        <div style="background:#f9fafb;padding:15px;border-radius:10px;margin:15px 0">
+                            <div style="margin-bottom:10px">
+                                <strong style="color:#6b7280;font-size:12px">Remitente:</strong>
+                                <div style="color:#111827;font-weight:600">{nombre}</div>
+                                <div style="color:#6b7280;font-size:13px">{email}</div>
+                            </div>
+                            <div style="margin-bottom:10px">
+                                <strong style="color:#6b7280;font-size:12px">Asunto:</strong>
+                                <div style="color:#111827">{asunto}</div>
+                            </div>
+                            <div>
+                                <strong style="color:#6b7280;font-size:12px">Mensaje:</strong>
+                                <div style="color:#111827;margin-top:5px;white-space:pre-wrap;line-height:1.5">{mensaje_texto}</div>
+                            </div>
+                        </div>
+                        <div style="text-align:center;margin:18px 0">
+                            <a href="{mensajes_url}" style="display:inline-block;background:#0b4fa3;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700">
+                                Ver y Responder Mensaje
+                            </a>
+                        </div>
+                        <p style="margin:15px 0 0 0;font-size:13px;color:#6b7280;line-height:1.5">
+                            <a href="{negocio_url}" style="color:#0b4fa3;text-decoration:none">Ver tu negocio</a>
+                        </p>
+                    </div>
+                </div>
+                <div style="max-width:520px;margin:10px auto 0 auto;font-size:12px;color:#6b7280;text-align:center">
+                    © {datetime.now().year} Ubik2CR
+                </div>
+            </div>
+            """
+            
+            send_email(owner.email, f"Nuevo mensaje para '{negocio.nombre}' en Ubik2CR", text_body, html_body)
+        except Exception as e:
+            print(f"[EMAIL ERROR] No se pudo enviar notificación de mensaje a {owner.email}: {e}")
+    
+    flash("¡Mensaje enviado exitosamente! El dueño del negocio recibirá una notificación por email.")
+    return redirect(f"/negocio/{negocio_id}")
+
+
+@app.route("/panel/mensajes")
+def ver_mensajes():
+    """Ver mensajes recibidos para los negocios del dueño"""
+    if not owner_required():
+        return redirect("/cuenta")
+    
+    user_id = session["user_id"]
+    
+    # Obtener todos los negocios del dueño
+    negocios = Negocio.query.filter_by(owner_id=user_id).all()
+    negocios_ids = [n.id for n in negocios]
+    
+    if not negocios_ids:
+        return render_template("mensajes.html", mensajes=[], negocios={}, sin_negocios=True)
+    
+    # Obtener mensajes de los negocios del dueño
+    mensajes = Mensaje.query.filter(
+        Mensaje.negocio_id.in_(negocios_ids)
+    ).order_by(Mensaje.created_at.desc()).all()
+    
+    # Crear diccionario de negocios para acceso rápido
+    negocios_dict = {n.id: n for n in negocios}
+    
+    # Contar no leídos
+    no_leidos = sum(1 for m in mensajes if not m.leido)
+    
+    return render_template(
+        "mensajes.html",
+        mensajes=mensajes,
+        negocios=negocios_dict,
+        no_leidos=no_leidos,
+        sin_negocios=False
+    )
+
+
+@app.route("/panel/mensajes/<int:id>")
+def ver_mensaje(id):
+    """Ver un mensaje individual y marcarlo como leído"""
+    if not owner_required():
+        return redirect("/cuenta")
+    
+    mensaje = db.session.get(Mensaje, id)
+    if not mensaje:
+        return "Mensaje no encontrado", 404
+    
+    # Verificar que el mensaje pertenece a un negocio del dueño
+    negocio = db.session.get(Negocio, mensaje.negocio_id)
+    if not negocio or negocio.owner_id != session["user_id"]:
+        return "No tenés permiso para ver este mensaje.", 403
+    
+    # Marcar como leído
+    if not mensaje.leido:
+        mensaje.leido = True
+        mensaje.updated_at = datetime.utcnow()
+        db.session.commit()
+    
+    return render_template("ver_mensaje.html", mensaje=mensaje, negocio=negocio)
+
+
+@app.route("/panel/mensajes/<int:id>/responder", methods=["POST"])
+def responder_mensaje(id):
+    """Responder a un mensaje por email"""
+    if not owner_required():
+        return redirect("/cuenta")
+    
+    mensaje = db.session.get(Mensaje, id)
+    if not mensaje:
+        return "Mensaje no encontrado", 404
+    
+    # Verificar que el mensaje pertenece a un negocio del dueño
+    negocio = db.session.get(Negocio, mensaje.negocio_id)
+    if not negocio or negocio.owner_id != session["user_id"]:
+        return "No tenés permiso para responder este mensaje.", 403
+    
+    respuesta = (request.form.get("respuesta") or "").strip()
+    if not respuesta or len(respuesta) < 10:
+        flash("La respuesta debe tener al menos 10 caracteres.")
+        return redirect(f"/panel/mensajes/{id}")
+    
+    # Obtener datos del dueño
+    owner = db.session.get(Usuario, session["user_id"])
+    
+    try:
+        base_url = get_base_url_from_request()
+        negocio_url = f"{base_url}/negocio/{negocio.id}"
+        
+        text_body = (
+            f"Hola {mensaje.nombre_remitente},\n\n"
+            f"Recibiste una respuesta sobre tu mensaje enviado a '{negocio.nombre}'.\n\n"
+            f"Tu mensaje original:\nAsunto: {mensaje.asunto}\n{mensaje.mensaje}\n\n"
+            f"Respuesta:\n{respuesta}\n\n"
+            f"Ver el negocio: {negocio_url}\n\n"
+            f"Saludos,\n{owner.nombre or 'El equipo de Ubik2CR'}\n"
+            f"Negocio: {negocio.nombre}"
+        )
+        
+        html_body = f"""
+        <div style="font-family:Arial,sans-serif;background:#f5f7fa;padding:24px">
+            <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e6e8ee">
+                <div style="background:linear-gradient(90deg,#0b4fa3,#38b24d);color:#fff;padding:18px 20px">
+                    <div style="font-size:18px;font-weight:800">Ubik2CR</div>
+                    <div style="opacity:.9;font-size:13px;margin-top:4px">Respuesta a tu mensaje</div>
+                </div>
+                <div style="padding:18px 20px;color:#111827">
+                    <p style="margin:0 0 10px 0">Hola {mensaje.nombre_remitente},</p>
+                    <p style="margin:0 0 14px 0;line-height:1.5">
+                        Recibiste una respuesta sobre tu mensaje enviado a <b>{negocio.nombre}</b>.
+                    </p>
+                    <div style="background:#f9fafb;padding:15px;border-radius:10px;margin:15px 0">
+                        <div style="margin-bottom:15px;padding-bottom:15px;border-bottom:1px solid #e5e7eb">
+                            <strong style="color:#6b7280;font-size:12px">Tu mensaje original:</strong>
+                            <div style="color:#111827;margin-top:5px">
+                                <div style="font-weight:600;margin-bottom:5px">{mensaje.asunto}</div>
+                                <div style="white-space:pre-wrap;line-height:1.5;color:#6b7280">{mensaje.mensaje}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <strong style="color:#6b7280;font-size:12px">Respuesta:</strong>
+                            <div style="color:#111827;margin-top:5px;white-space:pre-wrap;line-height:1.5;background:#fff;padding:10px;border-radius:5px;border-left:3px solid #0b4fa3">{respuesta}</div>
+                        </div>
+                    </div>
+                    <div style="text-align:center;margin:18px 0">
+                        <a href="{negocio_url}" style="display:inline-block;background:#0b4fa3;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700">
+                            Ver el Negocio
+                        </a>
+                    </div>
+                    <p style="margin:15px 0 0 0;font-size:13px;color:#6b7280;line-height:1.5">
+                        Saludos,<br>
+                        <strong>{owner.nombre or 'El equipo de Ubik2CR'}</strong><br>
+                        Negocio: {negocio.nombre}
+                    </p>
+                </div>
+            </div>
+            <div style="max-width:520px;margin:10px auto 0 auto;font-size:12px;color:#6b7280;text-align:center">
+                © {datetime.now().year} Ubik2CR
+            </div>
+        </div>
+        """
+        
+        send_email(mensaje.email_remitente, f"Respuesta sobre tu mensaje a '{negocio.nombre}'", text_body, html_body)
+        
+        # Marcar como respondido
+        mensaje.respondido = True
+        mensaje.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        flash("¡Respuesta enviada exitosamente!")
+    except Exception as e:
+        print(f"[EMAIL ERROR] No se pudo enviar respuesta a {mensaje.email_remitente}: {e}")
+        flash("Error al enviar la respuesta. Por favor, intentá nuevamente.")
+    
+    return redirect(f"/panel/mensajes/{id}")
+
+
+@app.route("/panel/mensajes/<int:id>/marcar-leido", methods=["POST"])
+def marcar_mensaje_leido(id):
+    """Marcar un mensaje como leído/no leído"""
+    if not owner_required():
+        return redirect("/cuenta")
+    
+    mensaje = db.session.get(Mensaje, id)
+    if not mensaje:
+        return "Mensaje no encontrado", 404
+    
+    # Verificar que el mensaje pertenece a un negocio del dueño
+    negocio = db.session.get(Negocio, mensaje.negocio_id)
+    if not negocio or negocio.owner_id != session["user_id"]:
+        return "No tenés permiso para modificar este mensaje.", 403
+    
+    mensaje.leido = not mensaje.leido
+    mensaje.updated_at = datetime.utcnow()
+    db.session.commit()
+    
+    return redirect("/panel/mensajes")
+
+
+# =====================================================
 # OWNER AUTH (DUEÑOS)
 # =====================================================
 @app.route("/owner/registro", methods=["GET", "POST"])
@@ -697,6 +994,14 @@ def panel_owner():
     negocios_ids = [n.id for n in negocios]
     ofertas = Oferta.query.filter(Oferta.negocio_id.in_(negocios_ids)).order_by(Oferta.created_at.desc()).all() if negocios_ids else []
     
+    # Obtener mensajes no leídos
+    mensajes_no_leidos = 0
+    if negocios_ids:
+        mensajes_no_leidos = Mensaje.query.filter(
+            Mensaje.negocio_id.in_(negocios_ids),
+            Mensaje.leido == False
+        ).count()
+    
     # Pasar datetime actual al template
     from datetime import datetime as dt
     ahora = dt.utcnow()
@@ -711,6 +1016,7 @@ def panel_owner():
         ofertas=ofertas,
         user_email=session.get("user_email"),
         ahora=ahora,
+        mensajes_no_leidos=mensajes_no_leidos,
     )
 
 @app.route("/panel/negocio/<int:id>/editar", methods=["GET", "POST"])

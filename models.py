@@ -131,3 +131,33 @@ class Oferta(db.Model):
         db.Index("ix_ofertas_negocio_fecha", "negocio_id", "fecha_caducidad"),
         db.Index("ix_ofertas_estado_fecha", "estado", "fecha_caducidad"),
     )
+
+# --- MODELO MENSAJE ---
+class Mensaje(db.Model):
+    __tablename__ = "mensajes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=False, index=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True, index=True)  # Usuario registrado (opcional)
+    
+    # Para usuarios anónimos
+    nombre_remitente = db.Column(db.String(100), nullable=False)
+    email_remitente = db.Column(db.String(180), nullable=False, index=True)
+    
+    asunto = db.Column(db.String(200), nullable=False)
+    mensaje = db.Column(db.Text, nullable=False)
+    
+    leido = db.Column(db.Boolean, default=False, index=True)
+    respondido = db.Column(db.Boolean, default=False, index=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relaciones
+    negocio = db.relationship("Negocio", backref="mensajes")
+    usuario = db.relationship("Usuario", backref="mensajes_enviados")
+    
+    __table_args__ = (
+        db.Index("ix_mensajes_negocio_leido", "negocio_id", "leido"),
+        db.Index("ix_mensajes_negocio_fecha", "negocio_id", "created_at"),
+    )

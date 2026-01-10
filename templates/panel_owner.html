@@ -46,6 +46,12 @@
       <div class="actions">
         <a class="btn btn-primary" href="/publicar">+ Publicar negocio</a>
         <a class="btn btn-primary" href="/panel/oferta/nueva" style="background:#ffc107; color:#000;">🎯 Nueva Oferta</a>
+        <a class="btn btn-primary" href="/panel/mensajes" style="background:#25D366; color:#fff;">
+          📨 Mensajes
+          {% if mensajes_no_leidos and mensajes_no_leidos > 0 %}
+            <span style="background:#fff;color:#25D366;border-radius:50%;padding:2px 6px;font-size:11px;font-weight:bold;margin-left:4px;">{{ mensajes_no_leidos }}</span>
+          {% endif %}
+        </a>
         <a class="btn btn-ghost" href="/">Ver Ubik2CR</a>
         <a class="btn btn-danger" href="/owner/logout">Cerrar sesión</a>
       </div>
@@ -72,6 +78,19 @@
         <div class="big">{{ vip }}</div>
         <div class="hint">Destacados (si aplica)</div>
       </div>
+      {% if mensajes_no_leidos is defined %}
+      <div class="card" style="border:2px solid #25D366;">
+        <h3>📨 Mensajes</h3>
+        <div class="big" style="color:#25D366;">{{ mensajes_no_leidos }}</div>
+        <div class="hint">
+          {% if mensajes_no_leidos > 0 %}
+            <a href="/panel/mensajes" style="color:#25D366;text-decoration:none;">Ver mensajes no leídos</a>
+          {% else %}
+            Sin mensajes nuevos
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <div class="card">
