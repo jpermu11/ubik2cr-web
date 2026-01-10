@@ -18,47 +18,57 @@
 <!-- HEADER PREMIUM -->
 <nav class="navbar-premium navbar-expand-lg">
     <div class="container-modern">
-        <div class="d-flex align-items-center justify-content-between w-100">
-            <a class="navbar-brand-premium" href="/">
-                <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
-                <span class="d-none d-sm-inline">Ubik2CR</span>
-            </a>
+        <a class="navbar-brand-premium" href="/">
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
+            <span class="d-none d-sm-inline">Ubik2CR</span>
+        </a>
 
-            <!-- Botón hamburger para móvil -->
-            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
-                    style="border: 2px solid var(--gray-300); border-radius: var(--radius-md); padding: 8px 12px; background: transparent; color: var(--gray-700);">
-                <i class="fas fa-bars"></i>
-            </button>
+        <!-- Botón hamburger para móvil -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
+                style="border: 2px solid var(--gray-300); border-radius: var(--radius-md); padding: 8px 12px; background: transparent; color: var(--gray-700);">
+            <i class="fas fa-bars"></i>
+        </button>
 
-            <!-- Menú colapsable -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="d-flex align-items-center gap-3 flex-wrap justify-content-end w-100 mt-3 mt-lg-0">
+        <!-- Menú colapsable -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+                <li class="nav-item">
                     <a href="/noticias" class="nav-link-premium">
                         <i class="fas fa-newspaper me-1"></i><span>Noticias</span>
                     </a>
+                </li>
+                <li class="nav-item">
                     <a href="/cuenta" class="nav-link-premium">
                         <i class="fas fa-user me-1"></i><span>Cuenta</span>
                     </a>
-                    {% if session.get('user_id') %}
+                </li>
+                {% if session.get('user_id') %}
+                <li class="nav-item">
                     <a href="/favoritos" class="nav-link-premium">
                         <i class="fas fa-heart me-1"></i><span>Favoritos</span>
                     </a>
-                    {% endif %}
-                    {% if session.get('admin_logged_in') %}
-                        <a href="/admin" class="btn-modern btn-modern-primary">
-                            <i class="fas fa-cog me-1"></i><span>Panel Admin</span>
-                        </a>
-                        <a href="/logout" class="btn-modern btn-modern-ghost">
-                            <i class="fas fa-sign-out-alt me-1"></i><span>Salir</span>
-                        </a>
-                    {% else %}
-                        <a href="/login" class="btn-modern btn-modern-primary">
-                            <i class="fas fa-lock me-1"></i><span>Administración</span>
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
+                </li>
+                {% endif %}
+                {% if session.get('admin_logged_in') %}
+                <li class="nav-item">
+                    <a href="/admin" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-cog me-1"></i><span>Panel Admin</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/logout" class="btn-modern btn-modern-ghost">
+                        <i class="fas fa-sign-out-alt me-1"></i><span>Salir</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a href="/login" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-lock me-1"></i><span>Administración</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
         </div>
     </div>
 </nav>
@@ -492,6 +502,28 @@
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+            
+            // Asegurar que el navbar collapse funcione correctamente
+            var navbarToggler = document.querySelector('.navbar-toggler');
+            var navbarCollapse = document.querySelector('.navbar-collapse');
+            
+            if (navbarToggler && navbarCollapse) {
+                navbarToggler.addEventListener('click', function() {
+                    navbarCollapse.classList.toggle('show');
+                    var isExpanded = navbarToggler.getAttribute('aria-expanded') === 'true';
+                    navbarToggler.setAttribute('aria-expanded', !isExpanded);
+                });
+                
+                // Cerrar el menú al hacer click en un enlace (solo en móvil)
+                if (window.innerWidth < 992) {
+                    navbarCollapse.querySelectorAll('.nav-link-premium, .btn-modern').forEach(function(link) {
+                        link.addEventListener('click', function() {
+                            navbarCollapse.classList.remove('show');
+                            navbarToggler.setAttribute('aria-expanded', 'false');
+                        });
+                    });
+                }
+            }
         });
     </script>
 </body>
