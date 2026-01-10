@@ -6,86 +6,70 @@
     <title>Ubik2CR - Tu cantón en tu mano</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-
-    <style>
-        body { background-color: #f5f7fa; }
-
-        .hero {
-            background: linear-gradient(135deg, #0b4fa3, #38b24d);
-            color: white;
-            padding: 90px 0 80px;
-            text-align: center;
-        }
-        .hero img { max-width: 160px; margin-bottom: 20px; }
-        .hero h1 { font-weight: 800; font-size: 3rem; }
-        .hero p { font-size: 1.3rem; }
-
-        .card-negocio {
-            border: none;
-            border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: 0.2s;
-            overflow: hidden;
-        }
-        .card-negocio:hover { transform: translateY(-4px); }
-    </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<nav class="navbar navbar-expand-lg" style="background:linear-gradient(90deg,#0b4fa3,#38b24d);">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-            <img src="{{ url_for('static', filename='uploads/logo.png') }}" height="55" alt="Ubik2CR">
-            <strong class="text-white fs-4">Ubik2CR</strong>
-        </a>
-
-        <div class="ms-auto d-flex gap-2 flex-wrap">
-
-            <!-- ✅ SIEMPRE VISIBLE -->
-            <a href="/noticias" class="btn btn-outline-light fw-bold"> 📢 Noticias </a>
-            <a href="/cuenta" class="btn btn-outline-light fw-bold">
-                👤 Cuenta
+<!-- HEADER PREMIUM -->
+<nav class="navbar-premium navbar-expand-lg">
+    <div class="container-modern">
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <a class="navbar-brand-premium" href="/">
+                <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
+                <span>Ubik2CR</span>
             </a>
-            {% if session.get('user_id') %}
-            <a href="/favoritos" class="btn btn-outline-light fw-bold"> ❤️ Favoritos </a>
-            {% endif %}
-            {% if session.get('admin_logged_in') %}
-                <a href="/admin" class="btn btn-light fw-bold">Panel Admin</a>
-                <a href="/logout" class="btn btn-outline-light">Salir</a>
-            {% else %}
-                <a href="/login" class="btn btn-light fw-bold">Administración</a>
-            {% endif %}
+
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <a href="/noticias" class="nav-link-premium">
+                    <i class="fas fa-newspaper me-1"></i>Noticias
+                </a>
+                <a href="/cuenta" class="nav-link-premium">
+                    <i class="fas fa-user me-1"></i>Cuenta
+                </a>
+                {% if session.get('user_id') %}
+                <a href="/favoritos" class="nav-link-premium">
+                    <i class="fas fa-heart me-1"></i>Favoritos
+                </a>
+                {% endif %}
+                {% if session.get('admin_logged_in') %}
+                    <a href="/admin" class="btn-modern btn-modern-primary">Panel Admin</a>
+                    <a href="/logout" class="btn-modern btn-modern-ghost">Salir</a>
+                {% else %}
+                    <a href="/login" class="btn-modern btn-modern-primary">Administración</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </nav>
 
-<!-- HERO -->
-<section class="hero">
-    <div class="container">
-        <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
-        <h1>Tu cantón en tu mano</h1>
-        <p>Negocios, servicios y lugares de tu comunidad</p>
+<!-- HERO PREMIUM -->
+<section class="hero-premium">
+    <div class="container-modern text-center">
+        <div class="animate-fade-in-up">
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="max-width: 180px; margin-bottom: 24px; filter: brightness(0) invert(1);">
+            <h1>Tu cantón en tu mano</h1>
+            <p>Descubrí los mejores negocios, servicios y lugares de tu comunidad</p>
 
-        <!-- ✅ BOTONES -->
-        <div class="mt-4 d-flex gap-2 justify-content-center flex-wrap">
-            <a href="/mapa" class="btn btn-light fw-bold px-4 py-2 rounded-pill">
-                📍 Ver en mapa
-            </a>
-            <a href="/noticias" class="btn btn-outline-light fw-bold px-4 py-2 rounded-pill">
-                📢 Noticias
-            </a>
+            <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
+                <a href="/mapa" class="btn-modern btn-modern-secondary" style="background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.3);">
+                    <i class="fas fa-map-marker-alt"></i> Ver en mapa
+                </a>
+                <a href="/noticias" class="btn-modern btn-modern-outline" style="background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.5);">
+                    <i class="fas fa-newspaper"></i> Noticias
+                </a>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- CARRUSEL DE OFERTAS -->
+<!-- CARRUSEL DE OFERTAS PREMIUM -->
 {% if ofertas_activas and ofertas_activas|length > 0 %}
-<div class="container my-4">
-    <div id="ofertasCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000">
-        <div class="carousel-inner rounded" style="border-radius: 15px !important; overflow: hidden;">
+<div class="section-modern" style="padding-top: 24px; padding-bottom: 24px;">
+    <div class="container-modern">
+        <div id="ofertasCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000" style="border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-lg);">
+            <div class="carousel-inner" style="border-radius: var(--radius-xl); overflow: hidden;">
             {% for oferta in ofertas_activas %}
             <div class="carousel-item {% if loop.first %}active{% endif %}" style="cursor: pointer;" onclick="window.location.href='/negocio/{{ oferta.negocio_id }}'">
                 <div class="position-relative">
@@ -118,16 +102,20 @@
 </div>
 {% endif %}
 
-<!-- BUSCADOR -->
-<div class="container mt-5">
-    <form method="get" class="row g-3">
-        <div class="col-md-5">
-            <input type="text" name="q" class="form-control" placeholder="¿Qué estás buscando?"
-                   value="{{ request.args.get('q','') }}">
-        </div>
+<!-- BUSCADOR PREMIUM -->
+<div class="section-modern" style="padding-top: 48px; padding-bottom: 24px;">
+    <div class="container-modern">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <div class="search-bar-premium">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="q" placeholder="¿Qué estás buscando?"
+                           value="{{ request.args.get('q','') }}">
+                </div>
+            </div>
 
-        <div class="col-md-4">
-            <select name="cat" class="form-select">
+            <div class="col-md-4">
+                <select name="cat" class="form-select" style="padding: 16px 20px; border: 2px solid var(--gray-300); border-radius: var(--radius-xl); font-size: 1rem; transition: all var(--transition-base);">
                 <option value="Todas" {% if categoria_actual == 'Todas' %}selected{% endif %}>Todas las categorías</option>
                 
                 <optgroup label="🍽️ Comida y Bebidas">
@@ -229,63 +217,89 @@
             </select>
         </div>
 
-        <div class="col-md-3">
-            <button class="btn btn-success w-100 fw-bold">Buscar</button>
-        </div>
-    </form>
-</div>
-
-<!-- RESULTADOS -->
-<div class="container my-5">
-    <div class="row g-4">
-        {% for n in negocios %}
-        <div class="col-md-4">
-            <div class="card card-negocio h-100">
-                <img src="{{ get_safe_image_url(n.imagen_url) if get_safe_image_url else (n.imagen_url if n.imagen_url else 'https://via.placeholder.com/600x400?text=Ubik2CR') }}"
-                     class="card-img-top"
-                     style="height:200px; object-fit:cover; background-color:#f0f0f0;"
-                     alt="{{ n.nombre }}"
-                     onerror="if(this.src.indexOf('placeholder') === -1) { this.src='https://via.placeholder.com/600x400?text=Ubik2CR'; this.onerror=null; }"
-                     loading="lazy">
-                <div class="card-body">
-                    <span class="badge bg-primary">{{ n.categoria }}</span>
-                    {% if n.es_vip %}
-                    <span class="badge bg-warning text-dark">⭐ VIP</span>
-                    {% endif %}
-                    <h5 class="mt-2 fw-bold">{{ n.nombre }}</h5>
-                    <p class="text-muted small mb-2">{{ n.ubicacion }}</p>
-                    {% if n.calificacion and n.calificacion > 0 %}
-                    <div class="mb-2">
-                        {% for i in range(5) %}
-                            {% if i < n.calificacion|int %}
-                                <i class="fas fa-star text-warning" style="font-size: 0.9rem;"></i>
-                            {% elif i < n.calificacion|round %}
-                                <i class="fas fa-star-half-alt text-warning" style="font-size: 0.9rem;"></i>
-                            {% else %}
-                                <i class="far fa-star text-warning" style="font-size: 0.9rem;"></i>
-                            {% endif %}
-                        {% endfor %}
-                        <span class="text-muted small ms-1">{{ n.calificacion }} ({{ n.total_votos }})</span>
-                    </div>
-                    {% endif %}
-                    <a href="/negocio/{{ n.id }}" class="btn btn-outline-primary w-100">Ver detalles</a>
-                </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn-modern btn-modern-primary w-100">
+                    <i class="fas fa-search me-2"></i>Buscar
+                </button>
             </div>
-        </div>
-        {% else %}
-        <div class="col-12">
-            <div class="alert alert-light border text-center py-5">
-                <h5 class="mb-2">Aún no hay resultados</h5>
-                <div class="text-muted">Probá con otra búsqueda o seleccioná "Todas las categorías".</div>
-            </div>
-        </div>
-        {% endfor %}
+        </form>
     </div>
 </div>
 
-    <footer class="text-center py-4 bg-dark text-white mt-5">
-        © 2025 Ubik2CR — Todos los derechos reservados
-    </footer>
+<!-- RESULTADOS -->
+<div class="section-modern" style="padding-top: 24px;">
+    <div class="container-modern">
+        <div class="row g-4">
+            {% for n in negocios %}
+            <div class="col-md-4 col-sm-6">
+                <a href="/negocio/{{ n.id }}" class="text-decoration-none" style="color: inherit;">
+                    <div class="card-modern animate-fade-in-up">
+                        <img src="{{ get_safe_image_url(n.imagen_url) if get_safe_image_url else (n.imagen_url if n.imagen_url else 'https://via.placeholder.com/600x400?text=Ubik2CR') }}"
+                             class="card-modern-image"
+                             alt="{{ n.nombre }}"
+                             onerror="if(this.src.indexOf('placeholder') === -1) { this.src='https://via.placeholder.com/600x400?text=Ubik2CR'; this.onerror=null; }"
+                             loading="lazy">
+                        <div class="card-modern-body">
+                            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                <span class="badge-modern">{{ n.categoria }}</span>
+                                {% if n.es_vip %}
+                                <span class="badge-modern" style="background: linear-gradient(135deg, #FFB800, #FFD700); color: #000;">⭐ VIP</span>
+                                {% endif %}
+                            </div>
+                            <h5 class="card-modern-title">{{ n.nombre }}</h5>
+                            <p class="card-modern-text">
+                                <i class="fas fa-map-marker-alt me-1" style="color: var(--gray-500); font-size: 0.875rem;"></i>
+                                {{ n.ubicacion }}
+                            </p>
+                            {% if n.calificacion and n.calificacion > 0 %}
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center gap-1 mb-1">
+                                    {% for i in range(5) %}
+                                        {% if i < n.calificacion|int %}
+                                            <i class="fas fa-star" style="color: #FFB800; font-size: 0.875rem;"></i>
+                                        {% elif i < n.calificacion|round %}
+                                            <i class="fas fa-star-half-alt" style="color: #FFB800; font-size: 0.875rem;"></i>
+                                        {% else %}
+                                            <i class="far fa-star" style="color: var(--gray-300); font-size: 0.875rem;"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span style="color: var(--gray-600); font-size: 0.875rem; font-weight: 600; margin-left: 4px;">
+                                        {{ n.calificacion }}
+                                    </span>
+                                    <span style="color: var(--gray-500); font-size: 0.8125rem; margin-left: 4px;">
+                                        ({{ n.total_votos }})
+                                    </span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-modern-footer">
+                            <span class="btn-modern btn-modern-primary" style="width: 100%; justify-content: center;">
+                                Ver detalles <i class="fas fa-arrow-right ms-2"></i>
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="card-modern text-center" style="padding: 64px 32px;">
+                    <i class="fas fa-search" style="font-size: 3rem; color: var(--gray-400); margin-bottom: 16px;"></i>
+                    <h5 class="mb-2" style="color: var(--gray-700);">Aún no hay resultados</h5>
+                    <p style="color: var(--gray-600);">Probá con otra búsqueda o seleccioná "Todas las categorías".</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER PREMIUM -->
+<footer style="background: var(--secondary); color: rgba(255,255,255,0.8); padding: 48px 0; margin-top: 64px;">
+    <div class="container-modern text-center">
+        <p style="margin: 0; font-size: 0.9375rem;">© 2025 Ubik2CR — Todos los derechos reservados</p>
+    </div>
+</footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
