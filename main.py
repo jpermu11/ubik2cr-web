@@ -346,7 +346,8 @@ def inicio():
         Oferta.estado == "activa"
     ).order_by(Oferta.fecha_inicio.desc()).limit(10).all()
     
-    q = (request.args.get("q") or "").strip()
+    busqueda_original = (request.args.get("q") or "").strip()  # Original con mayúsculas
+    q = busqueda_original.lower()  # Lowercase para búsqueda
     cat = (request.args.get("cat") or "Todas").strip()
 
     try:
@@ -360,8 +361,127 @@ def inicio():
 
     query = Negocio.query.filter_by(estado="aprobado")
 
+    # =====================================================
+    # BÚSQUEDA INTELIGENTE CON IA - MAPEO DE PALABRAS CLAVE
+    # =====================================================
+    def buscar_categorias_inteligente(busqueda):
+        """Mapea productos/servicios comunes a categorías de negocios"""
+        busqueda_lower = busqueda.lower().strip()
+        categorias_sugeridas = []
+        
+        # Diccionario de mapeo: producto/servicio -> categorías relacionadas
+        mapeo_inteligente = {
+            # Productos de belleza y cuidado personal
+            "shampoo": ["Farmacias", "Supermercados", "Tiendas de Belleza", "Salones de Belleza"],
+            "shampú": ["Farmacias", "Supermercados", "Tiendas de Belleza", "Salones de Belleza"],
+            "champú": ["Farmacias", "Supermercados", "Tiendas de Belleza", "Salones de Belleza"],
+            "jabon": ["Farmacias", "Supermercados", "Tiendas de Belleza"],
+            "jabón": ["Farmacias", "Supermercados", "Tiendas de Belleza"],
+            "crema": ["Farmacias", "Supermercados", "Tiendas de Belleza"],
+            "maquillaje": ["Tiendas de Belleza", "Farmacias", "Salones de Belleza"],
+            "perfume": ["Farmacias", "Tiendas de Belleza", "Supermercados"],
+            "corte": ["Salones de Belleza", "Barberías"],
+            "pelo": ["Salones de Belleza", "Barberías", "Tiendas de Belleza"],
+            "cabello": ["Salones de Belleza", "Barberías", "Tiendas de Belleza"],
+            "uñas": ["Salones de Belleza", "Manicure y Pedicure"],
+            
+            # Medicinas y salud
+            "medicina": ["Farmacias", "Clínicas", "Hospitales"],
+            "medicamento": ["Farmacias"],
+            "pastilla": ["Farmacias"],
+            "vitamina": ["Farmacias", "Suplementos"],
+            "doctor": ["Clínicas", "Consultorios Médicos", "Hospitales"],
+            "médico": ["Clínicas", "Consultorios Médicos", "Hospitales"],
+            "hospital": ["Hospitales", "Clínicas"],
+            "clinica": ["Clínicas", "Consultorios Médicos"],
+            "dentista": ["Odontología", "Clínicas"],
+            "fisioterapia": ["Fisioterapia", "Clínicas"],
+            
+            # Comida y bebidas
+            "comida": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Supermercados"],
+            "restaurante": ["Sodas y Rest.", "Restaurante", "Comida Rápida"],
+            "pizza": ["Comida Rápida", "Pizzerías", "Restaurante"],
+            "hamburguesa": ["Comida Rápida", "Restaurante"],
+            "cafe": ["Cafeterías", "Restaurante"],
+            "café": ["Cafeterías", "Restaurante"],
+            "desayuno": ["Sodas y Rest.", "Restaurante", "Cafeterías"],
+            "almuerzo": ["Sodas y Rest.", "Restaurante", "Comida Rápida"],
+            "cena": ["Restaurante", "Sodas y Rest.", "Bares y Licores"],
+            "bebida": ["Bares y Licores", "Supermercados", "Restaurante"],
+            "cerveza": ["Bares y Licores", "Supermercados"],
+            "helado": ["Heladerías", "Supermercados"],
+            "postre": ["Heladerías", "Restaurante", "Panaderías"],
+            
+            # Supermercados y alimentos
+            "supermercado": ["Supermercados", "Verdulerías", "Carnicerías"],
+            "verduras": ["Verdulerías", "Supermercados"],
+            "frutas": ["Verdulerías", "Supermercados"],
+            "carne": ["Carnicerías", "Supermercados"],
+            "pan": ["Panaderías", "Supermercados"],
+            "leche": ["Supermercados", "Farmacias"],
+            "huevos": ["Supermercados", "Verdulerías"],
+            
+            # Servicios
+            "gasolina": ["Gasolineras", "Estaciones de Servicio"],
+            "combustible": ["Gasolineras", "Estaciones de Servicio"],
+            "taller": ["Talleres Mecánicos", "Talleres de Reparación"],
+            "mecanico": ["Talleres Mecánicos", "Talleres de Reparación"],
+            "mecánico": ["Talleres Mecánicos", "Talleres de Reparación"],
+            "lavado": ["Lavado de Autos", "Lavanderías"],
+            "lavanderia": ["Lavanderías"],
+            "hotel": ["Hoteles", "Alojamiento"],
+            "motel": ["Hoteles", "Alojamiento"],
+            
+            # Educación
+            "escuela": ["Escuelas", "Centros Educativos"],
+            "colegio": ["Escuelas", "Centros Educativos"],
+            "universidad": ["Universidades", "Centros Educativos"],
+            "curso": ["Centros Educativos", "Academias"],
+            
+            # Tecnología
+            "computadora": ["Tiendas de Tecnología", "Reparación de Equipos"],
+            "celular": ["Tiendas de Tecnología", "Reparación de Equipos"],
+            "telefono": ["Tiendas de Tecnología", "Reparación de Equipos"],
+            "internet": ["Servicios de Internet", "Cafés Internet"],
+            
+            # Servicios financieros
+            "banco": ["Bancos", "Cooperativas"],
+            "cajero": ["Bancos", "Cooperativas"],
+            "dinero": ["Bancos", "Cooperativas"],
+        }
+        
+        # Buscar coincidencias
+        palabras_busqueda = busqueda_lower.split()
+        for palabra in palabras_busqueda:
+            if palabra in mapeo_inteligente:
+                categorias_sugeridas.extend(mapeo_inteligente[palabra])
+        
+        # También buscar coincidencias parciales
+        for clave, categorias in mapeo_inteligente.items():
+            if clave in busqueda_lower or busqueda_lower in clave:
+                categorias_sugeridas.extend(categorias)
+        
+        # Eliminar duplicados y devolver
+        return list(set(categorias_sugeridas))
+    
+    # Aplicar búsqueda inteligente
+    categorias_inteligentes = []
     if q:
-        query = query.filter(Negocio.nombre.ilike(f"%{q}%"))
+        categorias_inteligentes = buscar_categorias_inteligente(q)
+        
+        # Construir filtro: buscar en nombre, descripción Y categorías inteligentes
+        condiciones_busqueda = [
+            Negocio.nombre.ilike(f"%{q}%"),
+            Negocio.descripcion.ilike(f"%{q}%"),
+            Negocio.ubicacion.ilike(f"%{q}%")
+        ]
+        
+        # Si encontramos categorías inteligentes, agregarlas al filtro
+        if categorias_inteligentes:
+            condiciones_busqueda.append(Negocio.categoria.in_(categorias_inteligentes))
+        
+        query = query.filter(or_(*condiciones_busqueda))
+    
     if cat and cat != "Todas":
         query = query.filter_by(categoria=cat)
 
@@ -384,12 +504,13 @@ def inicio():
         has_next=page < total_pages,
         prev_page=page - 1,
         next_page=page + 1,
-        q=q,
+        q=busqueda_original if q else "",
         cat=cat,
         ofertas_activas=ofertas_activas,
         owner_logged_in=owner_logged_in(),
         admin_logged_in=admin_logged_in(),
         get_safe_image_url=get_safe_image_url,
+        categorias_inteligentes=categorias_inteligentes if q else [],
     )
 
 @app.route("/cuenta")

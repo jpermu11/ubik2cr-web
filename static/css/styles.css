@@ -299,9 +299,22 @@ p {
     opacity: 0.3;
 }
 
+.hero-premium .container-modern {
+    position: relative;
+    z-index: 1;
+}
+
 .hero-premium .container {
     position: relative;
     z-index: 1;
+}
+
+/* Asegurar que los botones del hero sean clickeables */
+.hero-premium a.btn-modern {
+    position: relative;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
 }
 
 .hero-premium h1 {
@@ -488,12 +501,40 @@ p {
    RESPONSIVE
    ============================================ */
 @media (max-width: 768px) {
+    /* Hero Premium - Mismo diseño pero ajustado para móvil */
+    .hero-premium {
+        padding: var(--spacing-2xl) 0 var(--spacing-xl);
+        min-height: auto;
+    }
+    
+    .hero-premium img {
+        max-width: 120px !important;
+        margin-bottom: 16px !important;
+    }
+    
     .hero-premium h1 {
-        font-size: 2.25rem;
+        font-size: 1.875rem;
+        line-height: 1.2;
+        margin-bottom: 12px;
     }
     
     .hero-premium p {
-        font-size: 1.125rem;
+        font-size: 1rem;
+        margin-bottom: 24px;
+        padding: 0 var(--spacing-md);
+    }
+    
+    .hero-premium .d-flex.gap-3 {
+        flex-direction: column;
+        gap: 12px !important;
+        width: 100%;
+        padding: 0 var(--spacing-md);
+    }
+    
+    .hero-premium .btn-modern {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
     }
     
     h1 { font-size: 2rem; }
@@ -524,13 +565,17 @@ p {
         height: 180px;
     }
     
-    /* Navbar en movil */
+    /* Navbar en movil - Mantener mismo estilo */
+    .navbar-premium {
+        padding: 12px 0;
+    }
+    
     .navbar-brand-premium span {
-        font-size: 1.25rem;
+        font-size: 1.125rem;
     }
     
     .navbar-brand-premium img {
-        height: 40px;
+        height: 36px;
     }
     
     /* Footer en movil */

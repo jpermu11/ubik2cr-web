@@ -72,11 +72,11 @@
             <p>Descubrí los mejores negocios, servicios y lugares de tu comunidad</p>
 
             <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
-                <a href="/mapa" class="btn-modern btn-modern-secondary" style="background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.3);">
-                    <i class="fas fa-map-marker-alt"></i> Ver en mapa
+                <a href="/mapa" class="btn-modern btn-modern-secondary" style="background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.3); text-decoration: none; position: relative; z-index: 10; pointer-events: auto;">
+                    <i class="fas fa-map-marker-alt"></i> <span>Ver en mapa</span>
                 </a>
-                <a href="/noticias" class="btn-modern btn-modern-outline" style="background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.5);">
-                    <i class="fas fa-newspaper"></i> Noticias
+                <a href="/noticias" class="btn-modern btn-modern-outline" style="background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.5); text-decoration: none; position: relative; z-index: 10; pointer-events: auto;">
+                    <i class="fas fa-newspaper"></i> <span>Noticias</span>
                 </a>
             </div>
         </div>
@@ -143,9 +143,10 @@
             <div class="col-12 col-md-5">
                 <div class="search-bar-premium">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" name="q" placeholder="¿Qué estás buscando?"
-                           value="{{ request.args.get('q','') }}" 
+                    <input type="text" name="q" placeholder="Ej: shampoo, comida, medicina, gasolina..."
+                           value="{{ q if q else '' }}" 
                            autocomplete="off"
+                           id="searchInput"
                            style="width: 100%;">
                 </div>
             </div>
@@ -266,6 +267,43 @@
 <!-- RESULTADOS -->
 <div class="section-modern" style="padding-top: 24px;">
     <div class="container-modern">
+        {% if q and categorias_inteligentes %}
+        <div class="alert alert-info mb-4" style="background: linear-gradient(135deg, var(--brand-blue-lightest), #e8f0f8); border: 2px solid var(--brand-blue); border-radius: var(--radius-lg); padding: 16px 20px;">
+            <div class="d-flex align-items-start gap-3">
+                <i class="fas fa-lightbulb" style="color: var(--brand-blue); font-size: 1.5rem; margin-top: 2px;"></i>
+                <div>
+                    <strong style="color: var(--brand-blue); display: block; margin-bottom: 8px;">🔍 Búsqueda Inteligente Activada</strong>
+                    <p style="margin: 0; color: var(--gray-700); font-size: 0.9375rem; line-height: 1.6;">
+                        Buscando "<strong>{{ q }}</strong>" en negocios relacionados con: 
+                        <span style="display: inline-flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+                            {% for cat_int in categorias_inteligentes %}
+                            <span class="badge" style="background: var(--brand-blue); color: white; padding: 6px 12px; border-radius: 20px; font-weight: 600;">{{ cat_int }}</span>
+                            {% endfor %}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if q and negocios|length == 0 %}
+        <div class="text-center py-5">
+            <i class="fas fa-search" style="font-size: 4rem; color: var(--gray-400); margin-bottom: 20px;"></i>
+            <h4 style="color: var(--gray-700); margin-bottom: 12px;">No se encontraron resultados</h4>
+            <p style="color: var(--gray-600); margin-bottom: 24px;">No hay negocios que coincidan con "<strong>{{ q }}</strong>"</p>
+            <a href="/" class="btn-modern btn-modern-primary">
+                <i class="fas fa-home me-2"></i>Volver al inicio
+            </a>
+        </div>
+        {% elif q %}
+        <div class="mb-4">
+            <h5 style="color: var(--gray-700); font-weight: 600;">
+                Resultados para "<strong style="color: var(--brand-blue);">{{ q }}</strong>" 
+                <span class="badge" style="background: var(--brand-blue); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.875rem; margin-left: 8px;">{{ negocios|length }}</span>
+            </h5>
+        </div>
+        {% endif %}
+        
         <div class="row g-4">
             {% for n in negocios %}
             <div class="col-md-4 col-sm-6">
