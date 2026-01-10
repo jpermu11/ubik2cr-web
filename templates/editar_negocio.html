@@ -283,6 +283,24 @@
             <label class="form-label fw-bold">Descripción</label>
             <textarea name="descripcion" class="form-control" rows="4" required>{{ n.descripcion or '' }}</textarea>
           </div>
+
+          <div class="col-12">
+            <label class="form-label fw-bold">
+              <i class="fas fa-tags me-2" style="color: var(--blue);"></i>
+              Productos / Servicios que ofrecés (Tags) <small class="text-muted">(Opcional)</small>
+            </label>
+            <input type="text" name="productos_tags" id="productos_tags" class="form-control form-control-lg"
+                   placeholder="Ej: martillo, clavos, pintura, herramientas, servicio de instalación... (presioná Enter o coma para agregar)"
+                   value="">
+            <div class="hint mt-2">
+              <i class="fas fa-info-circle me-1"></i>
+              Agregá productos o servicios que vendés (separados por comas o presioná Enter). Ej: "martillo, clavos, pintura" o "hamburguesa, papas fritas, refrescos".
+              Esto ayudará a que los clientes te encuentren más fácilmente cuando busquen estos productos.
+            </div>
+            <div class="mt-2" id="tags-display" style="display: none;">
+              <div class="d-flex flex-wrap gap-2" id="tags-container"></div>
+            </div>
+          </div>
         </div>
 
         <hr class="my-4">
@@ -402,6 +420,123 @@
   if (chk24) {
     chk24.addEventListener('change', toggleHorarios);
     toggleHorarios(); // Ejecutar al cargar
+  }
+
+  // Sistema de tags/productos (igual que en registro.html)
+  const productosTagsInput = document.getElementById('productos_tags');
+  const tagsContainer = document.getElementById('tags-container');
+  const tagsDisplay = document.getElementById('tags-display');
+  let tagsArray = [];
+
+  // Cargar tags existentes si hay
+  {% if n.productos_tags %}
+  try {
+    const tagsRaw = {{ n.productos_tags|tojson }};
+    let tagsExistentes = [];
+    
+    if (typeof tagsRaw === 'string') {
+      tagsExistentes = JSON.parse(tagsRaw);
+    } else if (Array.isArray(tagsRaw)) {
+      tagsExistentes = tagsRaw;
+    }
+    
+    if (Array.isArray(tagsExistentes) && tagsExistentes.length > 0) {
+      tagsArray = tagsExistentes.map(t => String(t).toLowerCase().trim()).filter(t => t);
+      if (tagsArray.length > 0 && tagsDisplay && tagsContainer) {
+        tagsDisplay.style.display = 'block';
+        tagsContainer.innerHTML = tagsArray.map((tag, index) => `
+          <span class="badge bg-primary" style="font-size: 0.875rem; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" onclick="eliminarTag(${index})">
+            #${tag}
+            <i class="fas fa-times" style="font-size: 0.75rem;"></i>
+          </span>
+        `).join('');
+      }
+    }
+  } catch(e) {
+    console.error('Error al cargar tags:', e);
+  }
+  {% endif %}
+
+  if (productosTagsInput && tagsContainer && tagsDisplay) {
+    productosTagsInput.addEventListener('input', function(e) {
+      const value = e.target.value.trim();
+      if (value.endsWith(',') || (value.endsWith(' ') && value.length > 1)) {
+        const tags = value.replace(/,\s*$/, '').split(/[,\s]+/).filter(t => t.trim() !== '').map(t => t.trim().toLowerCase());
+        tags.forEach(tag => {
+          if (tag && !tagsArray.includes(tag)) {
+            tagsArray.push(tag);
+          }
+        });
+        actualizarTagsDisplay();
+        productosTagsInput.value = '';
+      }
+    });
+
+    productosTagsInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const value = e.target.value.trim();
+        if (value) {
+          const tags = value.split(/[,\s]+/).filter(t => t.trim() !== '').map(t => t.trim().toLowerCase());
+          tags.forEach(tag => {
+            if (tag && !tagsArray.includes(tag)) {
+              tagsArray.push(tag);
+            }
+          });
+          actualizarTagsDisplay();
+          productosTagsInput.value = '';
+        }
+      } else if (e.key === 'Backspace' && productosTagsInput.value === '' && tagsArray.length > 0) {
+        tagsArray.pop();
+        actualizarTagsDisplay();
+      }
+    });
+
+    function actualizarTagsDisplay() {
+      if (tagsArray.length === 0) {
+        tagsDisplay.style.display = 'none';
+        return;
+      }
+      
+      tagsDisplay.style.display = 'block';
+      tagsContainer.innerHTML = tagsArray.map((tag, index) => `
+        <span class="badge bg-primary" style="font-size: 0.875rem; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" onclick="eliminarTag(${index})">
+          #${tag}
+          <i class="fas fa-times" style="font-size: 0.75rem;"></i>
+        </span>
+      `).join('');
+    }
+
+    window.eliminarTag = function(index) {
+      if (tagsArray && tagsArray.length > index) {
+        tagsArray.splice(index, 1);
+        actualizarTagsDisplay();
+      }
+    };
+
+    // Al enviar el formulario, agregar los tags como input hidden
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        if (tagsArray && tagsArray.length > 0) {
+          let hiddenInput = document.getElementById('productos_tags_json');
+          if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = 'productos_tags_json';
+            hiddenInput.name = 'productos_tags_json';
+            this.appendChild(hiddenInput);
+          }
+          hiddenInput.value = JSON.stringify(tagsArray);
+        } else {
+          // Si no hay tags, asegurarse de limpiar el campo
+          let hiddenInput = document.getElementById('productos_tags_json');
+          if (hiddenInput) {
+            hiddenInput.value = '';
+          }
+        }
+      });
+    }
   }
 </script>
 

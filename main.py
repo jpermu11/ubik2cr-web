@@ -35,6 +35,17 @@ from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Men
 # =====================================================
 app = Flask(__name__)
 
+# Agregar filtro personalizado para parsear JSON en templates
+@app.template_filter('from_json')
+def from_json_filter(value):
+    """Filtro para parsear JSON string a lista/dict en templates"""
+    if not value:
+        return []
+    try:
+        return json.loads(value)
+    except:
+        return []
+
 
 # =====================================================
 # SECURITY / SESSION
@@ -256,6 +267,17 @@ def get_horario_dict(horario_json: str):
     except:
         return {}
 
+def get_productos_tags_list(productos_tags_json: str):
+    """
+    Obtiene la lista de tags/productos desde JSON.
+    """
+    if not productos_tags_json:
+        return []
+    try:
+        return json.loads(productos_tags_json)
+    except:
+        return []
+
 
 # =====================================================
 # EMAIL (para recuperar contraseña)
@@ -448,6 +470,36 @@ def inicio():
             "banco": ["Bancos", "Cooperativas"],
             "cajero": ["Bancos", "Cooperativas"],
             "dinero": ["Bancos", "Cooperativas"],
+            
+            # Herramientas y ferretería (ejemplo del usuario: martillo)
+            "martillo": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "clavo": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "clavos": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "herramienta": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "herramientas": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "pintura": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "tornillo": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "tornillos": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "destornillador": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "taladro": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "ferreteria": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            "ferretería": ["Ferreterías", "Agrocomerciales", "Ferreterías y Materiales"],
+            
+            # Comida rápida (ejemplo del usuario: hamburguesa)
+            "hamburguesa": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Pizzerías"],
+            "hamburguesas": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Pizzerías"],
+            "papas fritas": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Pizzerías"],
+            "papas": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Verdurerías", "Supermercados"],
+            "refresco": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Supermercados", "Bares y Licores"],
+            "refrescos": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Supermercados", "Bares y Licores"],
+            "gaseosa": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Supermercados", "Bares y Licores"],
+            "gaseosas": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Supermercados", "Bares y Licores"],
+            "sandwich": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Cafeterías"],
+            "sandwiches": ["Sodas y Rest.", "Restaurante", "Comida Rápida", "Cafeterías"],
+            "soda": ["Sodas y Rest.", "Restaurante", "Comida Rápida"],
+            "casado": ["Sodas y Rest.", "Restaurante"],
+            "arroz con pollo": ["Sodas y Rest.", "Restaurante"],
+            "gallo pinto": ["Sodas y Rest.", "Restaurante", "Cafeterías"],
         }
         
         # Buscar coincidencias
@@ -469,12 +521,43 @@ def inicio():
     if q:
         categorias_inteligentes = buscar_categorias_inteligente(q)
         
-        # Construir filtro: buscar en nombre, descripción Y categorías inteligentes
+        # Construir filtro: buscar en nombre, descripción, ubicación, tags Y categorías inteligentes
         condiciones_busqueda = [
             Negocio.nombre.ilike(f"%{q}%"),
             Negocio.descripcion.ilike(f"%{q}%"),
             Negocio.ubicacion.ilike(f"%{q}%")
         ]
+        
+        # BUSCAR EN PRODUCTOS_TAGS (tags personalizados del negocio) - BÚSQUEDA INTELIGENTE
+        # Los tags están almacenados como JSON string: ["martillo", "clavos", "pintura"]
+        # Buscar si el término de búsqueda está en los tags
+        try:
+            # Buscar en tags JSON usando LIKE (funciona con postgresql y sqlite)
+            # Búsqueda más inteligente: busca el término completo dentro del JSON
+            palabras_busqueda = q.split()
+            
+            condiciones_tags = []
+            for palabra in palabras_busqueda:
+                if palabra and len(palabra) > 2:  # Solo buscar palabras de más de 2 caracteres
+                    condiciones_tags.extend([
+                        Negocio.productos_tags.ilike(f'%"{palabra}"%'),      # Búsqueda exacta: "martillo"
+                        Negocio.productos_tags.ilike(f'%"{palabra} %'),      # Búsqueda al inicio
+                        Negocio.productos_tags.ilike(f'% "{palabra}"%'),     # Búsqueda con espacio antes
+                        Negocio.productos_tags.ilike(f'%{palabra}%')         # Búsqueda parcial
+                    ])
+            
+            # También buscar el término completo
+            if q and len(q) > 2:
+                condiciones_tags.extend([
+                    Negocio.productos_tags.ilike(f'%"{q}"%'),
+                    Negocio.productos_tags.ilike(f'%{q}%')
+                ])
+            
+            if condiciones_tags:
+                condiciones_busqueda.append(or_(*condiciones_tags))
+        except Exception as e:
+            print(f"[BUSQUEDA] Error al buscar en tags: {e}")
+            # Si hay error, continuar sin buscar en tags
         
         # Si encontramos categorías inteligentes, agregarlas al filtro
         if categorias_inteligentes:
@@ -1166,6 +1249,27 @@ def editar_negocio_owner(id):
         else:
             negocio.horario = parse_horario_from_form(request.form)
         negocio.maps_url = request.form.get("maps_url", negocio.maps_url)
+        
+        # Procesar productos_tags (opcional)
+        productos_tags_str = request.form.get("productos_tags_json", "").strip()
+        if productos_tags_str:
+            try:
+                productos_tags_list = json.loads(productos_tags_str)
+                if productos_tags_list and isinstance(productos_tags_list, list):
+                    negocio.productos_tags = json.dumps([tag.lower().strip() for tag in productos_tags_list if tag.strip()])
+                else:
+                    negocio.productos_tags = None
+            except:
+                # Fallback: procesar como string separado por comas
+                productos_tags_raw = request.form.get("productos_tags", "").strip()
+                if productos_tags_raw:
+                    productos_tags_list = [tag.lower().strip() for tag in productos_tags_raw.split(",") if tag.strip()]
+                    negocio.productos_tags = json.dumps(productos_tags_list) if productos_tags_list else None
+                else:
+                    negocio.productos_tags = None
+        else:
+            # Si no viene nada, limpiar
+            negocio.productos_tags = None
 
         negocio.latitud = safe_float(request.form.get("latitud"))
         negocio.longitud = safe_float(request.form.get("longitud"))
@@ -1184,7 +1288,8 @@ def editar_negocio_owner(id):
     return render_template(
         "editar_negocio.html", 
         n=negocio,
-        get_horario_dict=get_horario_dict
+        get_horario_dict=get_horario_dict,
+        get_productos_tags_list=get_productos_tags_list
     )
 
 @app.route("/panel/negocio/<int:id>/ceder", methods=["GET", "POST"])
@@ -1324,6 +1429,22 @@ def publicar():
         longitud = safe_float(request.form.get("longitud"))
 
         imagen_url = save_upload("foto")
+        
+        # Procesar productos_tags (opcional)
+        productos_tags_json = None
+        productos_tags_str = request.form.get("productos_tags_json", "").strip()
+        if productos_tags_str:
+            try:
+                productos_tags_list = json.loads(productos_tags_str)
+                if productos_tags_list and isinstance(productos_tags_list, list):
+                    productos_tags_json = json.dumps([tag.lower().strip() for tag in productos_tags_list if tag.strip()])
+            except:
+                # Fallback: procesar como string separado por comas
+                productos_tags_raw = request.form.get("productos_tags", "").strip()
+                if productos_tags_raw:
+                    productos_tags_list = [tag.lower().strip() for tag in productos_tags_raw.split(",") if tag.strip()]
+                    if productos_tags_list:
+                        productos_tags_json = json.dumps(productos_tags_list)
 
         nuevo_negocio = Negocio(
             nombre=nombre,
@@ -1338,6 +1459,7 @@ def publicar():
             abierto_24h=abierto_24h,
             descripcion=descripcion,
             imagen_url=imagen_url,
+            productos_tags=productos_tags_json,
             estado="pendiente",
             es_vip=False,
         )
@@ -1672,6 +1794,32 @@ def editar_negocio_admin(id):
         else:
             n.horario = parse_horario_from_form(request.form)
         n.maps_url = request.form.get("maps_url", n.maps_url)
+        
+        # Procesar productos_tags (opcional)
+        productos_tags_str = request.form.get("productos_tags_json", "").strip()
+        if productos_tags_str:
+            try:
+                productos_tags_list = json.loads(productos_tags_str)
+                if productos_tags_list and isinstance(productos_tags_list, list):
+                    n.productos_tags = json.dumps([tag.lower().strip() for tag in productos_tags_list if tag.strip()])
+                else:
+                    n.productos_tags = None
+            except:
+                # Fallback: procesar como string separado por comas
+                productos_tags_raw = request.form.get("productos_tags", "").strip()
+                if productos_tags_raw:
+                    productos_tags_list = [tag.lower().strip() for tag in productos_tags_raw.split(",") if tag.strip()]
+                    n.productos_tags = json.dumps(productos_tags_list) if productos_tags_list else None
+                else:
+                    n.productos_tags = None
+        else:
+            # Procesar desde input de texto
+            productos_tags_raw = request.form.get("productos_tags", "").strip()
+            if productos_tags_raw:
+                productos_tags_list = [tag.lower().strip() for tag in productos_tags_raw.split(",") if tag.strip()]
+                n.productos_tags = json.dumps(productos_tags_list) if productos_tags_list else None
+            else:
+                n.productos_tags = None
 
         n.latitud = safe_float(request.form.get("latitud"))
         n.longitud = safe_float(request.form.get("longitud"))
@@ -1686,7 +1834,8 @@ def editar_negocio_admin(id):
     return render_template(
         "editar_negocio.html", 
         n=n,
-        get_horario_dict=get_horario_dict
+        get_horario_dict=get_horario_dict,
+        get_productos_tags_list=get_productos_tags_list
     )
 
 @app.route("/admin/noticias")

@@ -49,6 +49,10 @@ class Negocio(db.Model):
     abierto_24h = db.Column(db.Boolean, default=False, index=True)
     descripcion = db.Column(db.Text, nullable=False)
     imagen_url = db.Column(db.String(500), nullable=True)
+    
+    # Tags/Productos personalizados que vende el negocio (como hashtags)
+    # Almacenado como JSON: ["martillo", "clavos", "pintura", "herramientas"]
+    productos_tags = db.Column(db.Text, nullable=True)  # JSON string con lista de productos/tags
 
     es_vip = db.Column(db.Boolean, default=False, index=True)
     calificacion = db.Column(db.Float, default=0.0)
