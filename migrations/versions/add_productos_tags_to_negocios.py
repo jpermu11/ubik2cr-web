@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_productos_tags_to_negocios'
-down_revision = 'add_mensajes_table'
+down_revision = 'add_mensajes'
 branch_labels = None
 depends_on = None
 
