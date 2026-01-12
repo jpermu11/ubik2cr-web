@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Contacto - Ubik2CR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo-link"><img src="{{ url_for('static', filename='uploads/logo.png') }}" class="nav-logo"></a>
+            <a href="/" class="nav-link">Volver</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 600px; margin-top: 50px; text-align: center; background: white; padding: 50px; border-radius: 20px;">
+        <h1 style="color: var(--azul);">Contáctanos</h1>
+        <p style="color: #777; margin-bottom: 40px;">¿Tienes dudas o quieres reportar un error?</p>
+
+        <div style="font-size: 1.2rem; margin-bottom: 20px;">
+            📧 Correo: <a href="mailto:soporte@ubik2cr.com" style="color: var(--azul); font-weight: bold;">soporte@ubik2cr.com</a>
+        </div>
+
+        <div style="font-size: 1.2rem; margin-bottom: 40px;">
+            📞 WhatsApp: <span style="color: var(--verde); font-weight: bold;">8888-8888</span>
+        </div>
+
+        <a href="/" class="btn-login">Volver al Inicio</a>
+    </div>
+</body>
+</html>

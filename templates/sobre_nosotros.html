@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sobre Nosotros - Ubik2CR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo-link"><img src="{{ url_for('static', filename='uploads/logo.png') }}" class="nav-logo"></a>
+            <a href="/" class="nav-link">Volver</a>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 800px; margin-top: 50px; background: white; padding: 40px; border-radius: 20px;">
+        <h1 style="color: var(--azul); margin-bottom: 20px;">¿Qué es Ubik2CR?</h1>
+        <p style="font-size: 1.1rem; line-height: 1.8; color: #555; margin-bottom: 20px;">
+            Somos la iniciativa digital más grande del cantón, diseñada para conectar a los vecinos con los comercios locales de manera rápida y sencilla.
+        </p>
+        <p style="font-size: 1.1rem; line-height: 1.8; color: #555; margin-bottom: 20px;">
+            Nuestra misión es potenciar la economía local, dando visibilidad tanto a grandes ferreterías como a pequeños emprendimientos desde casa.
+        </p>
+
+        <h3 style="color: var(--verde); margin-top: 30px;">¿Tienes un negocio?</h3>
+        <p style="color: #555;">Publicarlo es totalmente gratis. Solo necesitas registrarte y esperar la aprobación de nuestro equipo.</p>
+
+        <br>
+        <a href="/publicar" class="btn-login">Publicar mi Negocio</a>
+    </div>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 Ubik2CR.</p>
+    </footer>
+</body>
+</html>
