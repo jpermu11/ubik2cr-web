@@ -1477,13 +1477,10 @@ def publicar():
         latitud = safe_float(request.form.get("latitud"))
         longitud = safe_float(request.form.get("longitud"))
 
-        # Guardar imagen principal (primera foto si hay múltiples, o la única)
-        imagen_url = save_upload("foto")
-        if not imagen_url or imagen_url == "/static/uploads/logo.png":
-            # Si no hay imagen principal, intentar obtener la primera de las múltiples
-            fotos = save_multiple_uploads("fotos", max_files=10)
-            if fotos:
-                imagen_url = fotos[0]
+        # Guardar múltiples imágenes (hasta 10)
+        fotos_urls = save_multiple_uploads("fotos", max_files=10)
+        # La primera foto será la imagen principal
+        imagen_url = fotos_urls[0] if fotos_urls else "/static/uploads/logo.png"
         
         # Procesar productos_tags (opcional)
         productos_tags_json = None
