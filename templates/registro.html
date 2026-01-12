@@ -375,6 +375,14 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+  // Fix para iconos de Leaflet (necesario para que funcionen los marcadores)
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  });
+
   // Centro por defecto (Costa Rica)
   const defaultLat = 9.9281;
   const defaultLng = -84.0907;
@@ -382,10 +390,15 @@
   const latInput = document.getElementById("latitud");
   const lngInput = document.getElementById("longitud");
 
+  if (!latInput || !lngInput) {
+    console.error("No se encontraron los inputs de latitud/longitud");
+  }
+
   const map = L.map('map').setView([defaultLat, defaultLng], 12);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap'
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
   }).addTo(map);
 
   let marker = null;
@@ -393,8 +406,8 @@
   function setMarker(lat, lng){
     if(marker) map.removeLayer(marker);
     marker = L.marker([lat, lng]).addTo(map);
-    latInput.value = lat.toFixed(6);
-    lngInput.value = lng.toFixed(6);
+    if (latInput) latInput.value = lat.toFixed(6);
+    if (lngInput) lngInput.value = lng.toFixed(6);
   }
 
   // Click para poner pin
@@ -482,92 +495,6 @@
         }
       });
     }
-  }
-
-  // Sistema de tags/productos
-  const productosTagsInput = document.getElementById('productos_tags');
-  const tagsContainer = document.getElementById('tags-container');
-  const tagsDisplay = document.getElementById('tags-display');
-  let tagsArray = [];
-
-  if (productosTagsInput) {
-    productosTagsInput.addEventListener('input', function(e) {
-      const value = e.target.value.trim();
-      if (value.endsWith(',') || value.endsWith(' ')) {
-        const tags = value.split(/[,\s]+/).filter(t => t.trim() !== '').map(t => t.trim().toLowerCase());
-        tags.forEach(tag => {
-          if (!tagsArray.includes(tag)) {
-            tagsArray.push(tag);
-          }
-        });
-        actualizarTagsDisplay();
-        productosTagsInput.value = '';
-      }
-    });
-
-    productosTagsInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const value = e.target.value.trim();
-        if (value) {
-          const tags = value.split(/[,\s]+/).filter(t => t.trim() !== '').map(t => t.trim().toLowerCase());
-          tags.forEach(tag => {
-            if (!tagsArray.includes(tag)) {
-              tagsArray.push(tag);
-            }
-          });
-          actualizarTagsDisplay();
-          productosTagsInput.value = '';
-        }
-      } else if (e.key === 'Backspace' && productosTagsInput.value === '' && tagsArray.length > 0) {
-        tagsArray.pop();
-        actualizarTagsDisplay();
-      }
-    });
-  }
-
-  function actualizarTagsDisplay() {
-    if (!tagsContainer || !tagsDisplay) return;
-    
-    if (tagsArray.length === 0) {
-      tagsDisplay.style.display = 'none';
-      return;
-    }
-    
-    tagsDisplay.style.display = 'block';
-    tagsContainer.innerHTML = tagsArray.map((tag, index) => `
-      <span class="badge bg-primary" style="font-size: 0.875rem; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" onclick="eliminarTag(${index})">
-        #${tag}
-        <i class="fas fa-times" style="font-size: 0.75rem;"></i>
-      </span>
-    `).join('');
-  }
-
-  function eliminarTag(index) {
-    if (tagsArray && tagsArray.length > index) {
-      tagsArray.splice(index, 1);
-      actualizarTagsDisplay();
-    }
-  }
-
-  // Al enviar el formulario, agregar los tags como input hidden
-  const form = document.querySelector('form');
-  if (form) {
-    form.addEventListener('submit', function(e) {
-      if (tagsArray && tagsArray.length > 0) {
-        const existingInput = document.getElementById('productos_tags_json');
-        if (existingInput) {
-          existingInput.value = JSON.stringify(tagsArray);
-        } else {
-          const hiddenInput = document.createElement('input');
-          hiddenInput.type = 'hidden';
-          hiddenInput.id = 'productos_tags_json';
-          hiddenInput.name = 'productos_tags_json';
-          hiddenInput.value = JSON.stringify(tagsArray);
-          this.appendChild(hiddenInput);
-        }
-      }
-    });
   }
 
   // Horario vs 24h
