@@ -27,7 +27,7 @@ try:
 except ImportError:
     CLOUDINARY_AVAILABLE = False
 
-from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje
+from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje, ImagenNegocio
 
 
 # =====================================================
@@ -174,6 +174,45 @@ def save_upload(field_name: str) -> str:
             # Si falla guardar, usar logo por defecto
             return "/static/uploads/logo.png"
     return "/static/uploads/logo.png"
+
+def save_multiple_uploads(field_name: str, max_files: int = 10) -> list:
+    """
+    Guarda múltiples imágenes. Devuelve lista de URLs.
+    Usa Cloudinary si está configurado, sino guarda localmente.
+    """
+    urls = []
+    files = request.files.getlist(field_name)
+    
+    # Limitar a max_files
+    files = files[:max_files]
+    
+    for imagen in files:
+        if imagen and imagen.filename:
+            # Intentar subir a Cloudinary primero
+            if USE_CLOUDINARY:
+                try:
+                    result = cloudinary.uploader.upload(
+                        imagen,
+                        folder="ubik2cr",
+                        resource_type="image"
+                    )
+                    urls.append(result.get("secure_url"))
+                    continue
+                except Exception as e:
+                    print(f"[CLOUDINARY ERROR] {e}")
+            
+            # Fallback: guardar localmente
+            try:
+                filename = secure_filename(imagen.filename)
+                path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                imagen.seek(0)
+                imagen.save(path)
+                urls.append(f"/static/uploads/{filename}")
+            except Exception as e:
+                print(f"[UPLOAD ERROR] {e}")
+                continue
+    
+    return urls
 
 def get_safe_image_url(imagen_url: str) -> str:
     """
@@ -1438,7 +1477,13 @@ def publicar():
         latitud = safe_float(request.form.get("latitud"))
         longitud = safe_float(request.form.get("longitud"))
 
+        # Guardar imagen principal (primera foto si hay múltiples, o la única)
         imagen_url = save_upload("foto")
+        if not imagen_url or imagen_url == "/static/uploads/logo.png":
+            # Si no hay imagen principal, intentar obtener la primera de las múltiples
+            fotos = save_multiple_uploads("fotos", max_files=10)
+            if fotos:
+                imagen_url = fotos[0]
         
         # Procesar productos_tags (opcional)
         productos_tags_json = None
@@ -1479,6 +1524,18 @@ def publicar():
             setattr(nuevo_negocio, "owner_id", session["user_id"])
 
         db.session.add(nuevo_negocio)
+        db.session.flush()  # Para obtener el ID del negocio
+        
+        # Guardar múltiples imágenes (hasta 10)
+        fotos_urls = save_multiple_uploads("fotos", max_files=10)
+        for orden, foto_url in enumerate(fotos_urls):
+            imagen_negocio = ImagenNegocio(
+                negocio_id=nuevo_negocio.id,
+                imagen_url=foto_url,
+                orden=orden
+            )
+            db.session.add(imagen_negocio)
+        
         db.session.commit()
         return render_template("exito.html")
 

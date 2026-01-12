@@ -106,6 +106,19 @@ class Resena(db.Model):
     # Relaciones
     negocio = db.relationship("Negocio", backref="resenas")
     usuario = db.relationship("Usuario", backref="resenas")
+
+# --- MODELO IMAGEN DE NEGOCIO ---
+class ImagenNegocio(db.Model):
+    __tablename__ = "imagenes_negocio"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=False, index=True)
+    imagen_url = db.Column(db.String(500), nullable=False)
+    orden = db.Column(db.Integer, default=0, index=True)  # Para ordenar las imágenes
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Relaciones
+    negocio = db.relationship("Negocio", backref="imagenes")
     
     __table_args__ = (
         db.Index("ix_resenas_negocio_estado", "negocio_id", "estado"),
