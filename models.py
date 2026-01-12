@@ -119,10 +119,6 @@ class ImagenNegocio(db.Model):
     
     # Relaciones
     negocio = db.relationship("Negocio", backref="imagenes")
-    
-    __table_args__ = (
-        db.Index("ix_resenas_negocio_estado", "negocio_id", "estado"),
-    )
 
 # --- MODELO OFERTA ---
 class Oferta(db.Model):
