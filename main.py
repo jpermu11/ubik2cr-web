@@ -1523,14 +1523,20 @@ def publicar():
         db.session.add(nuevo_negocio)
         db.session.flush()  # Para obtener el ID del negocio
         
-        # Guardar las imágenes en la tabla imagenes_negocio (ya fueron subidas arriba)
-        for orden, foto_url in enumerate(fotos_urls):
-            imagen_negocio = ImagenNegocio(
-                negocio_id=nuevo_negocio.id,
-                imagen_url=foto_url,
-                orden=orden
-            )
-            db.session.add(imagen_negocio)
+        # Guardar las imágenes en la tabla imagenes_negocio (si la tabla existe)
+        # Si la migración no se ha ejecutado, solo guardamos la imagen principal
+        try:
+            if fotos_urls:
+                for orden, foto_url in enumerate(fotos_urls):
+                    imagen_negocio = ImagenNegocio(
+                        negocio_id=nuevo_negocio.id,
+                        imagen_url=foto_url,
+                        orden=orden
+                    )
+                    db.session.add(imagen_negocio)
+        except Exception as e:
+            # Si la tabla imagenes_negocio no existe, solo continuamos con la imagen principal
+            print(f"[IMAGENES] No se pudieron guardar imágenes adicionales: {e}")
         
         db.session.commit()
         return render_template("exito.html")
