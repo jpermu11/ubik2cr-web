@@ -1,0 +1,35 @@
+═══════════════════════════════════════════════════════════════
+  PASO 1: ABRIR RENDER.COM
+═══════════════════════════════════════════════════════════════
+
+INSTRUCCIONES:
+
+1. Abre tu navegador (Chrome, Edge, Firefox, etc.)
+
+2. En la barra de direcciones (arriba), escribe:
+   render.com
+
+3. Presiona Enter
+
+4. Deberías ver la página de Render
+
+───────────────────────────────────────────────────────────────
+
+¿QUÉ DEBERÍAS VER?
+
+- Una página con el logo de Render
+- Un botón que dice "Get Started for Free" o "Sign up"
+- Colores azules/verdes
+
+───────────────────────────────────────────────────────────────
+
+SI VES ESO:
+✅ Perfecto, vamos al siguiente paso
+
+SI NO LO VES:
+- Verifica que escribiste bien: render.com
+- Asegúrate de tener internet
+- Intenta refrescar la página (F5)
+
+═══════════════════════════════════════════════════════════════
+

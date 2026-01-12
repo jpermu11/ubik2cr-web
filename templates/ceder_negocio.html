@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ceder Negocio | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background:#f5f7fa; }
+        .topbar {
+            background: linear-gradient(90deg,#0b4fa3,#38b24d);
+            color:#fff;
+            padding: 15px 0;
+        }
+        .cardx {
+            border:none;
+            border-radius:18px;
+            box-shadow:0 10px 25px rgba(0,0,0,.08);
+            overflow:hidden;
+        }
+        .warning-box {
+            background:#fff3cd;
+            border:1px solid #ffc107;
+            border-radius:10px;
+            padding:15px;
+            margin-bottom:20px;
+        }
+        .btn-warning { background:#ff9800; border:none; font-weight:800; }
+        .btn-warning:hover { filter:brightness(.95); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar topbar">
+    <div class="container d-flex align-items-center justify-content-between">
+        <a class="navbar-brand text-white fw-bold" href="/panel">← Volver al Panel</a>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <div class="cardx">
+        <div class="card-header bg-warning text-dark p-3">
+            <h4 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Ceder Negocio</h4>
+        </div>
+        <div class="card-body p-4">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-warning">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="warning-box">
+                <h5 class="mb-2"><i class="fas fa-exclamation-triangle me-2"></i>Importante</h5>
+                <p class="mb-0">
+                    Al ceder este negocio, <strong>perderás todos los derechos sobre él</strong>. 
+                    El nuevo dueño podrá editarlo, crear ofertas y gestionarlo completamente.
+                    Esta acción <strong>no se puede deshacer</strong>.
+                </p>
+            </div>
+
+            <div class="mb-4">
+                <h5>Negocio a ceder:</h5>
+                <div class="card bg-light p-3">
+                    <strong>{{ negocio.nombre }}</strong><br>
+                    <span class="text-muted">{{ negocio.categoria }} • {{ negocio.ubicacion }}</span>
+                </div>
+            </div>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Correo electrónico del nuevo dueño</label>
+                    <input type="email" name="email" class="form-control form-control-lg" 
+                           placeholder="nuevo@dueño.com" required autofocus>
+                    <small class="text-muted">
+                        El usuario debe estar registrado en Ubik2CR. Si no tiene cuenta, debe crearla primero.
+                    </small>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-warning px-4" 
+                            onclick="return confirm('¿Estás seguro de ceder este negocio? Esta acción no se puede deshacer.');">
+                        <i class="fas fa-check me-2"></i>Confirmar Cesión
+                    </button>
+                    <a href="/panel" class="btn btn-outline-secondary px-4">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

@@ -1,0 +1,134 @@
+═══════════════════════════════════════════════════════════════
+  EMPIEZA AQUÍ - INSTRUCCIONES MUY SIMPLES
+═══════════════════════════════════════════════════════════════
+
+Hola! No te preocupes, esto es más fácil de lo que parece.
+Solo necesitas hacer 3 cosas:
+
+═══════════════════════════════════════════════════════════════
+  COSA 1: ABRIR UNA CARPETA
+═══════════════════════════════════════════════════════════════
+
+1. Mira abajo a la izquierda de tu pantalla
+   (donde está el botón de Windows)
+
+2. Haz clic en el ícono que parece una CARPETA AMARILLA
+   (se llama "Explorador de archivos")
+
+3. Se abrirá una ventana
+
+4. Arriba de esa ventana, hay una barra blanca
+   (donde dice "Esta PC" o algo similar)
+
+5. Haz clic UNA VEZ en esa barra blanca
+
+6. Borra todo lo que hay ahí
+
+7. Escribe esto EXACTAMENTE (copia y pega si puedes):
+   C:\Users\jperm\.cursor\flask-app
+
+8. Presiona la tecla ENTER
+
+9. Ahora deberías ver varios archivos
+
+═══════════════════════════════════════════════════════════════
+  COSA 2: HACER DOBLE CLIC EN UN ARCHIVO
+═══════════════════════════════════════════════════════════════
+
+1. En la ventana que acabas de abrir, busca un archivo que se llama:
+   INSTALAR_TODO.bat
+
+2. Haz DOBLE CLIC (clic dos veces rápido) en ese archivo
+
+3. Se abrirá una ventana NEGRA
+   (No te asustes, es normal)
+
+4. ESPERA
+   (Puede tardar 5-10 minutos)
+   (Verás texto apareciendo, es normal)
+   (NO cierres la ventana)
+
+5. Cuando termine, verás un mensaje que dice "TODO LISTO"
+
+6. Presiona cualquier tecla para cerrar
+
+═══════════════════════════════════════════════════════════════
+  COSA 3: HACER DOBLE CLIC EN OTRO ARCHIVO
+═══════════════════════════════════════════════════════════════
+
+1. En la misma ventana, busca otro archivo que se llama:
+   EJECUTAR.bat
+
+2. Haz DOBLE CLIC en ese archivo
+
+3. Se abrirá OTRA ventana negra
+
+4. ESPERA unos segundos
+
+5. Verás un mensaje que dice algo sobre "localhost:5000"
+
+6. NO CIERRES ESTA VENTANA (déjala abierta)
+
+7. Abre tu navegador (Chrome, Edge, etc.)
+
+8. Arriba del navegador, donde escribes las direcciones,
+   escribe esto:
+   localhost:5000
+
+9. Presiona ENTER
+
+10. ¡LISTO! Deberías ver tu aplicación
+
+═══════════════════════════════════════════════════════════════
+  PERO ESPERA... SI TE SALE UN ERROR
+═══════════════════════════════════════════════════════════════
+
+Si cuando haces doble clic en INSTALAR_TODO.bat te sale un error
+que dice "Python no está instalado", entonces:
+
+1. Abre tu navegador
+
+2. Arriba, donde escribes direcciones, escribe:
+   python.org/downloads
+
+3. Presiona ENTER
+
+4. Verás un botón grande que dice "Download Python"
+
+5. Haz clic en ese botón
+
+6. Espera a que se descargue
+
+7. Cuando termine, busca el archivo descargado
+   (normalmente está en "Descargas")
+
+8. Haz DOBLE CLIC en el archivo descargado
+
+9. Se abrirá una ventana de instalación
+
+10. Busca una casilla que dice "Add Python to PATH"
+    (puede estar abajo o en un lado)
+
+11. MÁRCALA (haz clic para que aparezca una ✓)
+
+12. Haz clic en "Install Now"
+
+13. Espera a que termine
+
+14. Haz clic en "Close"
+
+15. Vuelve a intentar el COSA 2 (hacer doble clic en INSTALAR_TODO.bat)
+
+═══════════════════════════════════════════════════════════════
+  RESUMEN ULTRA SIMPLE
+═══════════════════════════════════════════════════════════════
+
+1. Abre la carpeta (Explorador de archivos)
+2. Doble clic en INSTALAR_TODO.bat
+3. Doble clic en EJECUTAR.bat
+4. Abre localhost:5000 en el navegador
+
+Si algo falla, solo dime qué mensaje ves y te ayudo.
+
+═══════════════════════════════════════════════════════════════
+

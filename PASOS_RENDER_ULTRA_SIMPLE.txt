@@ -1,0 +1,83 @@
+═══════════════════════════════════════════════════════════════
+  DESPLEGAR EN RENDER - SOLO 5 PASOS
+═══════════════════════════════════════════════════════════════
+
+PASO 1: CREAR CUENTA
+───────────────────────────────────────────────────────────────
+1. Abre: https://render.com
+2. Clic en "Get Started for Free"
+3. Clic en "Sign up with GitHub"
+4. Autoriza Render
+5. ✅ Listo
+
+───────────────────────────────────────────────────────────────
+
+PASO 2: CREAR BASE DE DATOS
+───────────────────────────────────────────────────────────────
+1. Clic en "New +" (arriba derecha)
+2. Clic en "PostgreSQL"
+3. Llena:
+   - Name: ubik2cr-db-oregon
+   - Region: Oregon
+   - Plan: Free
+4. Clic en "Create Database"
+5. ESPERA 2 minutos
+6. Cuando esté listo, entra a la base de datos
+7. Ve a pestaña "Connections"
+8. Copia la "Internal Database URL"
+   (Algo como: postgresql://...)
+9. ✅ GUARDA ESA URL
+
+───────────────────────────────────────────────────────────────
+
+PASO 3: CREAR WEB SERVICE
+───────────────────────────────────────────────────────────────
+1. Clic en "New +" otra vez
+2. Clic en "Web Service"
+3. Conecta tu repositorio:
+   - Busca: jpermu11/ubik2cr-web
+   - Si no aparece, clic en "Configure account"
+   - Autoriza GitHub
+   - Selecciona: jpermu11/ubik2cr-web
+4. Llena:
+   - Name: ubik2cr-web
+   - Region: Oregon
+   - Branch: main
+   - Build Command: pip install -r requirements.txt && flask db upgrade
+   - Start Command: gunicorn main:app
+   - Plan: Free
+
+───────────────────────────────────────────────────────────────
+
+PASO 4: AGREGAR VARIABLES
+───────────────────────────────────────────────────────────────
+En la misma página, baja hasta "Environment Variables"
+Agrega estas 9 variables (una por una):
+
+1. DATABASE_URL = (Pega la URL que copiaste en PASO 2)
+2. SESSION_SECRET = ubik2cr-secret-key-2025-super-segura-123456789
+3. ADMIN_USER = info@ubik2cr.com
+4. ADMIN_PASS = UjifamKJ252319@
+5. SMTP_HOST = smtp.gmail.com
+6. SMTP_PORT = 587
+7. SMTP_USER = jpermu@gmail.com
+8. SMTP_PASS = gxhr btfm rxfa wvbg
+9. SMTP_FROM = Ubik2CR <jpermu@gmail.com>
+
+───────────────────────────────────────────────────────────────
+
+PASO 5: CREAR Y ESPERAR
+───────────────────────────────────────────────────────────────
+1. Clic en "Create Web Service" (abajo)
+2. ESPERA 5-10 minutos
+3. Verás un log en tiempo real
+4. Cuando termine, verás "Your service is live"
+5. Clic en la URL que te da (algo como: https://ubik2cr-web.onrender.com)
+6. ✅ ¡TU APP ESTÁ EN LÍNEA!
+
+═══════════════════════════════════════════════════════════════
+  ESO ES TODO - SOLO 5 PASOS
+═══════════════════════════════════════════════════════════════
+
+Si algo falla, revisa la pestaña "Logs" en Render.
+

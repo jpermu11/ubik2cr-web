@@ -1,0 +1,160 @@
+═══════════════════════════════════════════════════════════
+  🚨 PASOS URGENTES - CONFIGURACION PARA PRODUCCION
+  Ubik2CR - NO PUEDE FALLAR - Miles de usuarios
+═══════════════════════════════════════════════════════════
+
+PASO 1: INSTALAR GIT (OBLIGATORIO - 5 minutos)
+═══════════════════════════════════════════════════════════
+
+1. Abre tu navegador
+2. Ve a: https://git-scm.com/download/win
+3. Haz clic en "Download for Windows"
+4. Ejecuta el instalador descargado
+5. ⚠️ IMPORTANTE: Marca la casilla "Add Git to PATH"
+6. Haz clic en "Next" hasta el final
+7. Cierra TODAS las ventanas de Cursor/PowerShell
+8. Vuelve a abrir Cursor
+9. Ejecuta: setup_git_urgente.bat
+
+═══════════════════════════════════════════════════════════
+PASO 2: CONFIGURAR GIT (AUTOMATICO - 1 minuto)
+═══════════════════════════════════════════════════════════
+
+Una vez instalado Git:
+
+1. Haz doble clic en: setup_git_urgente.bat
+2. El script hará TODO automáticamente:
+   - Inicializar Git
+   - Conectar a GitHub
+   - Agregar todos los archivos
+   - Crear commit inicial
+
+3. Cuando termine, ejecuta:
+   git branch -M main
+   git push -u origin main
+
+   (Si te pide autenticación, usa tu cuenta de GitHub)
+
+═══════════════════════════════════════════════════════════
+PASO 3: CONFIGURAR AUTO-BACKUP (OBLIGATORIO - 10 minutos)
+═══════════════════════════════════════════════════════════
+
+Windows Task Scheduler:
+
+1. Presiona Win + R
+2. Escribe: taskschd.msc
+3. Enter
+
+4. En Task Scheduler:
+   - Click derecho en "Task Scheduler Library"
+   - Create Basic Task...
+
+5. Configuración:
+   - Name: Ubik2CR_Auto_Backup
+   - Description: Backup automatico cada hora - Ubik2CR Produccion
+   - Trigger: Daily
+   - Repeat task every: 1 hours
+   - Duration: Indefinitely
+   - Action: Start a program
+   - Program/script: C:\Users\jperm\.cursor\flask-app\auto_backup.bat
+   - Start in: C:\Users\jperm\.cursor\flask-app
+   - ✅ "Run whether user is logged on or not"
+   - ✅ "Run with highest privileges"
+
+6. Finish
+
+VERIFICAR QUE FUNCIONA:
+   - Espera 1 hora
+   - Revisa backup_errors.log (no debe tener errores)
+   - Ve a GitHub.com → jpermu11/ubik2cr-web → Debe tener commits nuevos
+
+═══════════════════════════════════════════════════════════
+PASO 4: VERIFICAR RENDER.COM (5 minutos)
+═══════════════════════════════════════════════════════════
+
+1. Ve a: https://render.com
+2. Inicia sesión
+3. Entra a servicio: ubik2cr-web
+4. Ve a: Settings → Auto-Deploy
+   ✅ DEBE estar ACTIVADO (ON)
+5. Ve a: Settings → Notifications
+   ✅ Configurar alertas de email: jpermu@gmail.com
+6. Ve a: Settings → Health Check Path
+   ✅ DEBE ser: /health
+
+VERIFICAR QUE FUNCIONA:
+   - Ve a: https://ubik2cr.com/health
+   - Debe responder: {"status":"ok"}
+
+═══════════════════════════════════════════════════════════
+PASO 5: VERIFICACION DIARIA AUTOMATIZADA (OPCIONAL)
+═══════════════════════════════════════════════════════════
+
+Crear tarea programada para verificar salud:
+
+1. Task Scheduler → Create Basic Task
+2. Name: Ubik2CR_Verificar_Salud
+3. Trigger: Daily (cada día a las 9 AM)
+4. Action: Start a program
+5. Program: powershell.exe
+6. Arguments: -ExecutionPolicy Bypass -File "C:\Users\jperm\.cursor\flask-app\verificar_salud.ps1"
+
+Esto verificará automáticamente cada día:
+- ✅ Git está activo
+- ✅ Conexión a GitHub funciona
+- ✅ Aplicación responde
+- ✅ Archivos críticos existen
+- ✅ Backup funcionó
+
+═══════════════════════════════════════════════════════════
+PASO 6: GITHUB DESKTOP (RECOMENDADO - Opcional)
+═══════════════════════════════════════════════════════════
+
+Para facilitar trabajo diario (NO es obligatorio):
+
+1. Descarga: https://desktop.github.com/
+2. Instálalo
+3. Inicia sesión con tu cuenta de GitHub
+4. File → Add Local Repository
+5. Selecciona: C:\Users\jperm\.cursor\flask-app
+6. ✅ Ahora puedes hacer commit/push con un clic
+
+═══════════════════════════════════════════════════════════
+✅ VERIFICACION FINAL - CHECKLIST
+═══════════════════════════════════════════════════════════
+
+Antes de considerar TODO configurado:
+
+[ ] Git instalado y funcionando (git --version)
+[ ] Repositorio Git configurado (existe carpeta .git)
+[ ] Conexión a GitHub funciona (git remote -v)
+[ ] Auto-backup configurado (Task Scheduler)
+[ ] Render.com auto-deploy activado
+[ ] Health check funciona (https://ubik2cr.com/health)
+[ ] Alertas de email configuradas en Render
+[ ] Script de verificación salud ejecutado (verificar_salud.ps1)
+
+═══════════════════════════════════════════════════════════
+🚨 EN CASO DE EMERGENCIA
+═══════════════════════════════════════════════════════════
+
+Si algo falla AHORA MISMO:
+
+1. NO ENTRAR EN PANICO
+2. Ejecutar: verificar_salud.ps1
+3. Ver qué falló exactamente
+4. Revisar logs en Render.com → ubik2cr-web → Logs
+5. Si es crítico, revertir deploy en Render
+6. Contactar: support@render.com si es problema de Render
+
+SI SE PIERDE TRABAJO LOCAL:
+- GitHub tiene TODO: https://github.com/jpermu11/ubik2cr-web
+- Clonar de nuevo: git clone https://github.com/jpermu11/ubik2cr-web.git
+
+═══════════════════════════════════════════════════════════
+
+TIEMPO TOTAL: ~30 minutos para configurar TODO
+
+PRIORIDAD: INMEDIATA
+
+Este sistema está diseñado para NO FALLAR con miles de usuarios.

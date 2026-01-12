@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Ubik2CR - Tu cantón en tu mano</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body>
+
+<!-- HEADER PREMIUM -->
+<nav class="navbar-premium navbar-expand-lg">
+    <div class="container-modern">
+        <a class="navbar-brand-premium" href="/">
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
+            <span class="d-none d-sm-inline">Ubik2CR</span>
+        </a>
+
+        <!-- Botón hamburger para móvil -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
+                style="border: 2px solid var(--gray-300); border-radius: var(--radius-md); padding: 8px 12px; background: transparent; color: var(--gray-700);">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Menú colapsable -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+                <li class="nav-item">
+                    <a href="/noticias" class="nav-link-premium">
+                        <i class="fas fa-newspaper me-1"></i><span>Noticias</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/cuenta" class="nav-link-premium">
+                        <i class="fas fa-user me-1"></i><span>Cuenta</span>
+                    </a>
+                </li>
+                {% if session.get('user_id') %}
+                <li class="nav-item">
+                    <a href="/favoritos" class="nav-link-premium">
+                        <i class="fas fa-heart me-1"></i><span>Favoritos</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if session.get('admin_logged_in') %}
+                <li class="nav-item">
+                    <a href="/admin" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-cog me-1"></i><span>Panel Admin</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/logout" class="btn-modern btn-modern-ghost">
+                        <i class="fas fa-sign-out-alt me-1"></i><span>Salir</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a href="/login" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-lock me-1"></i><span>Administración</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO PREMIUM -->
+<section class="hero-premium">
+    <div class="container-modern text-center">
+        <div class="animate-fade-in-up">
+            <!-- INDICADOR DE PRUEBA - Verificar despliegues -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border-radius: 25px; display: inline-block; margin-bottom: 16px; font-size: 15px; font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.3);">
+                🚀 PRUEBA DE DESPLIEGUE EXITOSA - Funcionando Correctamente ✅
+            </div>
+            <br>
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="max-width: 400px; width: 100%; height: auto; margin-bottom: 24px; filter: brightness(0) invert(1);">
+            <h1>Tu cantón en tu mano</h1>
+            <p>Descubrí los mejores negocios, servicios y lugares de tu comunidad</p>
+
+            <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
+                <a href="/mapa" class="btn-modern btn-modern-secondary" style="background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.3); text-decoration: none; position: relative; z-index: 10; pointer-events: auto;">
+                    <i class="fas fa-map-marker-alt"></i> <span>Ver en mapa</span>
+                </a>
+                <a href="/noticias" class="btn-modern btn-modern-outline" style="background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.5); text-decoration: none; position: relative; z-index: 10; pointer-events: auto;">
+                    <i class="fas fa-newspaper"></i> <span>Noticias</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CARRUSEL DE OFERTAS PREMIUM -->
+{% if ofertas_activas and ofertas_activas|length > 0 %}
+<div class="section-modern" style="padding-top: 24px; padding-bottom: 24px;">
+    <div class="container-modern">
+        <div id="ofertasCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000" 
+             style="border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-lg); touch-action: pan-y;">
+            <div class="carousel-inner" style="border-radius: var(--radius-xl); overflow: hidden;">
+            {% for oferta in ofertas_activas %}
+            <div class="carousel-item {% if loop.first %}active{% endif %}" 
+                 style="cursor: pointer; touch-action: manipulation;" 
+                 onclick="window.location.href='/negocio/{{ oferta.negocio_id }}'"
+                 ontouchstart="this.style.opacity='0.9'" 
+                 ontouchend="this.style.opacity='1'">
+                <div class="position-relative">
+                    <img src="{{ get_safe_image_url(oferta.imagen_url) }}" 
+                         class="d-block w-100" 
+                         alt="{{ oferta.titulo }}" 
+                         style="height: 300px; object-fit: cover; width: 100%;"
+                         loading="lazy">
+                    <!-- Overlay con información (visible en todos los tamaños) -->
+                    <div class="position-absolute bottom-0 start-0 end-0" 
+                         style="background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.6), transparent); padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end;">
+                        <h5 class="fw-bold text-white mb-2" style="font-size: 1.25rem; line-height: 1.3;">{{ oferta.titulo }}</h5>
+                        {% if oferta.descripcion %}
+                        <p class="text-white mb-2" style="font-size: 0.9375rem; line-height: 1.4; opacity: 0.95;">
+                            {{ oferta.descripcion[:100] }}{% if oferta.descripcion|length > 100 %}...{% endif %}
+                        </p>
+                        {% endif %}
+                        <small class="text-white-50 d-flex align-items-center" style="font-size: 0.8125rem;">
+                            <i class="far fa-calendar-alt me-1"></i>
+                            <span>Válido hasta: {{ oferta.fecha_caducidad.strftime('%d/%m/%Y') }}</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if ofertas_activas|length > 1 %}
+        <button class="carousel-control-prev" type="button" data-bs-target="#ofertasCarousel" data-bs-slide="prev"
+                style="min-width: 50px; min-height: 50px; width: 50px; height: 50px; background: rgba(0,0,0,0.3); border-radius: 50%; top: 50%; transform: translateY(-50%); left: 15px; opacity: 0.8; touch-action: manipulation;">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#ofertasCarousel" data-bs-slide="next"
+                style="min-width: 50px; min-height: 50px; width: 50px; height: 50px; background: rgba(0,0,0,0.3); border-radius: 50%; top: 50%; transform: translateY(-50%); right: 15px; opacity: 0.8; touch-action: manipulation;">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Siguiente</span>
+        </button>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- BUSCADOR PREMIUM -->
+<div class="section-modern" style="padding-top: 48px; padding-bottom: 24px;">
+    <div class="container-modern">
+        <form method="get" class="row g-3" id="searchForm">
+            <div class="col-12 col-md-5">
+                <div class="search-bar-premium">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="q" placeholder="Ej: shampoo, comida, medicina, gasolina..."
+                           value="{{ q if q else '' }}" 
+                           autocomplete="off"
+                           id="searchInput"
+                           style="width: 100%;">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <select name="cat" class="form-select custom-select-arrow">
+                <option value="Todas" {% if categoria_actual == 'Todas' %}selected{% endif %}>Todas las categorías</option>
+                
+                <optgroup label="🍽️ Comida y Bebidas">
+                    <option value="Sodas y Rest." {% if categoria_actual == 'Sodas y Rest.' %}selected{% endif %}>🍴 Sodas y Rest.</option>
+                    <option value="Comida Rápida" {% if categoria_actual == 'Comida Rápida' %}selected{% endif %}>🍕 Comida Rápida</option>
+                    <option value="Cafeterías" {% if categoria_actual == 'Cafeterías' %}selected{% endif %}>☕ Cafeterías</option>
+                    <option value="Bares y Licores" {% if categoria_actual == 'Bares y Licores' %}selected{% endif %}>🍺 Bares y Licores</option>
+                    <option value="Heladerías" {% if categoria_actual == 'Heladerías' %}selected{% endif %}>🍦 Heladerías</option>
+                    <option value="Restaurante" {% if categoria_actual == 'Restaurante' %}selected{% endif %}>🍔 Restaurantes</option>
+                </optgroup>
+                
+                <optgroup label="🛒 Alimentos">
+                    <option value="Verdurerías" {% if categoria_actual == 'Verdurerías' %}selected{% endif %}>🥬 Verdurerías</option>
+                    <option value="Carnicerías" {% if categoria_actual == 'Carnicerías' %}selected{% endif %}>🥩 Carnicerías</option>
+                    <option value="Panaderías" {% if categoria_actual == 'Panaderías' %}selected{% endif %}>🥐 Panaderías</option>
+                    <option value="Super y Pulpes" {% if categoria_actual == 'Super y Pulpes' %}selected{% endif %}>🛒 Super y Pulpes</option>
+                </optgroup>
+                
+                <optgroup label="🏥 Salud">
+                    <option value="Farmacias" {% if categoria_actual == 'Farmacias' %}selected{% endif %}>💊 Farmacias</option>
+                    <option value="Clínicas y Dr." {% if categoria_actual == 'Clínicas y Dr.' %}selected{% endif %}>🩺 Clínicas y Dr.</option>
+                    <option value="Dentistas" {% if categoria_actual == 'Dentistas' %}selected{% endif %}>🦷 Dentistas</option>
+                    <option value="Laboratorios" {% if categoria_actual == 'Laboratorios' %}selected{% endif %}>🧪 Laboratorios</option>
+                    <option value="Veterinarias" {% if categoria_actual == 'Veterinarias' %}selected{% endif %}>🐾 Veterinarias</option>
+                    <option value="Ópticas" {% if categoria_actual == 'Ópticas' %}selected{% endif %}>👓 Ópticas</option>
+                    <option value="CCSS" {% if categoria_actual == 'CCSS' %}selected{% endif %}>🏥 CCSS / Clínica / Ebáis</option>
+                </optgroup>
+                
+                <optgroup label="💅 Belleza y Fitness">
+                    <option value="Gimnasios" {% if categoria_actual == 'Gimnasios' %}selected{% endif %}>💪 Gimnasios</option>
+                    <option value="Spas y Masajes" {% if categoria_actual == 'Spas y Masajes' %}selected{% endif %}>🧘 Spas y Masajes</option>
+                    <option value="Belleza y Barbería" {% if categoria_actual == 'Belleza y Barbería' %}selected{% endif %}>✂️ Belleza y Barbería</option>
+                </optgroup>
+                
+                <optgroup label="👕 Ropa y Tecnología">
+                    <option value="Ropa y Calzado" {% if categoria_actual == 'Ropa y Calzado' %}selected{% endif %}>👗 Ropa y Calzado</option>
+                    <option value="Tecnología y Cel." {% if categoria_actual == 'Tecnología y Cel.' %}selected{% endif %}>📱 Tecnología y Cel.</option>
+                    <option value="Reparaciones Tech" {% if categoria_actual == 'Reparaciones Tech' %}selected{% endif %}>💻 Reparaciones Tech</option>
+                </optgroup>
+                
+                <optgroup label="🔧 Construcción y Automotriz">
+                    <option value="Ferreterías" {% if categoria_actual == 'Ferreterías' %}selected{% endif %}>🔨 Ferreterías</option>
+                    <option value="Materiales Construcción" {% if categoria_actual == 'Materiales Construcción' %}selected{% endif %}>🧱 Materiales Construcción</option>
+                    <option value="Mecánica y Llantas" {% if categoria_actual == 'Mecánica y Llantas' %}selected{% endif %}>🔧 Mecánica y Llantas</option>
+                    <option value="Transporte" {% if categoria_actual == 'Transporte' %}selected{% endif %}>🚕 Transporte</option>
+                    <option value="Gasolineras" {% if categoria_actual == 'Gasolineras' %}selected{% endif %}>⛽ Gasolineras</option>
+                    <option value="Automotriz" {% if categoria_actual == 'Automotriz' %}selected{% endif %}>🚗 Automotriz</option>
+                </optgroup>
+                
+                <optgroup label="📚 Educación y Cultura">
+                    <option value="Librerías y Bazar" {% if categoria_actual == 'Librerías y Bazar' %}selected{% endif %}>📖 Librerías y Bazar</option>
+                    <option value="Escuelas" {% if categoria_actual == 'Escuelas' %}selected{% endif %}>🏫 Escuelas</option>
+                    <option value="Bibliotecas" {% if categoria_actual == 'Bibliotecas' %}selected{% endif %}>📚 Bibliotecas</option>
+                    <option value="Academias" {% if categoria_actual == 'Academias' %}selected{% endif %}>🎓 Academias</option>
+                    <option value="Educacion" {% if categoria_actual == 'Educacion' %}selected{% endif %}>🎓 Educación</option>
+                </optgroup>
+                
+                <optgroup label="🏨 Turismo y Entretenimiento">
+                    <option value="Hoteles y Hospedaje" {% if categoria_actual == 'Hoteles y Hospedaje' %}selected{% endif %}>🏨 Hoteles y Hospedaje</option>
+                    <option value="Parques" {% if categoria_actual == 'Parques' %}selected{% endif %}>🌳 Parques</option>
+                    <option value="Plazas" {% if categoria_actual == 'Plazas' %}selected{% endif %}>🏞️ Plazas</option>
+                    <option value="Polideportivo" {% if categoria_actual == 'Polideportivo' %}selected{% endif %}>🏟️ Polideportivos</option>
+                    <option value="Cines y Entretenimiento" {% if categoria_actual == 'Cines y Entretenimiento' %}selected{% endif %}>🎬 Cines y Entretenimiento</option>
+                    <option value="Turismo" {% if categoria_actual == 'Turismo' %}selected{% endif %}>🗺️ Turismo</option>
+                </optgroup>
+                
+                <optgroup label="💰 Finanzas">
+                    <option value="Bancos" {% if categoria_actual == 'Bancos' %}selected{% endif %}>🏦 Bancos</option>
+                    <option value="Cooperativas" {% if categoria_actual == 'Cooperativas' %}selected{% endif %}>💵 Cooperativas</option>
+                </optgroup>
+                
+                <optgroup label="🏛️ Servicios Públicos">
+                    <option value="Cruz Roja" {% if categoria_actual == 'Cruz Roja' %}selected{% endif %}>🚑 Cruz Roja</option>
+                    <option value="Bomberos" {% if categoria_actual == 'Bomberos' %}selected{% endif %}>🚒 Bomberos</option>
+                    <option value="Policía" {% if categoria_actual == 'Policía' %}selected{% endif %}>🚓 Policía</option>
+                    <option value="Municipalidad" {% if categoria_actual == 'Municipalidad' %}selected{% endif %}>🏛️ Municipalidad</option>
+                    <option value="Iglesia" {% if categoria_actual == 'Iglesia' %}selected{% endif %}>⛪ Iglesias</option>
+                    <option value="Instituciones Públicas" {% if categoria_actual == 'Instituciones Públicas' %}selected{% endif %}>🏢 Instituciones Públicas</option>
+                    <option value="Edificio Gubernamental" {% if categoria_actual == 'Edificio Gubernamental' %}selected{% endif %}>🏢 Edificio Gubernamental</option>
+                </optgroup>
+                
+                <optgroup label="💼 Servicios Profesionales">
+                    <option value="Servicios Pro" {% if categoria_actual == 'Servicios Pro' %}selected{% endif %}>💼 Servicios Pro</option>
+                    <option value="Consultoría" {% if categoria_actual == 'Consultoría' %}selected{% endif %}>📊 Consultoría</option>
+                    <option value="Abogados" {% if categoria_actual == 'Abogados' %}selected{% endif %}>⚖️ Abogados</option>
+                    <option value="Contables" {% if categoria_actual == 'Contables' %}selected{% endif %}>📋 Contables</option>
+                    <option value="Salones de Eventos" {% if categoria_actual == 'Salones de Eventos' %}selected{% endif %}>🎉 Salones de Eventos</option>
+                    <option value="Mudanzas y Transporte" {% if categoria_actual == 'Mudanzas y Transporte' %}selected{% endif %}>🚚 Mudanzas y Transporte</option>
+                    <option value="Plomería y Electricidad" {% if categoria_actual == 'Plomería y Electricidad' %}selected{% endif %}>⚡ Plomería y Electricidad</option>
+                    <option value="Jardinería" {% if categoria_actual == 'Jardinería' %}selected{% endif %}>🌱 Jardinería</option>
+                    <option value="Mascotas y Suministros" {% if categoria_actual == 'Mascotas y Suministros' %}selected{% endif %}>🐕 Mascotas y Suministros</option>
+                    <option value="Servicios" {% if categoria_actual == 'Servicios' %}selected{% endif %}>🧰 Servicios</option>
+                </optgroup>
+                
+                <optgroup label="🏪 Otros">
+                    <option value="Comercio" {% if categoria_actual == 'Comercio' %}selected{% endif %}>🏪 Comercios</option>
+                    <option value="Otros" {% if categoria_actual == 'Otros' %}selected{% endif %}>✨ Otros</option>
+                </optgroup>
+            </select>
+        </div>
+
+            <div class="col-12 col-md-3">
+                <button type="submit" class="btn-modern btn-modern-primary w-100" style="min-height: 52px;">
+                    <i class="fas fa-search me-2"></i><span>Buscar</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- RESULTADOS -->
+<div class="section-modern" style="padding-top: 24px;">
+    <div class="container-modern">
+        {% if q and categorias_inteligentes %}
+        <div class="alert alert-info mb-4" style="background: linear-gradient(135deg, var(--brand-blue-lightest), #e8f0f8); border: 2px solid var(--brand-blue); border-radius: var(--radius-lg); padding: 16px 20px;">
+            <div class="d-flex align-items-start gap-3">
+                <i class="fas fa-lightbulb" style="color: var(--brand-blue); font-size: 1.5rem; margin-top: 2px;"></i>
+                <div>
+                    <strong style="color: var(--brand-blue); display: block; margin-bottom: 8px;">🔍 Búsqueda Inteligente Activada</strong>
+                    <p style="margin: 0; color: var(--gray-700); font-size: 0.9375rem; line-height: 1.6;">
+                        Buscando "<strong>{{ q }}</strong>" en negocios relacionados con: 
+                        <span style="display: inline-flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+                            {% for cat_int in categorias_inteligentes %}
+                            <span class="badge" style="background: var(--brand-blue); color: white; padding: 6px 12px; border-radius: 20px; font-weight: 600;">{{ cat_int }}</span>
+                            {% endfor %}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if q and negocios|length == 0 %}
+        <div class="text-center py-5">
+            <i class="fas fa-search" style="font-size: 4rem; color: var(--gray-400); margin-bottom: 20px;"></i>
+            <h4 style="color: var(--gray-700); margin-bottom: 12px;">No se encontraron resultados</h4>
+            <p style="color: var(--gray-600); margin-bottom: 24px;">No hay negocios que coincidan con "<strong>{{ q }}</strong>"</p>
+            <a href="/" class="btn-modern btn-modern-primary">
+                <i class="fas fa-home me-2"></i>Volver al inicio
+            </a>
+        </div>
+        {% elif q %}
+        <div class="mb-4">
+            <h5 style="color: var(--gray-700); font-weight: 600;">
+                Resultados para "<strong style="color: var(--brand-blue);">{{ q }}</strong>" 
+                <span class="badge" style="background: var(--brand-blue); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.875rem; margin-left: 8px;">{{ negocios|length }}</span>
+            </h5>
+        </div>
+        {% endif %}
+        
+        <div class="row g-4">
+            {% for n in negocios %}
+            <div class="col-md-4 col-sm-6">
+                <a href="/negocio/{{ n.id }}" class="text-decoration-none" style="color: inherit;">
+                    <div class="card-modern animate-fade-in-up">
+                        <img src="{{ get_safe_image_url(n.imagen_url) if get_safe_image_url else (n.imagen_url if n.imagen_url else 'https://via.placeholder.com/600x400?text=Ubik2CR') }}"
+                             class="card-modern-image"
+                             alt="{{ n.nombre }}"
+                             onerror="if(this.src.indexOf('placeholder') === -1) { this.src='https://via.placeholder.com/600x400?text=Ubik2CR'; this.onerror=null; }"
+                             loading="lazy">
+                        <div class="card-modern-body">
+                            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                <span class="badge-modern">{{ n.categoria }}</span>
+                                {% if n.es_vip %}
+                                <span class="badge-modern" style="background: linear-gradient(135deg, #FFB800, #FFD700); color: #000;">⭐ VIP</span>
+                                {% endif %}
+                            </div>
+                            <h5 class="card-modern-title">{{ n.nombre }}</h5>
+                            <p class="card-modern-text">
+                                <i class="fas fa-map-marker-alt me-1" style="color: var(--gray-500); font-size: 0.875rem;"></i>
+                                {{ n.ubicacion }}
+                            </p>
+                            {% if n.calificacion and n.calificacion > 0 %}
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center gap-1 mb-1">
+                                    {% for i in range(5) %}
+                                        {% if i < n.calificacion|int %}
+                                            <i class="fas fa-star" style="color: #FFB800; font-size: 0.875rem;"></i>
+                                        {% elif i < n.calificacion|round %}
+                                            <i class="fas fa-star-half-alt" style="color: #FFB800; font-size: 0.875rem;"></i>
+                                        {% else %}
+                                            <i class="far fa-star" style="color: var(--gray-300); font-size: 0.875rem;"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span style="color: var(--gray-600); font-size: 0.875rem; font-weight: 600; margin-left: 4px;">
+                                        {{ n.calificacion }}
+                                    </span>
+                                    <span style="color: var(--gray-500); font-size: 0.8125rem; margin-left: 4px;">
+                                        ({{ n.total_votos }})
+                                    </span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-modern-footer">
+                            <span class="btn-modern btn-modern-primary" style="width: 100%; justify-content: center;">
+                                Ver detalles <i class="fas fa-arrow-right ms-2"></i>
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="card-modern text-center" style="padding: 64px 32px;">
+                    <i class="fas fa-search" style="font-size: 3rem; color: var(--gray-400); margin-bottom: 16px;"></i>
+                    <h5 class="mb-2" style="color: var(--gray-700);">Aún no hay resultados</h5>
+                    <p style="color: var(--gray-600);">Probá con otra búsqueda o seleccioná "Todas las categorías".</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER PREMIUM -->
+<footer>
+    <!-- Patrón de fondo sutil -->
+    <div class="footer-pattern-bg"></div>
+    
+    <div class="container-modern" style="position: relative; z-index: 1;">
+        <div class="row g-5 mb-5">
+            <!-- Información Principal -->
+            <div class="col-lg-6 mb-4">
+                <div class="mb-4">
+                    <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="height: 80px; width: auto; margin-bottom: 16px; filter: brightness(0) invert(1);">
+                    <h5 style="color: #FFFFFF; font-weight: 700; margin-bottom: 16px; font-size: 1.25rem; letter-spacing: -0.02em;">Ubik2CR</h5>
+                </div>
+                <p style="color: rgba(255,255,255,0.75); font-size: 0.9375rem; line-height: 1.8; margin-bottom: 32px; max-width: 90%;">
+                    Tu cantón en tu mano. Conectamos a tu comunidad con los mejores negocios, servicios y lugares de tu zona.
+                </p>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <a href="/mapa" class="footer-link">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Mapa</span>
+                    </a>
+                    <a href="/noticias" class="footer-link">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Noticias</span>
+                    </a>
+                    <a href="/cuenta" class="footer-link">
+                        <i class="fas fa-user"></i>
+                        <span>Cuenta</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Créditos de Desarrollo - Tico-App -->
+            <div class="col-lg-6 mb-4">
+                <h5 style="color: #FFFFFF; font-weight: 700; margin-bottom: 20px; font-size: 1.125rem; letter-spacing: -0.02em;">
+                    <i class="fas fa-code me-2" style="color: var(--primary);"></i>Desarrollado por
+                </h5>
+                <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: var(--radius-lg); padding: 28px; border: 1px solid rgba(255,255,255,0.1); transition: all var(--transition-base); box-shadow: var(--shadow-md);">
+                    <a href="https://tico-app.com/" target="_blank" rel="noopener noreferrer" class="footer-brand-link" style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                        <div class="footer-brand-icon">
+                            <i class="fas fa-code" style="font-size: 1.25rem; color: #FFFFFF;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="color: #FFFFFF; font-weight: 700; font-size: 1.25rem; margin-bottom: 4px; letter-spacing: -0.02em;">Tico-App</div>
+                            <div style="color: rgba(255,255,255,0.7); font-size: 0.875rem; font-weight: 500;">Desarrollo de Aplicaciones</div>
+                        </div>
+                        <i class="fas fa-external-link-alt" style="font-size: 0.875rem; opacity: 0.5; transition: opacity var(--transition-fast);"></i>
+                    </a>
+                    <p style="color: rgba(255,255,255,0.65); font-size: 0.875rem; margin: 0; line-height: 1.7; display: flex; align-items: flex-start; gap: 10px;">
+                        <i class="fas fa-sparkles" style="color: var(--primary); font-size: 1rem; margin-top: 2px; flex-shrink: 0;"></i>
+                        <span>Aplicaciones que transforman tu día a día. Desarrollamos apps para facilitar tu vida y tu negocio con tecnología avanzada y accesible.</span>
+                    </p>
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <a href="https://tico-app.com/" target="_blank" rel="noopener noreferrer" 
+                           class="footer-link" style="font-weight: 600;">
+                            <i class="fas fa-globe"></i>
+                            <span>Visitar tico-app.com</span>
+                            <i class="fas fa-arrow-right" style="margin-left: 4px; font-size: 0.75rem;"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Línea Divisoria -->
+        <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); margin: 48px 0 32px;"></div>
+        
+        <!-- Copyright y Links Legales -->
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <p style="margin: 0; color: rgba(255,255,255,0.6); font-size: 0.875rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="far fa-copyright" style="font-size: 0.75rem;"></i>
+                    <span>2025 Ubik2CR. Todos los derechos reservados.</span>
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="https://tico-app.com/" target="_blank" rel="noopener noreferrer" 
+                   class="footer-link" style="font-weight: 500;">
+                    <i class="fas fa-code"></i>
+                    <span>Creado con</span>
+                    <span style="color: var(--primary); font-weight: 700;">Tico-App</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script para mejorar experiencia móvil -->
+    <script>
+        // Prevenir zoom doble-tap en botones (iOS)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Mejorar feedback táctil en botones
+        document.querySelectorAll('button, .btn, a.btn').forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.98)';
+                this.style.opacity = '0.9';
+            }, { passive: true });
+            
+            btn.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.transform = '';
+                    this.style.opacity = '';
+                }, 150);
+            }, { passive: true });
+        });
+        
+        // Asegurar que los modales funcionen en móvil
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar tooltips y popovers si existen
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Asegurar que el navbar collapse funcione correctamente
+            var navbarToggler = document.querySelector('.navbar-toggler');
+            var navbarCollapse = document.querySelector('.navbar-collapse');
+            
+            if (navbarToggler && navbarCollapse) {
+                navbarToggler.addEventListener('click', function() {
+                    navbarCollapse.classList.toggle('show');
+                    var isExpanded = navbarToggler.getAttribute('aria-expanded') === 'true';
+                    navbarToggler.setAttribute('aria-expanded', !isExpanded);
+                });
+                
+                // Cerrar el menú al hacer click en un enlace (solo en móvil)
+                if (window.innerWidth < 992) {
+                    navbarCollapse.querySelectorAll('.nav-link-premium, .btn-modern').forEach(function(link) {
+                        link.addEventListener('click', function() {
+                            navbarCollapse.classList.remove('show');
+                            navbarToggler.setAttribute('aria-expanded', 'false');
+                        });
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

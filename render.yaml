@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: ubik2cr-web
+    env: python
+    buildCommand: pip install -r requirements.txt && FLASK_APP=main.py flask db upgrade
+    startCommand: gunicorn main:app
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_USER
+        value: info@ubik2cr.com
+      - key: ADMIN_PASS
+        value: UjifamKJ252319@
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: jpermu@gmail.com
+      - key: SMTP_PASS
+        value: gxhr btfm rxfa wvbg
+      - key: SMTP_FROM
+        value: Ubik2CR <jpermu@gmail.com>
+

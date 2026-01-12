@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ n.nombre }} | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --brand-blue: #0056b3; --brand-green: #7ab800; }
+        body { background-color: #f8f9fa; }
+
+        /* NAVBAR CLEAN ESTILO (Público) */
+        .navbar {
+            background-color: white !important;
+            padding: 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-bottom: 3px solid var(--brand-green);
+        }
+        .btn-outline-custom { border-color: var(--brand-blue); color: var(--brand-blue); font-weight: bold; }
+        .btn-outline-custom:hover { background-color: var(--brand-blue); color: white; }
+
+        /* Estilos del Detalle */
+        .header-negocio { background-color: white; border-bottom: 1px solid #eee; padding: 40px 0; margin-bottom: 30px; }
+        .img-principal { width: 100%; height: 400px; object-fit: cover; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .badge-cat { background-color: var(--brand-blue); font-size: 1rem; padding: 8px 15px; border-radius: 20px; }
+
+        .btn-whatsapp { 
+            background-color: #25D366; color: white; border: none; font-weight: bold; padding: 12px 25px; border-radius: 50px; font-size: 1.1rem; 
+            text-decoration: none; display: inline-block;
+        }
+        .btn-whatsapp:hover { background-color: #1ebc57; color: white; transform: scale(1.05); transition: 0.3s; }
+
+        #map { height: 350px; width: 100%; border-radius: 15px; border: 2px solid #eee; }
+        h1 { color: var(--brand-blue); font-weight: 800; }
+        .info-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 4px solid var(--brand-green); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <img src="/static/uploads/logo.png" alt="Ubik2CR" style="height: 85px; width: auto; object-fit: contain;">
+        </a>
+        <a href="/" class="btn btn-outline-custom btn-sm"><i class="fas fa-arrow-left"></i> Volver al Inicio</a>
+    </div>
+</nav>
+
+<div class="header-negocio">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3">
+                <span class="badge badge-cat mb-2"><i class="fas fa-tag"></i> {{ n.categoria }}</span>
+                <h1 class="display-4">{{ n.nombre }}</h1>
+                <p class="lead text-muted"><i class="fas fa-map-marker-alt text-danger"></i> {{ n.ubicacion }}</p>
+                {% if n.abierto_24h %}
+                <p class="text-muted mb-1"><i class="far fa-clock"></i> Abierto 24 horas</p>
+                {% elif n.horario or n.abierto_24h %}
+                <div class="text-muted mb-1">
+                    <i class="far fa-clock"></i> <strong>Horario:</strong><br>
+                    {% if format_horario_display %}
+                        <span style="white-space: pre-line;">{{ format_horario_display(n.horario or '', n.abierto_24h)|safe }}</span>
+                    {% else %}
+                        {% if n.abierto_24h %}
+                            Abierto 24 horas
+                        {% else %}
+                            {{ n.horario }}
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2 mt-4 align-items-center flex-wrap">
+                    {% if n.whatsapp %}
+                    <a href="https://wa.me/{{ n.whatsapp }}" target="_blank" class="btn-whatsapp" style="min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;">
+                        <i class="fab fa-whatsapp me-1"></i> <span>WhatsApp</span>
+                    </a>
+                    {% endif %}
+                    {% if n.telefono %}
+                    <a href="tel:{{ n.telefono }}" class="btn btn-outline-dark rounded-pill px-4 py-2" style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;">
+                        <i class="fas fa-phone me-1"></i> <span>Llamar</span>
+                    </a>
+                    {% endif %}
+                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2" 
+                            style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;" 
+                            data-bs-toggle="modal" data-bs-target="#mensajeModal">
+                        <i class="fas fa-envelope me-1"></i> <span>Enviar Mensaje</span>
+                    </button>
+                    {% if session.get('user_id') %}
+                    <button type="button" id="btn-favorito" class="btn btn-outline-danger rounded-pill px-4 py-2" 
+                            style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;" 
+                            onclick="toggleFavorito({{ n.id }})">
+                        <i class="far fa-heart me-1" id="icon-favorito"></i> <span id="text-favorito">Agregar a favoritos</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <img src="{{ n.imagen_url }}" class="img-principal" alt="{{ n.nombre }}">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="info-card mb-4">
+                <h3 style="color: var(--brand-blue);">Sobre nosotros</h3>
+                <hr>
+                <p class="fs-5 text-secondary" style="white-space: pre-line;">{{ n.descripcion }}</p>
+            </div>
+            
+            <!-- CALIFICACIÓN Y RESEÑAS -->
+            <div class="info-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 style="color: var(--brand-blue);">Calificaciones y Reseñas</h3>
+                    {% if promedio %}
+                    <div class="text-center">
+                        <div class="display-4 fw-bold text-primary">{{ promedio }}</div>
+                        <div class="text-muted small">
+                            {% for i in range(5) %}
+                                {% if i < promedio|int %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% elif i < promedio|round %}
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div class="text-muted small">{{ total_resenas }} reseña{{ 's' if total_resenas != 1 else '' }}</div>
+                    </div>
+                    {% else %}
+                    <div class="text-muted">Aún no hay calificaciones</div>
+                    {% endif %}
+                </div>
+                <hr>
+                
+                <!-- FORMULARIO DE RESEÑA -->
+                <div class="mb-4 p-3" style="background-color: #f8f9fa; border-radius: 10px;">
+                    <h5 class="mb-3">Dejá tu reseña</h5>
+                    <form method="POST" action="/negocio/{{ n.id }}/resena">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Calificación (1-5 estrellas)</label>
+                            <div class="d-flex gap-2 mb-2" id="star-container">
+                                {% for i in range(1, 6) %}
+                                <label class="star-rating" style="cursor: pointer; font-size: 2rem; color: #ddd;">
+                                    <input type="radio" name="calificacion" value="{{ i }}" required style="display: none;">
+                                    <i class="far fa-star"></i>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted">Seleccioná la cantidad de estrellas</small>
+                        </div>
+                        
+                        {% if not session.get('user_id') %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tu nombre</label>
+                                <input type="text" name="nombre" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tu email</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tu comentario</label>
+                            <textarea name="comentario" class="form-control" rows="3" placeholder="Compartí tu experiencia..." required minlength="10"></textarea>
+                            <small class="text-muted">Mínimo 10 caracteres</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i> Publicar reseña
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- LISTA DE RESEÑAS -->
+                {% if resenas and resenas|length > 0 %}
+                <div class="mt-4">
+                    <h5 class="mb-3">Reseñas ({{ total_resenas }})</h5>
+                    {% for resena in resenas %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <strong>{{ resena.nombre_usuario or (resena.usuario.nombre if resena.usuario else 'Usuario') }}</strong>
+                                <span class="text-muted small ms-2">{{ resena.created_at.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                            <div>
+                                {% for i in range(5) %}
+                                    {% if i < resena.calificacion %}
+                                        <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-warning"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="mb-0">{{ resena.comentario }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="far fa-comments fa-3x mb-3"></i>
+                    <p>No hay reseñas aún. ¡Sé el primero en dejar una!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="info-card">
+                <h5 class="fw-bold mb-3">📍 Ubicación</h5>
+                <div id="map"></div>
+                {% if n.maps_url %}
+                <a href="{{ n.maps_url }}" target="_blank" class="btn btn-primary w-100 mt-3" style="background-color: var(--brand-blue); border: none;">
+                    <i class="fas fa-location-arrow"></i> Abrir en Waze / Maps
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+
+    var lat = {{ n.latitud }};
+    var lon = {{ n.longitud }};
+
+    if (lat && lon) {
+        var map = L.map('map').setView([lat, lon], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.marker([lat, lon]).addTo(map)
+            .bindPopup("<b>{{ n.nombre }}</b><br>¡Aquí estamos!")
+            .openPopup();
+    } else {
+        document.getElementById('map').innerHTML = "<p class='text-center text-muted p-5 bg-light rounded'>Ubicación exacta no disponible en el mapa.</p>";
+    }
+
+    // Verificar si es favorito al cargar
+    {% if session.get('user_id') %}
+    fetch('/api/favoritos/{{ n.id }}')
+        .then(r => r.json())
+        .then(data => {
+            if (data.es_favorito) {
+                document.getElementById('icon-favorito').classList.remove('far');
+                document.getElementById('icon-favorito').classList.add('fas');
+                document.getElementById('text-favorito').textContent = 'En favoritos';
+                document.getElementById('btn-favorito').classList.remove('btn-outline-danger');
+                document.getElementById('btn-favorito').classList.add('btn-danger');
+            }
+        });
+    
+    function toggleFavorito(negocioId) {
+        const btn = document.getElementById('btn-favorito');
+        const icon = document.getElementById('icon-favorito');
+        const text = document.getElementById('text-favorito');
+        
+        // Prevenir múltiples clicks
+        if (btn.disabled) return;
+        btn.disabled = true;
+        
+        // Feedback visual inmediato
+        btn.style.opacity = '0.6';
+        
+        fetch('/api/favoritos/' + negocioId)
+            .then(r => {
+                if (!r.ok) throw new Error('Error en la respuesta');
+                return r.json();
+            })
+            .then(data => {
+                const esFavorito = data.es_favorito;
+                const url = esFavorito ? '/favoritos/quitar/' : '/favoritos/agregar/';
+                
+                return fetch(url + negocioId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Error al actualizar favorito');
+                return r.json();
+            })
+            .then(result => {
+                if (result.es_favorito) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    text.textContent = 'En favoritos';
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    text.textContent = 'Agregar a favoritos';
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-outline-danger');
+                }
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al actualizar favoritos. Por favor, intentá nuevamente.');
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            });
+    }
+    {% endif %}
+    
+    // Sistema de estrellas para reseñas
+    let selectedRating = 0;
+    const starContainer = document.getElementById('star-container');
+    if (starContainer) {
+        const starInputs = document.querySelectorAll('input[name="calificacion"]');
+        const starLabels = document.querySelectorAll('.star-rating');
+        
+        starInputs.forEach((input, index) => {
+            input.addEventListener('change', function() {
+                selectedRating = parseInt(this.value);
+                updateStars(selectedRating);
+            });
+            
+            const label = input.parentElement;
+            label.addEventListener('mouseenter', function() {
+                const rating = parseInt(input.value);
+                highlightStars(rating);
+            });
+        });
+        
+        starContainer.addEventListener('mouseleave', function() {
+            updateStars(selectedRating);
+        });
+        
+        function highlightStars(rating) {
+            starLabels.forEach((label, index) => {
+                const icon = label.querySelector('i');
+                if (index < rating) {
+                    icon.classList.add('fas');
+                    icon.classList.remove('far');
+                    icon.style.color = '#ffc107';
+                } else {
+                    icon.classList.add('far');
+                    icon.classList.remove('fas');
+                    icon.style.color = '#ddd';
+                }
+            });
+        }
+        
+        function updateStars(rating) {
+            starLabels.forEach((label, index) => {
+                const icon = label.querySelector('i');
+                if (index < rating) {
+                    icon.classList.add('fas');
+                    icon.classList.remove('far');
+                    icon.style.color = '#ffc107';
+                } else {
+                    icon.classList.add('far');
+                    icon.classList.remove('fas');
+                    icon.style.color = '#ddd';
+                }
+            });
+        }
+    }
+</script>
+
+<!-- Modal de Mensaje -->
+<div class="modal fade" id="mensajeModal" tabindex="-1" aria-labelledby="mensajeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; box-shadow: var(--shadow-xl);">
+            <div class="modal-header" style="background: linear-gradient(90deg, var(--brand-blue), var(--brand-green)); color: white; border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                <h5 class="modal-title fw-bold" id="mensajeModalLabel">
+                    <i class="fas fa-envelope me-2"></i>Enviar Mensaje a {{ n.nombre }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="min-height: 44px; min-width: 44px;"></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-info alert-dismissible fade show">{{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <form method="POST" action="/negocio/{{ n.id }}/mensaje">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label fw-bold">Tu Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required 
+                               value="{% if session.get('user_id') %}{{ session.get('user_name', '') }}{% endif %}"
+                               minlength="2" placeholder="Ej: Juan Pérez">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-bold">Tu Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" name="email" required 
+                               value="{% if session.get('user_id') %}{{ session.get('user_email', '') }}{% endif %}"
+                               placeholder="tu@email.com">
+                        <small class="text-muted">Tu email no se compartirá con el negocio. Solo se usará para responder.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="asunto" class="form-label fw-bold">Asunto <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="asunto" name="asunto" required 
+                               minlength="3" placeholder="Ej: Consulta sobre productos, Horarios, etc.">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mensaje" class="form-label fw-bold">Mensaje <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="mensaje" name="mensaje" rows="5" required 
+                                  minlength="10" placeholder="Escribí tu mensaje aquí..."></textarea>
+                        <small class="text-muted">Mínimo 10 caracteres.</small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary fw-bold" style="min-height: 48px; touch-action: manipulation;">
+                            <i class="fas fa-paper-plane me-2"></i>Enviar Mensaje
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="min-height: 48px; touch-action: manipulation;">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+

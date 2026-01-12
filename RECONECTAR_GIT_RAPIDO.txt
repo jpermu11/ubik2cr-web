@@ -1,0 +1,70 @@
+═══════════════════════════════════════════════════════════
+  RECONECTAR GIT - PASO A PASO SIMPLE
+═══════════════════════════════════════════════════════════
+
+TU TRABAJO ESTÁ GUARDADO ✅
+Los archivos están en: C:\Users\jperm\.cursor\flask-app
+
+═══════════════════════════════════════════════════════════
+OPCIÓN 1: USAR GITHUB DESKTOP (MÁS FÁCIL)
+═══════════════════════════════════════════════════════════
+
+1. Abre GitHub Desktop
+2. File → Add Local Repository
+3. Haz clic en "Choose..." 
+4. Selecciona: C:\Users\jperm\.cursor\flask-app
+5. Si dice "This directory does not appear to be a Git repository":
+   - Haz clic en "Create a Repository"
+   - Name: ubik2cr-web
+   - Haz clic en "Create Repository"
+6. Verás todos tus archivos en "Changes"
+7. Abajo, en "Summary", escribe: "Recuperar trabajo"
+8. Haz clic en "Commit to main"
+9. Arriba, haz clic en "Publish branch" o "Push origin"
+10. Si te pide conectar, usa: jpermu11/ubik2cr-web
+
+═══════════════════════════════════════════════════════════
+OPCIÓN 2: INSTALAR GIT Y USAR COMANDOS
+═══════════════════════════════════════════════════════════
+
+1. Descarga Git: https://git-scm.com/download/win
+2. Instálalo (marca "Add Git to PATH")
+3. Abre PowerShell en esta carpeta
+4. Ejecuta estos comandos uno por uno:
+
+   git init
+   git remote add origin https://github.com/jpermu11/ubik2cr-web.git
+   git add .
+   git commit -m "Recuperar trabajo"
+   git branch -M main
+   git push -u origin main
+
+═══════════════════════════════════════════════════════════
+VERIFICAR QUE FUNCIONA
+═══════════════════════════════════════════════════════════
+
+1. Haz un cambio pequeño en main.py
+2. Guarda (Ctrl+S)
+3. Haz commit y push
+4. Ve a https://render.com
+5. Entra a tu servicio ubik2cr-web
+6. Verás que Render detecta el cambio automáticamente
+7. Render hará deploy automático
+
+═══════════════════════════════════════════════════════════
+PREVENIR ESTO EN EL FUTURO
+═══════════════════════════════════════════════════════════
+
+✅ Activa Auto-Save en Cursor:
+   File → Preferences → Settings → "Auto Save" → "afterDelay"
+
+✅ Haz commits frecuentes:
+   Cada vez que hagas cambios importantes, haz commit y push
+
+✅ Usa GitHub Desktop:
+   Más fácil que comandos, visual, un clic para push
+
+✅ Verifica que .git existe:
+   Si no ves carpeta .git oculta, significa que no hay Git configurado
+
+═══════════════════════════════════════════════════════════

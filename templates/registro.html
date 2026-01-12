@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Publicar Negocio | Ubik2CR</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Leaflet (mapa con pin) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <style>
+    body { background:#f5f7fa; }
+
+    .topbar{
+      background: linear-gradient(90deg,#0b4fa3,#38b24d);
+      color:#fff;
+    }
+    .brand img{ height:56px; }
+    .brand span{ font-weight:800; letter-spacing:.2px; }
+
+    .hero-mini{
+      background: linear-gradient(135deg, rgba(11,79,163,.12), rgba(56,178,77,.12));
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .cardx{
+      border:none; border-radius:18px;
+      box-shadow:0 10px 25px rgba(0,0,0,.08);
+      overflow:hidden;
+    }
+    .cardx-header{
+      background: rgba(11,79,163,.08);
+      border-bottom:1px solid rgba(0,0,0,.06);
+    }
+
+    #map{
+      height: 360px;
+      border-radius: 14px;
+      border:1px solid rgba(0,0,0,.10);
+    }
+
+    .hint{
+      font-size:.92rem;
+      color:#6c757d;
+    }
+
+    .btn-primary{
+      background:#0b4fa3;
+      border:none;
+      font-weight:800;
+    }
+    .btn-primary:hover{ filter:brightness(.95); }
+
+    .btn-success{
+      background:#38b24d;
+      border:none;
+      font-weight:800;
+    }
+    .btn-success:hover{ filter:brightness(.95); }
+
+    .required::after{
+      content:" *";
+      color:#dc3545;
+      font-weight:800;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<nav class="navbar topbar">
+  <div class="container d-flex align-items-center justify-content-between py-2">
+    <a class="navbar-brand brand d-flex align-items-center gap-2 text-white text-decoration-none" href="/">
+      <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
+      <span class="fs-4">Ubik2CR</span>
+    </a>
+
+    <div class="d-flex gap-2">
+      <a href="/" class="btn btn-light fw-bold">
+        <i class="fa-solid fa-house me-1"></i> Inicio
+      </a>
+      <a href="/mapa" class="btn btn-outline-light">
+        <i class="fa-solid fa-map-location-dot me-1"></i> Mapa
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="container my-4">
+
+  <div class="hero-mini mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <h2 class="fw-bold mb-1">📌 Publicar un Negocio o Lugar</h2>
+      <div class="hint">
+        No necesitás saber coordenadas: <b>tocá el mapa</b> y el pin se coloca solo ✅
+      </div>
+    </div>
+    <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="height:70px;">
+  </div>
+
+  <div class="cardx">
+    <div class="cardx-header p-3">
+      <div class="fw-bold">
+        <i class="fa-solid fa-circle-plus me-2"></i> Formulario de publicación
+      </div>
+      <div class="hint">Tu negocio queda <b>pendiente</b> hasta ser aprobado por el administrador.</div>
+    </div>
+
+    <div class="p-4">
+      <form method="POST" enctype="multipart/form-data">
+
+        <div class="row g-3">
+
+          <div class="col-md-8">
+            <label class="form-label fw-bold required">Nombre del negocio / lugar</label>
+            <input type="text" name="nombre" class="form-control form-control-lg" required placeholder="Ej: Soda Don Pepe, Iglesia San Pedro...">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold required">Categoría</label>
+            <select name="categoria" class="form-select form-select-lg" required>
+              
+              <optgroup label="🍽️ Comida y Bebidas">
+                <option value="Sodas y Rest.">🍴 Sodas y Rest.</option>
+                <option value="Comida Rápida">🍕 Comida Rápida</option>
+                <option value="Cafeterías">☕ Cafeterías</option>
+                <option value="Bares y Licores">🍺 Bares y Licores</option>
+                <option value="Heladerías">🍦 Heladerías</option>
+                <option value="Restaurante">🍔 Restaurantes</option>
+              </optgroup>
+              
+              <optgroup label="🛒 Alimentos">
+                <option value="Verdurerías">🥬 Verdurerías</option>
+                <option value="Carnicerías">🥩 Carnicerías</option>
+                <option value="Panaderías">🥐 Panaderías</option>
+                <option value="Super y Pulpes">🛒 Super y Pulpes</option>
+              </optgroup>
+              
+              <optgroup label="🏥 Salud">
+                <option value="Farmacias">💊 Farmacias</option>
+                <option value="Clínicas y Dr.">🩺 Clínicas y Dr.</option>
+                <option value="Dentistas">🦷 Dentistas</option>
+                <option value="Laboratorios">🧪 Laboratorios</option>
+                <option value="Veterinarias">🐾 Veterinarias</option>
+                <option value="Ópticas">👓 Ópticas</option>
+                <option value="CCSS">🏥 CCSS / Clínica / Ebáis</option>
+              </optgroup>
+              
+              <optgroup label="💅 Belleza y Fitness">
+                <option value="Gimnasios">💪 Gimnasios</option>
+                <option value="Spas y Masajes">🧘 Spas y Masajes</option>
+                <option value="Belleza y Barbería">✂️ Belleza y Barbería</option>
+              </optgroup>
+              
+              <optgroup label="👕 Ropa y Tecnología">
+                <option value="Ropa y Calzado">👗 Ropa y Calzado</option>
+                <option value="Tecnología y Cel.">📱 Tecnología y Cel.</option>
+                <option value="Reparaciones Tech">💻 Reparaciones Tech</option>
+              </optgroup>
+              
+              <optgroup label="🔧 Construcción y Automotriz">
+                <option value="Ferreterías">🔨 Ferreterías</option>
+                <option value="Materiales Construcción">🧱 Materiales Construcción</option>
+                <option value="Mecánica y Llantas">🔧 Mecánica y Llantas</option>
+                <option value="Transporte">🚕 Transporte</option>
+                <option value="Gasolineras">⛽ Gasolineras</option>
+                <option value="Automotriz">🚗 Automotriz</option>
+              </optgroup>
+              
+              <optgroup label="📚 Educación y Cultura">
+                <option value="Librerías y Bazar">📖 Librerías y Bazar</option>
+                <option value="Escuelas">🏫 Escuelas</option>
+                <option value="Bibliotecas">📚 Bibliotecas</option>
+                <option value="Academias">🎓 Academias</option>
+                <option value="Educacion">🎓 Educación</option>
+              </optgroup>
+              
+              <optgroup label="🏨 Turismo y Entretenimiento">
+                <option value="Hoteles y Hospedaje">🏨 Hoteles y Hospedaje</option>
+                <option value="Parques">🌳 Parques</option>
+                <option value="Plazas">🏞️ Plazas</option>
+                <option value="Polideportivo">🏟️ Polideportivos</option>
+                <option value="Cines y Entretenimiento">🎬 Cines y Entretenimiento</option>
+                <option value="Turismo">🗺️ Turismo</option>
+              </optgroup>
+              
+              <optgroup label="💰 Finanzas">
+                <option value="Bancos">🏦 Bancos</option>
+                <option value="Cooperativas">💵 Cooperativas</option>
+              </optgroup>
+              
+              <optgroup label="🏛️ Servicios Públicos">
+                <option value="Cruz Roja">🚑 Cruz Roja</option>
+                <option value="Bomberos">🚒 Bomberos</option>
+                <option value="Policía">🚓 Policía</option>
+                <option value="Municipalidad">🏛️ Municipalidad</option>
+                <option value="Iglesia">⛪ Iglesias</option>
+                <option value="Instituciones Públicas">🏢 Instituciones Públicas</option>
+                <option value="Edificio Gubernamental">🏢 Edificio Gubernamental</option>
+              </optgroup>
+              
+              <optgroup label="💼 Servicios Profesionales">
+                <option value="Servicios Pro">💼 Servicios Pro</option>
+                <option value="Consultoría">📊 Consultoría</option>
+                <option value="Abogados">⚖️ Abogados</option>
+                <option value="Contables">📋 Contables</option>
+                <option value="Salones de Eventos">🎉 Salones de Eventos</option>
+                <option value="Mudanzas y Transporte">🚚 Mudanzas y Transporte</option>
+                <option value="Plomería y Electricidad">⚡ Plomería y Electricidad</option>
+                <option value="Jardinería">🌱 Jardinería</option>
+                <option value="Mascotas y Suministros">🐕 Mascotas y Suministros</option>
+                <option value="Servicios">🧰 Servicios</option>
+              </optgroup>
+              
+              <optgroup label="🏪 Otros">
+                <option value="Comercio">🏪 Comercios</option>
+                <option value="Otros">✨ Otros</option>
+              </optgroup>
+
+            </select>
+          </div>
+
+          <div class="col-md-7">
+            <label class="form-label fw-bold required">Ubicación (texto)</label>
+            <input type="text" name="ubicacion" class="form-control form-control-lg" required
+                   placeholder="Ej: 200m norte de la iglesia, San Juan de Poás">
+            <div class="hint mt-1">Esto es lo que verá la gente, aunque el pin sea exacto.</div>
+          </div>
+
+          <div class="col-md-5">
+            <label class="form-label fw-bold">Link de Google Maps (opcional)</label>
+            <input type="url" name="maps_url" class="form-control form-control-lg" placeholder="https://maps.app.goo.gl/...">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Teléfono (opcional)</label>
+            <input type="text" name="telefono" class="form-control form-control-lg" placeholder="Ej: 2448-5858">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">WhatsApp (opcional)</label>
+            <input type="text" name="whatsapp" class="form-control form-control-lg" placeholder="Ej: +506 8888-8888">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="abierto_24h" name="abierto_24h" value="1" onchange="toggleHorarios()">
+              <label class="form-check-label fw-bold" for="abierto_24h">Abierto 24 horas</label>
+            </div>
+          </div>
+
+          <div class="col-12" id="horarios-container">
+            <label class="form-label fw-bold mb-3">Horario por día (opcional)</label>
+            <div class="row g-2">
+              {% set dias = [
+                ('lunes', 'Lunes'),
+                ('martes', 'Martes'),
+                ('miercoles', 'Miércoles'),
+                ('jueves', 'Jueves'),
+                ('viernes', 'Viernes'),
+                ('sabado', 'Sábado'),
+                ('domingo', 'Domingo')
+              ] %}
+              {% for dia_key, dia_nombre in dias %}
+              <div class="col-md-6 col-lg-4">
+                <div class="card p-2" style="border: 1px solid #ddd; border-radius: 8px;">
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="horario_{{ dia_key }}_abierto" name="horario_{{ dia_key }}_abierto" value="1" onchange="toggleDia('{{ dia_key }}')">
+                    <label class="form-check-label fw-bold" for="horario_{{ dia_key }}_abierto">{{ dia_nombre }}</label>
+                  </div>
+                  <div id="horario_{{ dia_key }}_times" style="display:none;">
+                    <div class="row g-1">
+                      <div class="col-6">
+                        <input type="time" class="form-control form-control-sm" name="horario_{{ dia_key }}_apertura" placeholder="Apertura">
+                      </div>
+                      <div class="col-6">
+                        <input type="time" class="form-control form-control-sm" name="horario_{{ dia_key }}_cierre" placeholder="Cierre">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="hint mt-2">Marcá los días que está abierto y especificá las horas de apertura y cierre.</div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Foto / Logo (opcional)</label>
+            <input type="file" name="foto" class="form-control form-control-lg">
+            <div class="hint mt-1">Si no subís foto, se usa el logo por defecto.</div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-bold required">Descripción</label>
+            <textarea name="descripcion" rows="4" class="form-control form-control-lg" required
+                      placeholder="Describe lo que ofrece, horarios, servicios, etc."></textarea>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-bold">
+              <i class="fas fa-tags me-2" style="color: var(--brand-blue);"></i>
+              Productos / Servicios que ofrecés (Tags) <small class="text-muted">(Opcional)</small>
+            </label>
+            <input type="text" name="productos_tags" id="productos_tags" class="form-control form-control-lg"
+                   placeholder="Ej: martillo, clavos, pintura, herramientas, servicio de instalación..."
+                   data-role="tagsinput">
+            <div class="hint mt-2">
+              <i class="fas fa-info-circle me-1"></i>
+              Agregá productos o servicios que vendés (separados por comas). Ej: "martillo, clavos, pintura" o "hamburguesa, papas fritas, refrescos".
+              Esto ayudará a que los clientes te encuentren más fácilmente cuando busquen estos productos.
+            </div>
+            <div class="mt-2" id="tags-display" style="display: none;">
+              <div class="d-flex flex-wrap gap-2" id="tags-container"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <hr class="my-4">
+
+        <!-- MAPA -->
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="fw-bold">
+            <i class="fa-solid fa-map-pin me-2"></i> Marcá la ubicación exacta
+          </div>
+          <div class="hint">Tocá el mapa para colocar el pin ✅</div>
+        </div>
+
+        <div id="map"></div>
+
+        <!-- hidden lat/long (se llenan con el pin) -->
+        <input type="hidden" id="latitud" name="latitud" value="">
+        <input type="hidden" id="longitud" name="longitud" value="">
+
+        <div class="hint mt-2">
+          Si no marcás el pin, se puede publicar igual, pero es mejor marcarlo para salir bien en el mapa.
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-success btn-lg px-4">
+            <i class="fa-solid fa-paper-plane me-2"></i> Publicar
+          </button>
+          <a href="/" class="btn btn-outline-secondary btn-lg px-4">
+            Cancelar
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Centro por defecto (Costa Rica)
+  const defaultLat = 9.9281;
+  const defaultLng = -84.0907;
+
+  const latInput = document.getElementById("latitud");
+  const lngInput = document.getElementById("longitud");
+
+  const map = L.map('map').setView([defaultLat, defaultLng], 12);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  let marker = null;
+
+  function setMarker(lat, lng){
+    if(marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng]).addTo(map);
+    latInput.value = lat.toFixed(6);
+    lngInput.value = lng.toFixed(6);
+  }
+
+  // Click para poner pin
+  map.on('click', function(e){
+    setMarker(e.latlng.lat, e.latlng.lng);
+  });
+
+  // Sistema de tags/productos
+  const productosTagsInput = document.getElementById('productos_tags');
+  const tagsContainer = document.getElementById('tags-container');
+  const tagsDisplay = document.getElementById('tags-display');
+  let tagsArray = [];
+
+  if (productosTagsInput && tagsContainer && tagsDisplay) {
+    productosTagsInput.addEventListener('input', function(e) {
+      const value = e.target.value.trim();
+      if (value.endsWith(',') || (value.endsWith(' ') && value.length > 1)) {
+        const tags = value.replace(/,\s*$/, '').split(/[,\s]+/).filter(t => t.trim() !== '').map(t => t.trim().toLowerCase());
+        tags.forEach(tag => {
+          if (tag && !tagsArray.includes(tag)) {
+            tagsArray.push(tag);
+          }
+        });
+        actualizarTagsDisplay();
+        productosTagsInput.value = '';
+      }
+    });
+
+    productosTagsInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const value = e.target.value.trim();
+        if (value) {
+          const tags = value.split(/[,\s]+/).filter(t => t.trim() !== '').map(t => t.trim().toLowerCase());
+          tags.forEach(tag => {
+            if (tag && !tagsArray.includes(tag)) {
+              tagsArray.push(tag);
+            }
+          });
+          actualizarTagsDisplay();
+          productosTagsInput.value = '';
+        }
+      } else if (e.key === 'Backspace' && productosTagsInput.value === '' && tagsArray.length > 0) {
+        tagsArray.pop();
+        actualizarTagsDisplay();
+      }
+    });
+
+    function actualizarTagsDisplay() {
+      if (tagsArray.length === 0) {
+        tagsDisplay.style.display = 'none';
+        return;
+      }
+      
+      tagsDisplay.style.display = 'block';
+      tagsContainer.innerHTML = tagsArray.map((tag, index) => `
+        <span class="badge bg-primary" style="font-size: 0.875rem; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" onclick="eliminarTag(${index})">
+          #${tag}
+          <i class="fas fa-times" style="font-size: 0.75rem;"></i>
+        </span>
+      `).join('');
+    }
+
+    window.eliminarTag = function(index) {
+      if (tagsArray && tagsArray.length > index) {
+        tagsArray.splice(index, 1);
+        actualizarTagsDisplay();
+      }
+    };
+
+    // Al enviar el formulario, agregar los tags como input hidden
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        if (tagsArray && tagsArray.length > 0) {
+          let hiddenInput = document.getElementById('productos_tags_json');
+          if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = 'productos_tags_json';
+            hiddenInput.name = 'productos_tags_json';
+            this.appendChild(hiddenInput);
+          }
+          hiddenInput.value = JSON.stringify(tagsArray);
+        }
+      });
+    }
+  }
+
+  // Sistema de tags/productos
+  const productosTagsInput = document.getElementById('productos_tags');
+  const tagsContainer = document.getElementById('tags-container');
+  const tagsDisplay = document.getElementById('tags-display');
+  let tagsArray = [];
+
+  if (productosTagsInput) {
+    productosTagsInput.addEventListener('input', function(e) {
+      const value = e.target.value.trim();
+      if (value.endsWith(',') || value.endsWith(' ')) {
+        const tags = value.split(/[,\s]+/).filter(t => t.trim() !== '').map(t => t.trim().toLowerCase());
+        tags.forEach(tag => {
+          if (!tagsArray.includes(tag)) {
+            tagsArray.push(tag);
+          }
+        });
+        actualizarTagsDisplay();
+        productosTagsInput.value = '';
+      }
+    });
+
+    productosTagsInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const value = e.target.value.trim();
+        if (value) {
+          const tags = value.split(/[,\s]+/).filter(t => t.trim() !== '').map(t => t.trim().toLowerCase());
+          tags.forEach(tag => {
+            if (!tagsArray.includes(tag)) {
+              tagsArray.push(tag);
+            }
+          });
+          actualizarTagsDisplay();
+          productosTagsInput.value = '';
+        }
+      } else if (e.key === 'Backspace' && productosTagsInput.value === '' && tagsArray.length > 0) {
+        tagsArray.pop();
+        actualizarTagsDisplay();
+      }
+    });
+  }
+
+  function actualizarTagsDisplay() {
+    if (!tagsContainer || !tagsDisplay) return;
+    
+    if (tagsArray.length === 0) {
+      tagsDisplay.style.display = 'none';
+      return;
+    }
+    
+    tagsDisplay.style.display = 'block';
+    tagsContainer.innerHTML = tagsArray.map((tag, index) => `
+      <span class="badge bg-primary" style="font-size: 0.875rem; padding: 8px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" onclick="eliminarTag(${index})">
+        #${tag}
+        <i class="fas fa-times" style="font-size: 0.75rem;"></i>
+      </span>
+    `).join('');
+  }
+
+  function eliminarTag(index) {
+    if (tagsArray && tagsArray.length > index) {
+      tagsArray.splice(index, 1);
+      actualizarTagsDisplay();
+    }
+  }
+
+  // Al enviar el formulario, agregar los tags como input hidden
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      if (tagsArray && tagsArray.length > 0) {
+        const existingInput = document.getElementById('productos_tags_json');
+        if (existingInput) {
+          existingInput.value = JSON.stringify(tagsArray);
+        } else {
+          const hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.id = 'productos_tags_json';
+          hiddenInput.name = 'productos_tags_json';
+          hiddenInput.value = JSON.stringify(tagsArray);
+          this.appendChild(hiddenInput);
+        }
+      }
+    });
+  }
+
+  // Horario vs 24h
+  const chk24 = document.getElementById("abierto_24h");
+  const horarioInput = document.getElementById("horario");
+  function toggleHorarios() {
+    const abierto24h = document.getElementById('abierto_24h');
+    const container = document.getElementById('horarios-container');
+    if (!abierto24h || !container) return;
+    
+    if (abierto24h.checked) {
+      container.style.display = 'none';
+      // Desmarcar todos los días
+      document.querySelectorAll('[id^="horario_"][id$="_abierto"]').forEach(cb => {
+        cb.checked = false;
+        const diaKey = cb.id.replace('horario_', '').replace('_abierto', '');
+        const timesDiv = document.getElementById(`horario_${diaKey}_times`);
+        if (timesDiv) {
+          timesDiv.style.display = 'none';
+        }
+      });
+    } else {
+      container.style.display = 'block';
+    }
+  }
+
+  function toggleDia(diaKey) {
+    const checkbox = document.getElementById(`horario_${diaKey}_abierto`);
+    const timesDiv = document.getElementById(`horario_${diaKey}_times`);
+    if (checkbox && timesDiv) {
+      if (checkbox.checked) {
+        timesDiv.style.display = 'block';
+      } else {
+        timesDiv.style.display = 'none';
+        // Limpiar los campos de hora
+        const apertura = timesDiv.querySelector(`input[name="horario_${diaKey}_apertura"]`);
+        const cierre = timesDiv.querySelector(`input[name="horario_${diaKey}_cierre"]`);
+        if (apertura) apertura.value = '';
+        if (cierre) cierre.value = '';
+      }
+    }
+  }
+
+  // Inicializar
+  const chk24 = document.getElementById('abierto_24h');
+  if (chk24) {
+    chk24.addEventListener('change', toggleHorarios);
+    toggleHorarios(); // Ejecutar al cargar
+  }
+</script>
+
+</body>
+</html>
+

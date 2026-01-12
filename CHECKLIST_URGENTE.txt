@@ -1,0 +1,92 @@
+═══════════════════════════════════════════════════════════
+  ✅ CHECKLIST URGENTE - Ubik2CR Producción
+  Miles de usuarios - NO PUEDE FALLAR
+═══════════════════════════════════════════════════════════
+
+PASO 1: INSTALAR GIT ⚠️ OBLIGATORIO
+═══════════════════════════════════════════════════════════
+
+[ ] 1. Descargar Git: https://git-scm.com/download/win
+[ ] 2. Instalar marcando "Add Git to PATH"
+[ ] 3. Cerrar TODAS las ventanas de Cursor/PowerShell
+[ ] 4. Reabrir Cursor
+[ ] 5. Ejecutar: setup_git_urgente.bat
+[ ] 6. Ejecutar: git push -u origin main
+
+VERIFICAR: git --version (debe mostrar versión)
+
+═══════════════════════════════════════════════════════════
+PASO 2: CONFIGURAR AUTO-BACKUP ⚠️ OBLIGATORIO
+═══════════════════════════════════════════════════════════
+
+[ ] 1. Abrir Task Scheduler (Win+R → taskschd.msc)
+[ ] 2. Create Basic Task
+[ ] 3. Nombre: Ubik2CR_Auto_Backup
+[ ] 4. Trigger: Daily, repetir cada 1 hora
+[ ] 5. Action: Ejecutar auto_backup.bat
+[ ] 6. Run with highest privileges: ✅
+
+VERIFICAR: Esperar 1 hora, revisar backup_errors.log
+
+═══════════════════════════════════════════════════════════
+PASO 3: VERIFICAR RENDER.COM ⚠️ OBLIGATORIO
+═══════════════════════════════════════════════════════════
+
+[ ] 1. Ir a: https://render.com
+[ ] 2. Entrar a servicio: ubik2cr-web
+[ ] 3. Settings → Auto-Deploy: ✅ DEBE estar ON
+[ ] 4. Settings → Notifications: ✅ Configurar email
+[ ] 5. Settings → Health Check: ✅ Debe ser /health
+[ ] 6. Verificar: https://ubik2cr.com/health → {"status":"ok"}
+
+═══════════════════════════════════════════════════════════
+PASO 4: VERIFICAR CONFIGURACIÓN ACTUAL ⚠️ OBLIGATORIO
+═══════════════════════════════════════════════════════════
+
+[ ] 1. Ejecutar: powershell -ExecutionPolicy Bypass -File verificar_salud.ps1
+[ ] 2. Verificar que TODO muestra ✅
+[ ] 3. Si hay ❌, resolver antes de continuar
+
+═══════════════════════════════════════════════════════════
+PASO 5: CONFIGURAR VERIFICACIÓN DIARIA (RECOMENDADO)
+═══════════════════════════════════════════════════════════
+
+[ ] 1. Task Scheduler → Create Basic Task
+[ ] 2. Nombre: Ubik2CR_Verificar_Salud
+[ ] 3. Trigger: Daily a las 9 AM
+[ ] 4. Action: Ejecutar verificar_salud.ps1
+[ ] 5. Guardar
+
+═══════════════════════════════════════════════════════════
+✅ VERIFICACIÓN FINAL
+═══════════════════════════════════════════════════════════
+
+[ ] Git instalado: git --version
+[ ] Git configurado: git status (debe funcionar)
+[ ] Conexión GitHub: git remote -v (debe mostrar origin)
+[ ] Auto-backup configurado: Task Scheduler tiene tarea
+[ ] Render auto-deploy: Activado en Settings
+[ ] Health check: https://ubik2cr.com/health funciona
+[ ] Verificación salud: verificar_salud.ps1 pasa todos los checks
+
+═══════════════════════════════════════════════════════════
+🚨 EN CASO DE PROBLEMA
+═══════════════════════════════════════════════════════════
+
+1. NO ENTRAR EN PÁNICO
+2. Ejecutar: verificar_salud.ps1
+3. Ver qué falló exactamente
+4. Revisar logs en Render.com
+5. Si es crítico: Rollback en Render
+
+SI SE PIERDE TRABAJO:
+- GitHub tiene TODO: https://github.com/jpermu11/ubik2cr-web
+- Clonar: git clone https://github.com/jpermu11/ubik2cr-web.git
+
+═══════════════════════════════════════════════════════════
+
+TIEMPO TOTAL: ~30 minutos
+
+PRIORIDAD: ⚠️ URGENTE - INMEDIATO
+
+Este sistema está diseñado para NO FALLAR.

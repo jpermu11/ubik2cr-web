@@ -1,0 +1,138 @@
+═══════════════════════════════════════════════════════════════
+  GUÍA PASO A PASO - MUY FÁCIL (SIN CURSOR)
+═══════════════════════════════════════════════════════════════
+
+NO NECESITAS USAR CURSOR PARA ESTO.
+Puedes hacerlo todo desde el Explorador de Windows normal.
+
+═══════════════════════════════════════════════════════════════
+PASO 1: ABRIR LA CARPETA DEL PROYECTO
+═══════════════════════════════════════════════════════════════
+
+1. Presiona la tecla WINDOWS (la del logo de Windows, abajo a la izquierda)
+
+2. Escribe: explorador
+   (o busca "Explorador de archivos" en el menú)
+
+3. Presiona Enter
+
+4. Se abrirá una ventana con tus carpetas
+
+5. En la barra de direcciones (arriba, donde dice "Esta PC" o similar),
+   haz clic una vez y escribe esto EXACTAMENTE:
+
+   C:\Users\jperm\.cursor\flask-app
+
+6. Presiona Enter
+
+7. Ahora deberías ver varios archivos, incluyendo:
+   - INSTALAR_TODO.bat
+   - EJECUTAR.bat
+   - LEEME_PRIMERO.txt
+
+═══════════════════════════════════════════════════════════════
+PASO 2: INSTALAR PYTHON (Si no lo tienes)
+═══════════════════════════════════════════════════════════════
+
+1. Abre tu navegador (Chrome, Edge, Firefox, etc.)
+
+2. En la barra de direcciones (arriba), escribe:
+   python.org/downloads
+
+3. Presiona Enter
+
+4. Verás una página con un botón grande que dice "Download Python"
+
+5. Haz clic en ese botón
+
+6. Espera a que se descargue (puede tardar 1-2 minutos)
+
+7. Cuando termine, busca el archivo descargado
+   (normalmente está en "Descargas" o aparece abajo en el navegador)
+
+8. Haz DOBLE CLIC en el archivo descargado
+   (se llama algo como "python-3.11.x.exe")
+
+9. Se abrirá una ventana de instalación
+
+10. LO MÁS IMPORTANTE: En la primera pantalla, busca una casilla que dice:
+    ☐ "Add Python to PATH" o "Agregar Python al PATH"
+    
+    MÁRCALA (haz clic para que aparezca una ✓)
+
+11. Haz clic en el botón "Install Now" o "Instalar ahora"
+
+12. Espera a que termine (puede tardar 2-3 minutos)
+
+13. Cuando termine, verás un botón "Close" o "Cerrar"
+
+14. Haz clic en "Close"
+
+15. Cierra todas las ventanas abiertas
+
+═══════════════════════════════════════════════════════════════
+PASO 3: INSTALAR TODO AUTOMÁTICAMENTE
+═══════════════════════════════════════════════════════════════
+
+1. Vuelve a la ventana del Explorador de archivos
+   (donde viste los archivos INSTALAR_TODO.bat, etc.)
+
+2. Busca el archivo que se llama: INSTALAR_TODO.bat
+   (Tiene un ícono que parece un engranaje o un documento)
+
+3. Haz DOBLE CLIC en INSTALAR_TODO.bat
+
+4. Se abrirá una ventana NEGRA (es normal, no te asustes)
+
+5. Verás texto apareciendo en la ventana negra
+
+6. ESPERA pacientemente (puede tardar 5-10 minutos la primera vez)
+   - Verás mensajes como "Instalando dependencias..."
+   - No cierres la ventana
+   - No hagas clic en nada, solo espera
+
+7. Cuando termine, verás un mensaje que dice:
+   "✅ ¡TODO LISTO!"
+
+8. Presiona cualquier tecla para cerrar la ventana
+
+═══════════════════════════════════════════════════════════════
+PASO 4: EJECUTAR LA APLICACIÓN
+═══════════════════════════════════════════════════════════════
+
+1. En la misma ventana del Explorador de archivos
+
+2. Busca el archivo que se llama: EJECUTAR.bat
+
+3. Haz DOBLE CLIC en EJECUTAR.bat
+
+4. Se abrirá OTRA ventana negra
+
+5. Espera a que aparezca un mensaje que dice:
+   "La aplicación estará disponible en: http://localhost:5000"
+
+6. IMPORTANTE: NO CIERRES ESTA VENTANA NEGRA
+   (Déjala abierta mientras uses la aplicación)
+
+7. Abre tu navegador (Chrome, Edge, etc.)
+
+8. En la barra de direcciones (arriba del navegador), escribe:
+   localhost:5000
+
+9. Presiona Enter
+
+10. ¡Deberías ver tu aplicación funcionando! 🎉
+
+═══════════════════════════════════════════════════════════════
+  RESUMEN ULTRA SIMPLE
+═══════════════════════════════════════════════════════════════
+
+1. Abre el Explorador de Windows
+2. Ve a: C:\Users\jperm\.cursor\flask-app
+3. Instala Python desde python.org (marca "Add Python to PATH")
+4. Doble clic en INSTALAR_TODO.bat (espera a que termine)
+5. Doble clic en EJECUTAR.bat (deja la ventana abierta)
+6. Abre localhost:5000 en tu navegador
+
+═══════════════════════════════════════════════════════════════
+

@@ -1,0 +1,101 @@
+═══════════════════════════════════════════════════════════════
+  INSTRUCCIONES MUY SIMPLES - LEE ESTO PRIMERO
+═══════════════════════════════════════════════════════════════
+
+PASO 1: INSTALAR PYTHON (Solo la primera vez)
+═══════════════════════════════════════════════════════════════
+
+1. Abre tu navegador (Chrome, Edge, etc.)
+
+2. Ve a esta página:
+   https://www.python.org/downloads/
+
+3. Haz clic en el botón grande que dice "Download Python"
+
+4. Espera a que se descargue el archivo
+
+5. Cuando termine, haz doble clic en el archivo descargado
+   (se llama algo como "python-3.11.x.exe")
+
+6. IMPORTANTE: En la primera pantalla que aparece, marca esta casilla:
+   ☑ "Add Python to PATH"
+   
+   (Esta casilla es MUY IMPORTANTE, no te la saltes)
+
+7. Haz clic en "Install Now"
+
+8. Espera a que termine (puede tardar 2-3 minutos)
+
+9. Cuando termine, haz clic en "Close"
+
+10. Cierra todas las ventanas abiertas
+
+
+PASO 2: INSTALAR TODO AUTOMÁTICAMENTE
+═══════════════════════════════════════════════════════════════
+
+1. Abre el Explorador de Archivos (la carpeta amarilla en la barra de tareas)
+
+2. Ve a esta carpeta:
+   C:\Users\jperm\.cursor\flask-app
+
+3. Busca el archivo llamado: INSTALAR_TODO.bat
+   (Tiene un ícono de engranaje o de documento)
+
+4. Haz DOBLE CLIC en INSTALAR_TODO.bat
+
+5. Se abrirá una ventana negra
+
+6. ESPERA a que termine (puede tardar 5-10 minutos la primera vez)
+
+7. Cuando termine, verás un mensaje que dice "¡TODO LISTO!"
+
+8. Presiona cualquier tecla para cerrar la ventana
+
+
+PASO 3: EJECUTAR LA APLICACIÓN
+═══════════════════════════════════════════════════════════════
+
+1. En la misma carpeta, busca el archivo: EJECUTAR.bat
+
+2. Haz DOBLE CLIC en EJECUTAR.bat
+
+3. Se abrirá otra ventana negra
+
+4. Espera a que aparezca un mensaje que dice:
+   "La aplicación estará disponible en: http://localhost:5000"
+
+5. NO CIERRES ESTA VENTANA (déjala abierta)
+
+6. Abre tu navegador (Chrome, Edge, etc.)
+
+7. En la barra de direcciones (arriba), escribe:
+   localhost:5000
+
+8. Presiona Enter
+
+9. ¡Deberías ver tu aplicación funcionando! 🎉
+
+
+═══════════════════════════════════════════════════════════════
+  RESUMEN RÁPIDO
+═══════════════════════════════════════════════════════════════
+
+1. Instala Python desde python.org (marca "Add Python to PATH")
+2. Doble clic en INSTALAR_TODO.bat
+3. Doble clic en EJECUTAR.bat
+4. Abre localhost:5000 en tu navegador
+
+¡Eso es todo!
+
+
+═══════════════════════════════════════════════════════════════
+  SI ALGO SALE MAL
+═══════════════════════════════════════════════════════════════
+
+- Si ves un error, cópialo completo y pégamelo
+- No cierres las ventanas negras mientras la app está corriendo
+- Para detener la app, presiona Ctrl + C en la ventana negra
+
+═══════════════════════════════════════════════════════════════
+

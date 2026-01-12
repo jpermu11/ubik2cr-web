@@ -1,0 +1,131 @@
+═══════════════════════════════════════════════════════════════
+  GUÍA PASO A PASO - SIN CONOCIMIENTOS DE PROGRAMACIÓN
+═══════════════════════════════════════════════════════════════
+
+Esta guía te llevará de la mano para hacer funcionar tu aplicación.
+
+═══════════════════════════════════════════════════════════════
+PASO 1: INSTALAR PYTHON (Si no lo tienes)
+═══════════════════════════════════════════════════════════════
+
+1. Abre tu navegador (Chrome, Edge, etc.)
+2. Ve a esta página: https://www.python.org/downloads/
+3. Haz clic en el botón grande que dice "Download Python"
+4. Se descargará un archivo .exe
+5. Haz doble clic en el archivo descargado
+6. IMPORTANTE: En la primera pantalla, marca la casilla que dice:
+   ☑ "Add Python to PATH" o "Agregar Python al PATH"
+7. Haz clic en "Install Now"
+8. Espera a que termine (puede tardar unos minutos)
+9. Cuando termine, haz clic en "Close"
+10. Cierra todas las ventanas abiertas
+
+═══════════════════════════════════════════════════════════════
+PASO 2: ABRIR LA TERMINAL (PowerShell o CMD)
+═══════════════════════════════════════════════════════════════
+
+OPCIÓN A - Desde el Explorador de Archivos:
+1. Abre el Explorador de Archivos (carpeta amarilla en la barra de tareas)
+2. Ve a esta carpeta: C:\Users\jperm\.cursor\flask-app
+3. Una vez dentro de la carpeta, haz clic en la barra de direcciones (arriba)
+4. Escribe: powershell
+5. Presiona Enter
+6. Se abrirá una ventana negra (PowerShell)
+
+OPCIÓN B - Desde el menú de Windows:
+1. Presiona la tecla Windows (la del logo de Windows)
+2. Escribe: powershell
+3. Presiona Enter
+4. Se abrirá una ventana negra
+5. Escribe: cd C:\Users\jperm\.cursor\flask-app
+6. Presiona Enter
+
+═══════════════════════════════════════════════════════════════
+PASO 3: VERIFICAR QUE PYTHON FUNCIONA
+═══════════════════════════════════════════════════════════════
+
+En la ventana negra (PowerShell), escribe exactamente esto y presiona Enter:
+
+    python --version
+
+Si ves algo como "Python 3.11.5" o similar, ¡perfecto! Python está instalado.
+Si ves un error, vuelve al PASO 1.
+
+═══════════════════════════════════════════════════════════════
+PASO 4: INSTALAR LAS HERRAMIENTAS NECESARIAS
+═══════════════════════════════════════════════════════════════
+
+Copia y pega estos comandos UNO POR UNO en la ventana negra.
+Presiona Enter después de cada uno y espera a que termine antes del siguiente.
+
+COMANDO 1:
+    python -m venv venv
+
+(Esto creará una carpeta llamada "venv" - puede tardar un minuto)
+
+COMANDO 2:
+    venv\Scripts\Activate.ps1
+
+Si te sale un error sobre "execution policy", escribe esto primero:
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+Luego vuelve a escribir:
+    venv\Scripts\Activate.ps1
+
+Deberías ver que aparece "(venv)" al inicio de la línea.
+
+COMANDO 3:
+    pip install -r requirements.txt
+
+(Esto instalará todo lo necesario - puede tardar varios minutos)
+
+═══════════════════════════════════════════════════════════════
+PASO 5: PREPARAR LA BASE DE DATOS
+═══════════════════════════════════════════════════════════════
+
+Copia y pega estos comandos UNO POR UNO:
+
+COMANDO 1:
+    flask db init
+
+COMANDO 2:
+    flask db migrate -m "Initial migration"
+
+COMANDO 3:
+    flask db upgrade
+
+═══════════════════════════════════════════════════════════════
+PASO 6: EJECUTAR LA APLICACIÓN
+═══════════════════════════════════════════════════════════════
+
+Escribe este comando:
+
+    python main.py
+
+Deberías ver algo como:
+    * Running on http://127.0.0.1:5000
+
+¡NO CIERRES ESTA VENTANA! Déjala abierta.
+
+═══════════════════════════════════════════════════════════════
+PASO 7: VER TU APLICACIÓN EN EL NAVEGADOR
+═══════════════════════════════════════════════════════════════
+
+1. Abre tu navegador (Chrome, Edge, Firefox, etc.)
+2. En la barra de direcciones (arriba), escribe:
+   http://localhost:5000
+3. Presiona Enter
+
+¡Deberías ver tu aplicación funcionando! 🎉
+
+═══════════════════════════════════════════════════════════════
+SI ALGO SALE MAL
+═══════════════════════════════════════════════════════════════
+
+- Si ves un error, cópialo completo y pégamelo
+- No cierres la ventana negra mientras la app está corriendo
+- Para detener la app, presiona Ctrl + C en la ventana negra
+- Si necesitas empezar de nuevo, cierra todo y vuelve al PASO 2
+
+═══════════════════════════════════════════════════════════════
+

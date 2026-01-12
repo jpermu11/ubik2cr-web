@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Oferta | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background:#f5f7fa; }
+        .topbar {
+            background: linear-gradient(90deg,#0b4fa3,#38b24d);
+            color:#fff;
+            padding: 15px 0;
+        }
+        .cardx {
+            border:none;
+            border-radius:18px;
+            box-shadow:0 10px 25px rgba(0,0,0,.08);
+            overflow:hidden;
+        }
+        .btn-primary { background:#0b4fa3; border:none; font-weight:800; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar topbar">
+    <div class="container d-flex align-items-center justify-content-between">
+        <a class="navbar-brand text-white fw-bold" href="/panel">← Volver al Panel</a>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <div class="cardx">
+        <div class="card-header bg-primary text-white p-3">
+            <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Oferta</h4>
+        </div>
+        <div class="card-body p-4">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-warning">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="mb-3">
+                <img src="{{ oferta.imagen_url }}" class="img-fluid" style="max-height: 200px; border-radius: 10px;" alt="{{ oferta.titulo }}">
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Título de la Oferta</label>
+                        <input type="text" name="titulo" class="form-control" value="{{ oferta.titulo }}" required maxlength="200">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Descripción</label>
+                        <textarea name="descripcion" class="form-control" rows="3">{{ oferta.descripcion or '' }}</textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Fecha de Caducidad</label>
+                        <input type="date" name="fecha_caducidad" class="form-control" value="{{ oferta.fecha_caducidad.strftime('%Y-%m-%d') }}" id="fecha_caducidad" min="">
+                        <small class="text-muted">Máximo 2 meses desde la fecha de inicio</small>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Nueva Imagen (opcional)</label>
+                        <input type="file" name="imagen" class="form-control" accept="image/*">
+                        <small class="text-muted">Si no subís una nueva imagen, se mantiene la actual</small>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                    <a href="/panel" class="btn btn-outline-secondary px-4">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Establecer fecha máxima (2 meses desde fecha de inicio)
+const fechaInicio = new Date('{{ oferta.fecha_inicio.strftime("%Y-%m-%d") }}');
+const maxDate = new Date(fechaInicio);
+maxDate.setMonth(fechaInicio.getMonth() + 2);
+
+document.getElementById('fecha_caducidad').min = fechaInicio.toISOString().split('T')[0];
+document.getElementById('fecha_caducidad').max = maxDate.toISOString().split('T')[0];
+</script>
+
+</body>
+</html>
+
