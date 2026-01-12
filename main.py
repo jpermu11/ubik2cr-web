@@ -749,7 +749,7 @@ def noticias():
             Noticia.fecha_caducidad >= ahora
         )
     ).order_by(Noticia.fecha.desc()).all()
-    return render_template("noticias.html", noticias=noticias_list)
+    return render_template("noticias.html", noticias=noticias_list, get_safe_image_url=get_safe_image_url)
 
 @app.route("/negocio/<int:id>")
 def detalle_negocio(id):
