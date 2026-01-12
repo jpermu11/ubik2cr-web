@@ -1477,7 +1477,7 @@ def publicar():
         latitud = safe_float(request.form.get("latitud"))
         longitud = safe_float(request.form.get("longitud"))
 
-        # Guardar múltiples imágenes (hasta 10)
+        # Guardar múltiples imágenes (hasta 10) - UNA SOLA VEZ
         fotos_urls = save_multiple_uploads("fotos", max_files=10)
         # La primera foto será la imagen principal
         imagen_url = fotos_urls[0] if fotos_urls else "/static/uploads/logo.png"
@@ -1523,8 +1523,7 @@ def publicar():
         db.session.add(nuevo_negocio)
         db.session.flush()  # Para obtener el ID del negocio
         
-        # Guardar múltiples imágenes (hasta 10)
-        fotos_urls = save_multiple_uploads("fotos", max_files=10)
+        # Guardar las imágenes en la tabla imagenes_negocio (ya fueron subidas arriba)
         for orden, foto_url in enumerate(fotos_urls):
             imagen_negocio = ImagenNegocio(
                 negocio_id=nuevo_negocio.id,
