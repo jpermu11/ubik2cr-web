@@ -95,6 +95,11 @@
                         <i class="far fa-heart me-1" id="icon-favorito"></i> <span id="text-favorito">Agregar a favoritos</span>
                     </button>
                     {% endif %}
+                    <button type="button" class="btn btn-outline-success rounded-pill px-4 py-2" 
+                            style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation; border-color: var(--brand-green); color: var(--brand-green);" 
+                            onclick="compartirNegocio({{ n.id }}, '{{ n.nombre|e }}')">
+                        <i class="fas fa-share-alt me-1"></i> <span>Compartir</span>
+                    </button>
                 </div>
             </div>
             <div class="col-md-6 text-center">
@@ -440,6 +445,112 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Función para compartir negocio
+    function compartirNegocio(negocioId, nombre) {
+        const url = `${window.location.origin}/negocio/${negocioId}`;
+        const texto = `📍 ${nombre}\n\nDescubre este negocio en Ubik2CR:\n${url}`;
+        
+        // Intentar usar Web Share API (dispositivos móviles)
+        if (navigator.share) {
+            navigator.share({
+                title: nombre,
+                text: texto,
+                url: url
+            }).catch(err => {
+                console.log('Error al compartir:', err);
+                fallbackCompartirNegocio(texto, url);
+            });
+        } else {
+            fallbackCompartirNegocio(texto, url);
+        }
+    }
+
+    // Función auxiliar para compartir negocio (fallback)
+    function fallbackCompartirNegocio(texto, url) {
+        // Copiar al portapapeles
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(texto + '\n' + url).then(() => {
+                alert('¡Enlace copiado al portapapeles! Ahora puedes compartirlo.');
+            }).catch(() => {
+                mostrarModalCompartirNegocio(texto, url);
+            });
+        } else {
+            mostrarModalCompartirNegocio(texto, url);
+        }
+    }
+
+    // Modal para compartir negocio
+    function mostrarModalCompartirNegocio(texto, url) {
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(texto + '\n' + url)}`;
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(texto)}&url=${encodeURIComponent(url)}`;
+        
+        const modal = `
+            <div class="modal fade" id="modalCompartirNegocio" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Compartir Negocio</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="d-grid gap-2">
+                                <a href="${whatsappUrl}" target="_blank" class="btn btn-success">
+                                    <i class="fab fa-whatsapp me-2"></i> WhatsApp
+                                </a>
+                                <a href="${facebookUrl}" target="_blank" class="btn btn-primary">
+                                    <i class="fab fa-facebook me-2"></i> Facebook
+                                </a>
+                                <a href="${twitterUrl}" target="_blank" class="btn btn-info text-white">
+                                    <i class="fab fa-twitter me-2"></i> Twitter
+                                </a>
+                                <button class="btn btn-outline-secondary" onclick="copiarEnlaceNegocio('${url}')">
+                                    <i class="fas fa-copy me-2"></i> Copiar Enlace
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remover modal anterior si existe
+        const modalExistente = document.getElementById('modalCompartirNegocio');
+        if (modalExistente) {
+            modalExistente.remove();
+        }
+        
+        // Agregar modal al body
+        document.body.insertAdjacentHTML('beforeend', modal);
+        const modalElement = new bootstrap.Modal(document.getElementById('modalCompartirNegocio'));
+        modalElement.show();
+        
+        // Remover modal del DOM después de cerrarse
+        document.getElementById('modalCompartirNegocio').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+    }
+
+    // Copiar enlace al portapapeles
+    function copiarEnlaceNegocio(url) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('¡Enlace copiado al portapapeles!');
+            });
+        } else {
+            // Fallback para navegadores antiguos
+            const textarea = document.createElement('textarea');
+            textarea.value = url;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('¡Enlace copiado al portapapeles!');
+        }
+    }
+</script>
 
 </body>
 </html>

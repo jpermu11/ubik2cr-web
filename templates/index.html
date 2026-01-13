@@ -11,6 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 
 <body>
@@ -154,6 +155,21 @@
                     </div>
                     {% endfor %}
                     </div>
+                    <!-- Botones de compartir y descargar noticias -->
+                    <div class="d-flex gap-2 justify-content-center mt-2 flex-wrap" style="padding: 0 8px;">
+                        {% if noticias_recientes|length > 0 %}
+                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                onclick="event.stopPropagation(); compartirNoticia({{ noticias_recientes[0].id }}, '{{ noticias_recientes[0].titulo|e }}');"
+                                style="font-size: 0.75rem; padding: 4px 8px; min-height: 32px; border-radius: 6px;">
+                            <i class="fas fa-share-alt me-1"></i> Compartir Noticia
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                onclick="event.stopPropagation(); descargarNoticia({{ noticias_recientes[0].id }});"
+                                style="font-size: 0.75rem; padding: 4px 8px; min-height: 32px; border-radius: 6px;">
+                            <i class="fas fa-download me-1"></i> Obtener Noticia
+                        </button>
+                        {% endif %}
+                    </div>
                     {% if noticias_recientes|length > 1 %}
                     <button class="carousel-control-prev" type="button" data-bs-target="#noticiasCarousel" data-bs-slide="prev"
                             style="min-width: 40px; min-height: 40px; width: 40px; height: 40px; background: rgba(255,255,255,0.95); border-radius: 50%; top: 50%; transform: translateY(-50%); left: 10px; opacity: 0.9; touch-action: manipulation; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
@@ -217,6 +233,21 @@
                         </div>
                     </div>
                     {% endfor %}
+                    </div>
+                    <!-- Botones de compartir y descargar ofertas -->
+                    <div class="d-flex gap-2 justify-content-center mt-2 flex-wrap" style="padding: 0 8px;">
+                        {% if ofertas_activas|length > 0 %}
+                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                onclick="event.stopPropagation(); compartirOferta({{ ofertas_activas[0].id }}, {{ ofertas_activas[0].negocio_id }}, '{{ ofertas_activas[0].titulo|e }}');"
+                                style="font-size: 0.75rem; padding: 4px 8px; min-height: 32px; border-radius: 6px; border-color: var(--brand-green); color: var(--brand-green);">
+                            <i class="fas fa-share-alt me-1"></i> Compartir Oferta
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                onclick="event.stopPropagation(); descargarOferta({{ ofertas_activas[0].id }});"
+                                style="font-size: 0.75rem; padding: 4px 8px; min-height: 32px; border-radius: 6px; border-color: var(--brand-green); color: var(--brand-green);">
+                            <i class="fas fa-download me-1"></i> Obtener Oferta
+                        </button>
+                        {% endif %}
                     </div>
                     {% if ofertas_activas|length > 1 %}
                     <button class="carousel-control-prev" type="button" data-bs-target="#ofertasCarousel" data-bs-slide="prev"
@@ -648,6 +679,234 @@
 </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script para compartir y descargar noticias/ofertas -->
+    <script>
+        // Función para obtener la URL base
+        function getBaseUrl() {
+            return window.location.origin;
+        }
+
+        // Compartir noticia
+        function compartirNoticia(noticiaId, titulo) {
+            const url = `${getBaseUrl()}/noticias`;
+            const texto = `📰 ${titulo}\n\nDescubre esta y más noticias en Ubik2CR:\n${url}`;
+            
+            // Intentar usar Web Share API (dispositivos móviles)
+            if (navigator.share) {
+                navigator.share({
+                    title: titulo,
+                    text: texto,
+                    url: url
+                }).catch(err => {
+                    console.log('Error al compartir:', err);
+                    fallbackCompartir(texto, url);
+                });
+            } else {
+                fallbackCompartir(texto, url);
+            }
+        }
+
+        // Compartir oferta
+        function compartirOferta(ofertaId, negocioId, titulo) {
+            const url = `${getBaseUrl()}/negocio/${negocioId}`;
+            const texto = `🎯 ${titulo}\n\n¡Mira esta oferta en Ubik2CR!\n${url}`;
+            
+            // Intentar usar Web Share API (dispositivos móviles)
+            if (navigator.share) {
+                navigator.share({
+                    title: titulo,
+                    text: texto,
+                    url: url
+                }).catch(err => {
+                    console.log('Error al compartir:', err);
+                    fallbackCompartir(texto, url);
+                });
+            } else {
+                fallbackCompartir(texto, url);
+            }
+        }
+
+        // Función auxiliar para compartir (fallback)
+        function fallbackCompartir(texto, url) {
+            // Copiar al portapapeles
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(texto + '\n' + url).then(() => {
+                    alert('¡Enlace copiado al portapapeles! Ahora puedes compartirlo.');
+                }).catch(() => {
+                    mostrarModalCompartir(texto, url);
+                });
+            } else {
+                mostrarModalCompartir(texto, url);
+            }
+        }
+
+        // Modal para compartir
+        function mostrarModalCompartir(texto, url) {
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(texto + '\n' + url)}`;
+            const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(texto)}&url=${encodeURIComponent(url)}`;
+            
+            const modal = `
+                <div class="modal fade" id="modalCompartir" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Compartir</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="d-grid gap-2">
+                                    <a href="${whatsappUrl}" target="_blank" class="btn btn-success">
+                                        <i class="fab fa-whatsapp me-2"></i> WhatsApp
+                                    </a>
+                                    <a href="${facebookUrl}" target="_blank" class="btn btn-primary">
+                                        <i class="fab fa-facebook me-2"></i> Facebook
+                                    </a>
+                                    <a href="${twitterUrl}" target="_blank" class="btn btn-info text-white">
+                                        <i class="fab fa-twitter me-2"></i> Twitter
+                                    </a>
+                                    <button class="btn btn-outline-secondary" onclick="copiarEnlace('${url}')">
+                                        <i class="fas fa-copy me-2"></i> Copiar Enlace
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remover modal anterior si existe
+            const modalExistente = document.getElementById('modalCompartir');
+            if (modalExistente) {
+                modalExistente.remove();
+            }
+            
+            // Agregar modal al body
+            document.body.insertAdjacentHTML('beforeend', modal);
+            const modalElement = new bootstrap.Modal(document.getElementById('modalCompartir'));
+            modalElement.show();
+            
+            // Remover modal del DOM después de cerrarse
+            document.getElementById('modalCompartir').addEventListener('hidden.bs.modal', function() {
+                this.remove();
+            });
+        }
+
+        // Copiar enlace al portapapeles
+        function copiarEnlace(url) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('¡Enlace copiado al portapapeles!');
+                });
+            } else {
+                // Fallback para navegadores antiguos
+                const textarea = document.createElement('textarea');
+                textarea.value = url;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('¡Enlace copiado al portapapeles!');
+            }
+        }
+
+        // Descargar noticia como imagen
+        async function descargarNoticia(noticiaId) {
+            try {
+                // Buscar el carousel item activo de noticias
+                const carousel = document.querySelector('#noticiasCarousel .carousel-item.active');
+                if (!carousel) {
+                    alert('No se pudo encontrar la noticia para descargar.');
+                    return;
+                }
+                
+                // Crear un elemento temporal con mejor formato para la imagen
+                const tempDiv = document.createElement('div');
+                tempDiv.style.width = '800px';
+                tempDiv.style.padding = '30px';
+                tempDiv.style.background = 'white';
+                tempDiv.style.position = 'absolute';
+                tempDiv.style.left = '-9999px';
+                
+                const cloned = carousel.cloneNode(true);
+                cloned.style.width = '800px';
+                cloned.style.height = 'auto';
+                cloned.style.position = 'relative';
+                cloned.style.display = 'block';
+                
+                tempDiv.appendChild(cloned);
+                document.body.appendChild(tempDiv);
+                
+                // Usar html2canvas para convertir a imagen
+                const canvas = await html2canvas(tempDiv, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    logging: false
+                });
+                
+                // Descargar la imagen
+                const link = document.createElement('a');
+                link.download = `noticia-ubik2cr-${noticiaId}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                // Limpiar
+                document.body.removeChild(tempDiv);
+            } catch (error) {
+                console.error('Error al descargar noticia:', error);
+                alert('No se pudo descargar la imagen. Por favor, intenta hacer una captura de pantalla.');
+            }
+        }
+
+        // Descargar oferta como imagen
+        async function descargarOferta(ofertaId) {
+            try {
+                // Buscar el carousel item activo de ofertas
+                const carousel = document.querySelector('#ofertasCarousel .carousel-item.active');
+                if (!carousel) {
+                    alert('No se pudo encontrar la oferta para descargar.');
+                    return;
+                }
+                
+                // Crear un elemento temporal con mejor formato para la imagen
+                const tempDiv = document.createElement('div');
+                tempDiv.style.width = '800px';
+                tempDiv.style.padding = '30px';
+                tempDiv.style.background = 'white';
+                tempDiv.style.position = 'absolute';
+                tempDiv.style.left = '-9999px';
+                
+                const cloned = carousel.cloneNode(true);
+                cloned.style.width = '800px';
+                cloned.style.height = 'auto';
+                cloned.style.position = 'relative';
+                cloned.style.display = 'block';
+                
+                tempDiv.appendChild(cloned);
+                document.body.appendChild(tempDiv);
+                
+                // Usar html2canvas para convertir a imagen
+                const canvas = await html2canvas(tempDiv, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    logging: false
+                });
+                
+                // Descargar la imagen
+                const link = document.createElement('a');
+                link.download = `oferta-ubik2cr-${ofertaId}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                // Limpiar
+                document.body.removeChild(tempDiv);
+            } catch (error) {
+                console.error('Error al descargar oferta:', error);
+                alert('No se pudo descargar la imagen. Por favor, intenta hacer una captura de pantalla.');
+            }
+        }
+    </script>
     
     <!-- Script para mejorar experiencia móvil -->
     <script>
