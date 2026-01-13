@@ -8,4 +8,5 @@ Werkzeug
 SQLAlchemy
 python-dotenv
 cloudinary
+requests
 

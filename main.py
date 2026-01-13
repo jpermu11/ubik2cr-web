@@ -2353,19 +2353,15 @@ def importar_lugares_osm(provincia, canton, tipos_amenity=None):
     bbox = obtener_bbox_canton(provincia, canton)
     bbox_str = f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}"
     
-    # Construir query Overpass
-    amenity_filters = "|".join([f'["amenity"="{t}"]' for t in tipos_amenity])
-    shop_filters = '["shop"]'
-    
+    # Construir query Overpass (sintaxis correcta)
+    # Buscar lugares con amenity o shop en el área del cantón
     query = f"""
     [out:json][timeout:25];
     (
-      node{amenity_filters}({bbox_str});
-      way{amenity_filters}({bbox_str});
-      relation{amenity_filters}({bbox_str});
-      node{shop_filters}({bbox_str});
-      way{shop_filters}({bbox_str});
-      relation{shop_filters}({bbox_str});
+      node["amenity"]({bbox_str});
+      node["shop"]({bbox_str});
+      way["amenity"]({bbox_str});
+      way["shop"]({bbox_str});
     );
     out body;
     >;
