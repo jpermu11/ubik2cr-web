@@ -407,6 +407,14 @@ def inicio():
         Oferta.estado == "activa"
     ).order_by(Oferta.fecha_inicio.desc()).limit(10).all()
     
+    # Obtener noticias recientes (no caducadas)
+    noticias_recientes = Noticia.query.filter(
+        or_(
+            Noticia.fecha_caducidad.is_(None),
+            Noticia.fecha_caducidad >= ahora
+        )
+    ).order_by(Noticia.fecha.desc()).limit(5).all()
+    
     busqueda_original = (request.args.get("q") or "").strip()  # Original con mayúsculas
     q = busqueda_original.lower()  # Lowercase para búsqueda
     cat = (request.args.get("cat") or "Todas").strip()
@@ -629,6 +637,7 @@ def inicio():
         q=busqueda_original if q else "",
         cat=cat,
         ofertas_activas=ofertas_activas,
+        noticias_recientes=noticias_recientes,
         owner_logged_in=owner_logged_in(),
         admin_logged_in=admin_logged_in(),
         get_safe_image_url=get_safe_image_url,
