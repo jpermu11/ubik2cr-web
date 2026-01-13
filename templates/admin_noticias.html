@@ -23,12 +23,39 @@
             .topbar {
                 min-height: 70px;
                 max-height: 70px;
+                height: 70px;
+                overflow: visible;
+                position: relative;
             }
             .topbar .container {
                 flex-wrap: nowrap;
+                position: relative;
+                height: 100%;
             }
             .brand img {
                 height: 45px !important;
+            }
+            
+            /* Menú colapsable fuera del flujo del navbar */
+            .navbar-collapse {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: linear-gradient(90deg,var(--blue),var(--green));
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                padding: 16px;
+                z-index: 1000;
+                margin-top: 0;
+            }
+            
+            .navbar-collapse .d-flex {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .navbar-collapse .btn {
+                width: 100%;
             }
         }
     </style>

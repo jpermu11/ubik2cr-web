@@ -85,12 +85,40 @@
             .navbar {
                 min-height: 80px;
                 max-height: 80px;
+                height: 80px;
+                overflow: visible;
+                position: relative;
             }
             .navbar .container {
                 flex-wrap: nowrap;
+                position: relative;
+                height: 100%;
             }
             .navbar-brand img {
                 height: 50px !important;
+            }
+            
+            /* Menú colapsable fuera del flujo del navbar */
+            .navbar-collapse {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                border-top: 3px solid var(--brand-blue);
+                padding: 16px;
+                z-index: 1000;
+                margin-top: 0;
+            }
+            
+            .navbar-collapse .d-flex {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .navbar-collapse .btn {
+                width: 100%;
             }
         }
     </style>
