@@ -616,7 +616,19 @@ def inicio():
         # Eliminar duplicados y devolver
         return list(set(categorias_sugeridas))
     
-    # Aplicar búsqueda inteligente
+    # Filtros de ubicación (aplicar primero para que funcionen independientemente)
+    provincia_filtro = request.args.get("provincia", "").strip()
+    canton_filtro = request.args.get("canton", "").strip()
+    distrito_filtro = request.args.get("distrito", "").strip()
+    
+    if provincia_filtro:
+        query = query.filter_by(provincia=provincia_filtro)
+    if canton_filtro:
+        query = query.filter_by(canton=canton_filtro)
+    if distrito_filtro:
+        query = query.filter_by(distrito=distrito_filtro)
+    
+    # Aplicar búsqueda inteligente (solo si hay texto de búsqueda)
     categorias_inteligentes = []
     if q:
         categorias_inteligentes = buscar_categorias_inteligente(q)
@@ -665,20 +677,9 @@ def inicio():
         
         query = query.filter(or_(*condiciones_busqueda))
     
+    # Filtro de categoría (aplicar después de ubicación pero antes del ordenamiento)
     if cat and cat != "Todas":
         query = query.filter_by(categoria=cat)
-    
-    # Filtros de ubicación
-    provincia_filtro = request.args.get("provincia", "").strip()
-    canton_filtro = request.args.get("canton", "").strip()
-    distrito_filtro = request.args.get("distrito", "").strip()
-    
-    if provincia_filtro:
-        query = query.filter_by(provincia=provincia_filtro)
-    if canton_filtro:
-        query = query.filter_by(canton=canton_filtro)
-    if distrito_filtro:
-        query = query.filter_by(distrito=distrito_filtro)
 
     query = query.order_by(Negocio.es_vip.desc(), Negocio.id.desc())
 

@@ -474,19 +474,44 @@
         </div>
         {% endif %}
         
-        {% if q and negocios|length == 0 %}
+        {% if (q or request.args.get('provincia') or request.args.get('canton') or request.args.get('distrito') or categoria_actual != 'Todas') and negocios|length == 0 %}
         <div class="text-center py-5">
             <i class="fas fa-search" style="font-size: 4rem; color: var(--gray-400); margin-bottom: 20px;"></i>
             <h4 style="color: var(--gray-700); margin-bottom: 12px;">No se encontraron resultados</h4>
-            <p style="color: var(--gray-600); margin-bottom: 24px;">No hay negocios que coincidan con "<strong>{{ q }}</strong>"</p>
+            <p style="color: var(--gray-600); margin-bottom: 24px;">
+                {% if q %}
+                    No hay negocios que coincidan con "<strong>{{ q }}</strong>"
+                {% elif request.args.get('distrito') %}
+                    No hay negocios registrados en el distrito "<strong>{{ request.args.get('distrito') }}</strong>"
+                {% elif request.args.get('canton') %}
+                    No hay negocios registrados en el cantón "<strong>{{ request.args.get('canton') }}</strong>"
+                {% elif request.args.get('provincia') %}
+                    No hay negocios registrados en la provincia "<strong>{{ request.args.get('provincia') }}</strong>"
+                {% elif categoria_actual != 'Todas' %}
+                    No hay negocios en la categoría "<strong>{{ categoria_actual }}</strong>"
+                {% else %}
+                    No se encontraron negocios con los filtros seleccionados
+                {% endif %}
+            </p>
+            <p class="text-muted small mb-3">¿Querés que tu negocio aparezca aquí? <a href="/publicar" class="text-primary">Publicá tu negocio gratis</a></p>
             <a href="/" class="btn-modern btn-modern-primary">
                 <i class="fas fa-home me-2"></i>Volver al inicio
             </a>
         </div>
-        {% elif q %}
+        {% elif q or request.args.get('provincia') or request.args.get('canton') or request.args.get('distrito') or categoria_actual != 'Todas' %}
         <div class="mb-4">
             <h5 style="color: var(--gray-700); font-weight: 600;">
-                Resultados para "<strong style="color: var(--brand-blue);">{{ q }}</strong>" 
+                {% if q %}
+                    Resultados para "<strong style="color: var(--brand-blue);">{{ q }}</strong>"
+                {% elif request.args.get('distrito') %}
+                    Negocios en <strong style="color: var(--brand-blue);">{{ request.args.get('distrito') }}</strong>
+                {% elif request.args.get('canton') %}
+                    Negocios en <strong style="color: var(--brand-blue);">{{ request.args.get('canton') }}</strong>
+                {% elif request.args.get('provincia') %}
+                    Negocios en <strong style="color: var(--brand-blue);">{{ request.args.get('provincia') }}</strong>
+                {% elif categoria_actual != 'Todas' %}
+                    Negocios en categoría <strong style="color: var(--brand-blue);">{{ categoria_actual }}</strong>
+                {% endif %}
                 <span class="badge" style="background: var(--brand-blue); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.875rem; margin-left: 8px;">{{ negocios|length }}</span>
             </h5>
         </div>
