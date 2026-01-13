@@ -1721,7 +1721,9 @@ def publicar():
             print(f"[IMAGENES] No se pudieron guardar imágenes adicionales: {e}")
         
         db.session.commit()
-        return render_template("exito.html")
+        # Pasar información de sesión para mostrar botón condicional
+        user_logged_in = "user_id" in session
+        return render_template("exito.html", user_logged_in=user_logged_in)
 
     return render_template("registro.html")
 

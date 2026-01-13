@@ -443,22 +443,39 @@
   // Inicializar mapa solo cuando el DOM esté listo y el elemento sea visible
   let map = null;
   let marker = null;
+  let mapInitialized = false;
 
   function initMap() {
+    // Evitar múltiples inicializaciones
+    if (mapInitialized) {
+      return;
+    }
+
     const mapElement = document.getElementById('map');
     if (!mapElement) {
       console.error("No se encontró el elemento #map");
       return;
     }
 
-    // Verificar que el elemento tenga dimensiones
-    if (mapElement.offsetWidth === 0 || mapElement.offsetHeight === 0) {
+    // Verificar que el elemento tenga dimensiones visibles
+    const rect = mapElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
       // Si no tiene dimensiones, intentar de nuevo después de un breve delay
-      setTimeout(initMap, 100);
+      setTimeout(initMap, 200);
+      return;
+    }
+
+    // Verificar que Leaflet esté cargado
+    if (typeof L === 'undefined') {
+      console.error("Leaflet no está cargado");
+      setTimeout(initMap, 200);
       return;
     }
 
     try {
+      // Limpiar contenido previo si existe
+      mapElement.innerHTML = '';
+
       // Inicializar el mapa
       map = L.map('map', {
         center: [defaultLat, defaultLng],
@@ -472,21 +489,27 @@
         maxZoom: 19
       }).addTo(map);
 
-      // Asegurar que el mapa se renderice correctamente
+      // Forzar renderizado del mapa
       setTimeout(function() {
         if (map) {
           map.invalidateSize();
+          // Asegurar que el mapa se centre correctamente
+          map.setView([defaultLat, defaultLng], 12);
         }
-      }, 100);
+      }, 300);
 
       // Click para poner pin
       map.on('click', function(e){
         setMarker(e.latlng.lat, e.latlng.lng);
       });
 
+      mapInitialized = true;
       console.log("Mapa inicializado correctamente");
     } catch (error) {
       console.error("Error al inicializar el mapa:", error);
+      mapInitialized = false;
+      // Intentar de nuevo después de un delay más largo
+      setTimeout(initMap, 500);
     }
   }
 
@@ -496,19 +519,39 @@
       return;
     }
     if(marker) map.removeLayer(marker);
-    marker = L.marker([lat, lng]).addTo(map);
+    marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+    
+    // Permitir arrastrar el marcador
+    marker.on('dragend', function(e) {
+      const position = marker.getLatLng();
+      if (latInput) latInput.value = position.lat.toFixed(6);
+      if (lngInput) lngInput.value = position.lng.toFixed(6);
+    });
+    
     if (latInput) latInput.value = lat.toFixed(6);
     if (lngInput) lngInput.value = lng.toFixed(6);
   }
 
   // Inicializar el mapa cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(initMap, 200);
-    });
+  function startMapInit() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(initMap, 300);
+      });
+    } else {
+      // DOM ya está listo
+      setTimeout(initMap, 300);
+    }
+  }
+
+  // Iniciar después de que Leaflet se cargue
+  if (typeof L !== 'undefined') {
+    startMapInit();
   } else {
-    // DOM ya está listo
-    setTimeout(initMap, 200);
+    // Esperar a que Leaflet se cargue
+    window.addEventListener('load', function() {
+      setTimeout(initMap, 500);
+    });
   }
 
   // Sistema de tags/productos
