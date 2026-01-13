@@ -274,6 +274,31 @@
     </div>
 </div>
 
+<!-- MENSAJE INFORMATIVO SOBRE LOCALIDADES -->
+<div class="section-modern" style="padding-top: 24px; padding-bottom: 24px; background: linear-gradient(135deg, rgba(11, 79, 163, 0.05), rgba(56, 178, 77, 0.05));">
+    <div class="container-modern">
+        <div class="alert alert-info mb-0" style="background: linear-gradient(135deg, rgba(11, 79, 163, 0.08), rgba(56, 178, 77, 0.08)); border: 2px solid var(--brand-blue); border-radius: var(--radius-lg); padding: 20px 24px;">
+            <div class="d-flex align-items-start gap-3 flex-wrap">
+                <div style="flex-shrink: 0;">
+                    <i class="fas fa-info-circle" style="color: var(--brand-blue); font-size: 2rem;"></i>
+                </div>
+                <div style="flex-grow: 1;">
+                    <h5 class="fw-bold mb-2" style="color: var(--brand-blue); font-size: 1.2rem;">
+                        <i class="fas fa-map-marked-alt me-2"></i>¿Buscás negocios en tu zona?
+                    </h5>
+                    <p class="mb-2" style="color: var(--gray-700); font-size: 1rem; line-height: 1.6;">
+                        Las localidades aparecen en Ubik2CR conforme los negocios se van registrando. 
+                        <strong>¿Querés que tu negocio aparezca en tu provincia, cantón o distrito?</strong>
+                    </p>
+                    <a href="/publicar" class="btn btn-primary fw-bold" style="background: var(--brand-blue); border: none; border-radius: var(--radius-md); padding: 10px 20px; margin-top: 8px;">
+                        <i class="fas fa-plus-circle me-2"></i>Publicá tu negocio gratis
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- BUSCADOR PREMIUM -->
 <div class="section-modern" style="padding-top: 48px; padding-bottom: 24px;">
     <div class="container-modern">
@@ -289,7 +314,7 @@
                 </div>
             </div>
 
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <select name="cat" class="form-select custom-select-arrow">
                 <option value="Todas" {% if categoria_actual == 'Todas' %}selected{% endif %}>Todas las categorías</option>
                 
@@ -389,6 +414,32 @@
                     <option value="Comercio" {% if categoria_actual == 'Comercio' %}selected{% endif %}>🏪 Comercios</option>
                     <option value="Otros" {% if categoria_actual == 'Otros' %}selected{% endif %}>✨ Otros</option>
                 </optgroup>
+            </select>
+        </div>
+        
+        <!-- Filtros de ubicación -->
+        <div class="col-12 col-md-2">
+            <select name="provincia" id="filtro_provincia" class="form-select custom-select-arrow" onchange="cargarCantonesBusqueda()">
+                <option value="">Todas las provincias</option>
+                <option value="San José" {% if request.args.get('provincia') == 'San José' %}selected{% endif %}>San José</option>
+                <option value="Alajuela" {% if request.args.get('provincia') == 'Alajuela' %}selected{% endif %}>Alajuela</option>
+                <option value="Cartago" {% if request.args.get('provincia') == 'Cartago' %}selected{% endif %}>Cartago</option>
+                <option value="Heredia" {% if request.args.get('provincia') == 'Heredia' %}selected{% endif %}>Heredia</option>
+                <option value="Guanacaste" {% if request.args.get('provincia') == 'Guanacaste' %}selected{% endif %}>Guanacaste</option>
+                <option value="Puntarenas" {% if request.args.get('provincia') == 'Puntarenas' %}selected{% endif %}>Puntarenas</option>
+                <option value="Limón" {% if request.args.get('provincia') == 'Limón' %}selected{% endif %}>Limón</option>
+            </select>
+        </div>
+        
+        <div class="col-12 col-md-2">
+            <select name="canton" id="filtro_canton" class="form-select custom-select-arrow" onchange="cargarDistritosBusqueda()" {% if not request.args.get('provincia') %}disabled{% endif %}>
+                <option value="">Todos los cantones</option>
+            </select>
+        </div>
+        
+        <div class="col-12 col-md-2">
+            <select name="distrito" id="filtro_distrito" class="form-select custom-select-arrow" {% if not request.args.get('canton') %}disabled{% endif %}>
+                <option value="">Todos los distritos</option>
             </select>
         </div>
 
@@ -1022,8 +1073,103 @@
             }, { passive: true });
         });
         
+        // Funciones para cargar cantones y distritos en búsqueda
+        function cargarCantonesBusqueda() {
+            const provinciaSelect = document.getElementById('filtro_provincia');
+            const cantonSelect = document.getElementById('filtro_canton');
+            const distritoSelect = document.getElementById('filtro_distrito');
+            
+            const provincia = provinciaSelect.value;
+            
+            if (!provincia) {
+                cantonSelect.innerHTML = '<option value="">Todos los cantones</option>';
+                cantonSelect.disabled = true;
+                distritoSelect.innerHTML = '<option value="">Todos los distritos</option>';
+                distritoSelect.disabled = true;
+                return;
+            }
+            
+            fetch(`/api/ubicaciones/cantones?provincia=${encodeURIComponent(provincia)}`)
+                .then(response => response.json())
+                .then(data => {
+                    cantonSelect.innerHTML = '<option value="">Todos los cantones</option>';
+                    if (data.cantones && data.cantones.length > 0) {
+                        data.cantones.forEach(canton => {
+                            const option = document.createElement('option');
+                            option.value = canton;
+                            option.textContent = canton;
+                            {% if request.args.get('canton') %}
+                            if (option.value === '{{ request.args.get("canton") }}') {
+                                option.selected = true;
+                            }
+                            {% endif %}
+                            cantonSelect.appendChild(option);
+                        });
+                        cantonSelect.disabled = false;
+                        {% if request.args.get('canton') %}
+                        cargarDistritosBusqueda();
+                        {% endif %}
+                    } else {
+                        cantonSelect.disabled = true;
+                    }
+                    
+                    distritoSelect.innerHTML = '<option value="">Todos los distritos</option>';
+                    distritoSelect.disabled = true;
+                })
+                .catch(error => {
+                    console.error('Error al cargar cantones:', error);
+                    cantonSelect.disabled = true;
+                });
+        }
+        
+        function cargarDistritosBusqueda() {
+            const provinciaSelect = document.getElementById('filtro_provincia');
+            const cantonSelect = document.getElementById('filtro_canton');
+            const distritoSelect = document.getElementById('filtro_distrito');
+            
+            const provincia = provinciaSelect.value;
+            const canton = cantonSelect.value;
+            
+            if (!provincia || !canton) {
+                distritoSelect.innerHTML = '<option value="">Todos los distritos</option>';
+                distritoSelect.disabled = true;
+                return;
+            }
+            
+            fetch(`/api/ubicaciones/distritos?provincia=${encodeURIComponent(provincia)}&canton=${encodeURIComponent(canton)}`)
+                .then(response => response.json())
+                .then(data => {
+                    distritoSelect.innerHTML = '<option value="">Todos los distritos</option>';
+                    if (data.distritos && data.distritos.length > 0) {
+                        data.distritos.forEach(distrito => {
+                            const option = document.createElement('option');
+                            option.value = distrito;
+                            option.textContent = distrito;
+                            {% if request.args.get('distrito') %}
+                            if (option.value === '{{ request.args.get("distrito") }}') {
+                                option.selected = true;
+                            }
+                            {% endif %}
+                            distritoSelect.appendChild(option);
+                        });
+                        distritoSelect.disabled = false;
+                    } else {
+                        distritoSelect.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar distritos:', error);
+                    distritoSelect.disabled = true;
+                });
+        }
+        
         // Asegurar que los modales funcionen en móvil
         document.addEventListener('DOMContentLoaded', function() {
+            // Cargar cantones y distritos si hay valores en la URL
+            {% if request.args.get('provincia') %}
+            cargarCantonesBusqueda();
+            {% endif %}
+            
             // Inicializar tooltips y popovers si existen
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {

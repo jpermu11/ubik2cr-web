@@ -204,10 +204,42 @@
             </select>
           </div>
 
-          <div class="col-md-7">
+          <!-- Ubicación geográfica de Costa Rica -->
+          <div class="col-md-4">
+            <label class="form-label fw-bold required">Provincia</label>
+            <select name="provincia" id="provincia" class="form-select" required onchange="cargarCantones()">
+              <option value="">Seleccionar provincia</option>
+              <option value="San José" {% if n.provincia == 'San José' %}selected{% endif %}>San José</option>
+              <option value="Alajuela" {% if n.provincia == 'Alajuela' %}selected{% endif %}>Alajuela</option>
+              <option value="Cartago" {% if n.provincia == 'Cartago' %}selected{% endif %}>Cartago</option>
+              <option value="Heredia" {% if n.provincia == 'Heredia' %}selected{% endif %}>Heredia</option>
+              <option value="Guanacaste" {% if n.provincia == 'Guanacaste' %}selected{% endif %}>Guanacaste</option>
+              <option value="Puntarenas" {% if n.provincia == 'Puntarenas' %}selected{% endif %}>Puntarenas</option>
+              <option value="Limón" {% if n.provincia == 'Limón' %}selected{% endif %}>Limón</option>
+            </select>
+            <div class="hint mt-1">Seleccioná la provincia donde está tu negocio</div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold required">Cantón</label>
+            <select name="canton" id="canton" class="form-select" required onchange="cargarDistritos()" {% if not n.provincia %}disabled{% endif %}>
+              <option value="">{% if n.provincia %}Seleccionar cantón{% else %}Primero seleccioná una provincia{% endif %}</option>
+            </select>
+            <div class="hint mt-1">Seleccioná el cantón</div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold required">Distrito</label>
+            <select name="distrito" id="distrito" class="form-select" required {% if not n.canton %}disabled{% endif %}>
+              <option value="">{% if n.canton %}Seleccionar distrito{% else %}Primero seleccioná un cantón{% endif %}</option>
+            </select>
+            <div class="hint mt-1">Seleccioná el distrito</div>
+          </div>
+
+          <div class="col-md-12">
             <label class="form-label fw-bold">Ubicación (texto)</label>
             <input type="text" name="ubicacion" class="form-control" value="{{ n.ubicacion or '' }}" placeholder="Ej: Frente al parque, San Pedro de Poás" required>
-            <div class="hint mt-1">Esto es lo que verá la gente. Ejemplo: "200m norte de la iglesia".</div>
+            <div class="hint mt-1">Dirección específica que verá la gente. Ejemplo: "200m norte de la iglesia".</div>
           </div>
 
           <div class="col-md-5">
@@ -547,6 +579,109 @@
       });
     }
   }
+</script>
+
+<script>
+  // Funciones para cargar cantones y distritos dinámicamente
+  function cargarCantones() {
+    const provinciaSelect = document.getElementById('provincia');
+    const cantonSelect = document.getElementById('canton');
+    const distritoSelect = document.getElementById('distrito');
+    
+    const provincia = provinciaSelect.value;
+    
+    if (!provincia) {
+      cantonSelect.innerHTML = '<option value="">Primero seleccioná una provincia</option>';
+      cantonSelect.disabled = true;
+      distritoSelect.innerHTML = '<option value="">Primero seleccioná un cantón</option>';
+      distritoSelect.disabled = true;
+      return;
+    }
+    
+    fetch(`/api/ubicaciones/cantones?provincia=${encodeURIComponent(provincia)}`)
+      .then(response => response.json())
+      .then(data => {
+        cantonSelect.innerHTML = '<option value="">Seleccionar cantón</option>';
+        if (data.cantones && data.cantones.length > 0) {
+          data.cantones.forEach(canton => {
+            const option = document.createElement('option');
+            option.value = canton;
+            option.textContent = canton;
+            {% if n.canton %}
+            if (option.value === '{{ n.canton }}') {
+              option.selected = true;
+            }
+            {% endif %}
+            cantonSelect.appendChild(option);
+          });
+          cantonSelect.disabled = false;
+          {% if n.canton %}
+          cargarDistritos();
+          {% endif %}
+        } else {
+          cantonSelect.innerHTML = '<option value="">No hay cantones disponibles</option>';
+          cantonSelect.disabled = true;
+        }
+        
+        distritoSelect.innerHTML = '<option value="">Primero seleccioná un cantón</option>';
+        distritoSelect.disabled = true;
+      })
+      .catch(error => {
+        console.error('Error al cargar cantones:', error);
+        cantonSelect.innerHTML = '<option value="">Error al cargar cantones</option>';
+        cantonSelect.disabled = true;
+      });
+  }
+  
+  function cargarDistritos() {
+    const provinciaSelect = document.getElementById('provincia');
+    const cantonSelect = document.getElementById('canton');
+    const distritoSelect = document.getElementById('distrito');
+    
+    const provincia = provinciaSelect.value;
+    const canton = cantonSelect.value;
+    
+    if (!provincia || !canton) {
+      distritoSelect.innerHTML = '<option value="">Primero seleccioná un cantón</option>';
+      distritoSelect.disabled = true;
+      return;
+    }
+    
+    fetch(`/api/ubicaciones/distritos?provincia=${encodeURIComponent(provincia)}&canton=${encodeURIComponent(canton)}`)
+      .then(response => response.json())
+      .then(data => {
+        distritoSelect.innerHTML = '<option value="">Seleccionar distrito</option>';
+        if (data.distritos && data.distritos.length > 0) {
+          data.distritos.forEach(distrito => {
+            const option = document.createElement('option');
+            option.value = distrito;
+            option.textContent = distrito;
+            {% if n.distrito %}
+            if (option.value === '{{ n.distrito }}') {
+              option.selected = true;
+            }
+            {% endif %}
+            distritoSelect.appendChild(option);
+          });
+          distritoSelect.disabled = false;
+        } else {
+          distritoSelect.innerHTML = '<option value="">No hay distritos disponibles</option>';
+          distritoSelect.disabled = true;
+        }
+      })
+      .catch(error => {
+        console.error('Error al cargar distritos:', error);
+        distritoSelect.innerHTML = '<option value="">Error al cargar distritos</option>';
+        distritoSelect.disabled = true;
+      });
+  }
+  
+  // Cargar cantones y distritos al cargar la página si hay valores
+  document.addEventListener('DOMContentLoaded', function() {
+    {% if n.provincia %}
+    cargarCantones();
+    {% endif %}
+  });
 </script>
 
 </body>

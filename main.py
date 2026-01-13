@@ -476,7 +476,12 @@ def inicio():
 
     PER_PAGE = 24
 
-    query = Negocio.query.filter_by(estado="aprobado")
+    # Query base: solo negocios aprobados CON datos completos de ubicación
+    query = Negocio.query.filter_by(estado="aprobado").filter(
+        Negocio.provincia.isnot(None),
+        Negocio.canton.isnot(None),
+        Negocio.distrito.isnot(None)
+    )
 
     # =====================================================
     # BÚSQUEDA INTELIGENTE CON IA - MAPEO DE PALABRAS CLAVE
@@ -662,6 +667,18 @@ def inicio():
     
     if cat and cat != "Todas":
         query = query.filter_by(categoria=cat)
+    
+    # Filtros de ubicación
+    provincia_filtro = request.args.get("provincia", "").strip()
+    canton_filtro = request.args.get("canton", "").strip()
+    distrito_filtro = request.args.get("distrito", "").strip()
+    
+    if provincia_filtro:
+        query = query.filter_by(provincia=provincia_filtro)
+    if canton_filtro:
+        query = query.filter_by(canton=canton_filtro)
+    if distrito_filtro:
+        query = query.filter_by(distrito=distrito_filtro)
 
     query = query.order_by(Negocio.es_vip.desc(), Negocio.id.desc())
 
@@ -691,6 +708,52 @@ def inicio():
         get_safe_image_url=get_safe_image_url,
         categorias_inteligentes=categorias_inteligentes if q else [],
     )
+
+@app.route("/api/ubicaciones/cantones")
+def api_cantones():
+    """API para obtener cantones de una provincia"""
+    provincia = request.args.get("provincia", "").strip()
+    if not provincia:
+        return {"error": "Provincia requerida"}, 400
+    
+    try:
+        import os
+        json_path = os.path.join(os.path.dirname(__file__), "static", "data", "costa_rica_ubicaciones.json")
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        if provincia in data:
+            cantones = list(data[provincia].keys())
+            return {"cantones": cantones}
+        else:
+            return {"cantones": []}
+    except Exception as e:
+        print(f"[API ERROR] Error al obtener cantones: {e}")
+        return {"error": "Error al cargar datos"}, 500
+
+@app.route("/api/ubicaciones/distritos")
+def api_distritos():
+    """API para obtener distritos de un cantón"""
+    provincia = request.args.get("provincia", "").strip()
+    canton = request.args.get("canton", "").strip()
+    
+    if not provincia or not canton:
+        return {"error": "Provincia y cantón requeridos"}, 400
+    
+    try:
+        import os
+        json_path = os.path.join(os.path.dirname(__file__), "static", "data", "costa_rica_ubicaciones.json")
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        if provincia in data and canton in data[provincia]:
+            distritos = data[provincia][canton]
+            return {"distritos": distritos}
+        else:
+            return {"distritos": []}
+    except Exception as e:
+        print(f"[API ERROR] Error al obtener distritos: {e}")
+        return {"error": "Error al cargar datos"}, 500
 
 @app.route("/cuenta")
 def cuenta():
@@ -1386,6 +1449,9 @@ def editar_negocio_owner(id):
         negocio.nombre = request.form.get("nombre", negocio.nombre)
         negocio.categoria = request.form.get("categoria", negocio.categoria)
         negocio.ubicacion = request.form.get("ubicacion", negocio.ubicacion)
+        negocio.provincia = request.form.get("provincia", "").strip() or None
+        negocio.canton = request.form.get("canton", "").strip() or None
+        negocio.distrito = request.form.get("distrito", "").strip() or None
         negocio.descripcion = request.form.get("descripcion", negocio.descripcion)
         negocio.telefono = request.form.get("telefono", negocio.telefono)
         negocio.whatsapp = request.form.get("whatsapp", negocio.whatsapp)
@@ -1606,10 +1672,18 @@ def publicar():
                     if productos_tags_list:
                         productos_tags_json = json.dumps(productos_tags_list)
 
+        # Obtener ubicación geográfica
+        provincia = request.form.get("provincia", "").strip()
+        canton = request.form.get("canton", "").strip()
+        distrito = request.form.get("distrito", "").strip()
+        
         nuevo_negocio = Negocio(
             nombre=nombre,
             categoria=categoria,
             ubicacion=ubicacion,
+            provincia=provincia if provincia else None,
+            canton=canton if canton else None,
+            distrito=distrito if distrito else None,
             latitud=latitud,
             longitud=longitud,
             maps_url=maps_url,

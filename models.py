@@ -38,6 +38,11 @@ class Negocio(db.Model):
     estado = db.Column(db.String(20), default="pendiente", index=True)  # pendiente, aprobado
 
     ubicacion = db.Column(db.String(200), nullable=False)
+    
+    # Ubicación geográfica de Costa Rica
+    provincia = db.Column(db.String(50), nullable=True, index=True)
+    canton = db.Column(db.String(100), nullable=True, index=True)
+    distrito = db.Column(db.String(100), nullable=True, index=True)
 
     latitud = db.Column(db.Float, nullable=True, index=True)
     longitud = db.Column(db.Float, nullable=True, index=True)
@@ -65,6 +70,8 @@ class Negocio(db.Model):
     __table_args__ = (
         db.Index("ix_negocios_estado_categoria", "estado", "categoria"),
         db.Index("ix_negocios_estado_id", "estado", "id"),
+        db.Index("ix_negocios_provincia_canton", "provincia", "canton"),
+        db.Index("ix_negocios_provincia_canton_distrito", "provincia", "canton", "distrito"),
     )
 
 # --- MODELO NOTICIA ---
