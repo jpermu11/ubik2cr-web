@@ -46,6 +46,7 @@
       <div class="actions">
         <a class="btn btn-primary" href="/publicar">+ Publicar negocio</a>
         <a class="btn btn-primary" href="/panel/oferta/nueva" style="background:#ffc107; color:#000;">🎯 Nueva Oferta</a>
+        <a class="btn btn-primary" href="/panel/noticia/nueva" style="background:#0b4fa3; color:#fff;">📰 Nueva Noticia</a>
         <a class="btn btn-primary" href="/panel/mensajes" style="background:#25D366; color:#fff;">
           📨 Mensajes
           {% if mensajes_no_leidos and mensajes_no_leidos > 0 %}
@@ -202,6 +203,73 @@
         <div class="empty">
           Aún no tenés ofertas publicadas.
           <div class="hint">Creá ofertas especiales para promocionar tus negocios: <a href="/panel/oferta/nueva">Nueva Oferta</a></div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- SECCIÓN DE NOTICIAS -->
+    <div class="card" style="margin-top: 18px;">
+      <h2 style="margin:0 0 10px 0;">Mis Noticias</h2>
+
+      {% if noticias and noticias|length > 0 %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Imagen</th>
+            <th>Título</th>
+            <th>Negocio</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for noticia in noticias %}
+          <tr>
+            <td>
+              {% if noticia.imagen_url %}
+              <img src="{{ noticia.imagen_url }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" alt="{{ noticia.titulo }}">
+              {% else %}
+              <div style="width: 60px; height: 60px; background:#e8f0f8; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-newspaper" style="color:#0b4fa3; opacity:0.3;"></i>
+              </div>
+              {% endif %}
+            </td>
+            <td>
+              <strong>{{ noticia.titulo }}</strong><br>
+              <span class="muted">{{ noticia.contenido[:50] }}{% if noticia.contenido|length > 50 %}...{% endif %}</span>
+            </td>
+            <td>
+              {% if noticia.negocio %}
+              {{ noticia.negocio.nombre }}
+              {% else %}
+              <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {{ noticia.fecha.strftime('%d/%m/%Y') }}
+            </td>
+            <td>
+              {% if noticia.fecha_caducidad and noticia.fecha_caducidad <= ahora %}
+                <span class="badge" style="background:#dc3545; color:#fff;">Caducada</span>
+              {% else %}
+                <span class="badge b-ok">Activa</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="row-actions">
+                <a class="btn btn-primary" href="/panel/noticia/{{ noticia.id }}/editar">Editar</a>
+                <a class="btn btn-danger" href="/panel/noticia/{{ noticia.id }}/eliminar" onclick="return confirm('¿Eliminar esta noticia?');">Eliminar</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="empty">
+          Aún no tenés noticias publicadas.
+          <div class="hint">Compartí novedades y eventos de tus negocios: <a href="/panel/noticia/nueva">Nueva Noticia</a></div>
         </div>
       {% endif %}
     </div>

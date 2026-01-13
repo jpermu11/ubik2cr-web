@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Noticia | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background:#f5f7fa; }
+        .topbar {
+            background: linear-gradient(90deg,#0b4fa3,#38b24d);
+            color:#fff;
+            padding: 15px 0;
+        }
+        .cardx {
+            border:none;
+            border-radius:18px;
+            box-shadow:0 10px 25px rgba(0,0,0,.08);
+            overflow:hidden;
+        }
+        .btn-primary { background:#0b4fa3; border:none; font-weight:800; }
+        .required::after { content:" *"; color:#dc3545; font-weight:800; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar topbar">
+    <div class="container d-flex align-items-center justify-content-between">
+        <a class="navbar-brand text-white fw-bold" href="/panel">← Volver al Panel</a>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <div class="cardx">
+        <div class="card-header bg-primary text-white p-3">
+            <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Noticia</h4>
+        </div>
+        <div class="card-body p-4">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-warning">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if noticia.imagen_url %}
+            <div class="mb-3">
+                <label class="form-label fw-bold">Imagen Actual</label>
+                <div>
+                    <img src="{{ noticia.imagen_url }}" style="max-width: 300px; max-height: 200px; border-radius: 10px;" alt="{{ noticia.titulo }}">
+                </div>
+            </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold required">Título</label>
+                        <input type="text" name="titulo" class="form-control" required value="{{ noticia.titulo }}" maxlength="200">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold required">Contenido</label>
+                        <textarea name="contenido" class="form-control" rows="8" required>{{ noticia.contenido }}</textarea>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Nueva Imagen (opcional)</label>
+                        <input type="file" name="imagen" class="form-control" accept="image/*">
+                        <small class="text-muted">Si no subís una nueva imagen, se mantiene la actual.</small>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">
+                            <i class="far fa-calendar-alt me-1"></i>Fecha de Desaparición (opcional)
+                        </label>
+                        <input type="datetime-local" name="fecha_caducidad" class="form-control" id="fecha_caducidad" 
+                               value="{% if noticia.fecha_caducidad %}{{ noticia.fecha_caducidad.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                        <small class="text-muted">Si especificás una fecha, la noticia desaparecerá automáticamente después de esa fecha. Si no especificás fecha, la noticia permanecerá visible indefinidamente.</small>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-check me-2"></i>Guardar Cambios
+                    </button>
+                    <a href="/panel" class="btn btn-outline-secondary px-4">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1288,6 +1288,9 @@ def panel_owner():
     negocios_ids = [n.id for n in negocios]
     ofertas = Oferta.query.filter(Oferta.negocio_id.in_(negocios_ids)).order_by(Oferta.created_at.desc()).all() if negocios_ids else []
     
+    # Obtener noticias de los negocios del dueño
+    noticias = Noticia.query.filter(Noticia.negocio_id.in_(negocios_ids)).order_by(Noticia.fecha.desc()).all() if negocios_ids else []
+    
     # Obtener mensajes no leídos
     mensajes_no_leidos = 0
     if negocios_ids:
@@ -1308,6 +1311,7 @@ def panel_owner():
         pendientes=pendientes,
         vip=vip,
         ofertas=ofertas,
+        noticias=noticias,
         user_email=session.get("user_email"),
         ahora=ahora,
         mensajes_no_leidos=mensajes_no_leidos,
