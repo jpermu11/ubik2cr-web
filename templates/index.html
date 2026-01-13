@@ -122,14 +122,16 @@
                          onclick="window.location.href='/noticias'"
                          ontouchstart="this.style.opacity='0.9'" 
                          ontouchend="this.style.opacity='1'">
-                        <div class="position-relative d-flex" style="height: 200px;">
+                        <div class="position-relative d-flex" style="height: 200px; overflow: hidden;">
                             {% if noticia.imagen_url %}
-                            <img src="{{ get_safe_image_url(noticia.imagen_url) }}" 
-                                 class="d-block" 
-                                 alt="{{ noticia.titulo }}" 
-                                 style="width: 180px; height: 200px; object-fit: cover; flex-shrink: 0;"
-                                 onerror="if(this.src.indexOf('placeholder') === -1) { this.src='https://via.placeholder.com/180x200?text=Ubik2CR'; this.onerror=null; }"
-                                 loading="lazy">
+                            <div style="width: 180px; height: 200px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <img src="{{ get_safe_image_url(noticia.imagen_url) }}" 
+                                     class="d-block" 
+                                     alt="{{ noticia.titulo }}" 
+                                     style="max-width: 180px; max-height: 200px; width: auto; height: auto; object-fit: contain;"
+                                     onerror="if(this.src.indexOf('placeholder') === -1) { this.src='https://via.placeholder.com/180x200?text=Ubik2CR'; this.onerror=null; }"
+                                     loading="lazy">
+                            </div>
                             {% else %}
                             <div style="width: 180px; height: 200px; background: linear-gradient(135deg, var(--brand-blue-lightest), #e8f0f8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <i class="fas fa-newspaper" style="font-size: 2.5rem; color: var(--brand-blue); opacity: 0.3;"></i>
@@ -189,12 +191,14 @@
                          onclick="window.location.href='/negocio/{{ oferta.negocio_id }}'"
                          ontouchstart="this.style.opacity='0.9'" 
                          ontouchend="this.style.opacity='1'">
-                        <div class="position-relative d-flex" style="height: 200px;">
-                            <img src="{{ get_safe_image_url(oferta.imagen_url) }}" 
-                                 class="d-block" 
-                                 alt="{{ oferta.titulo }}" 
-                                 style="width: 180px; height: 200px; object-fit: cover; flex-shrink: 0;"
-                                 loading="lazy">
+                        <div class="position-relative d-flex" style="height: 200px; overflow: hidden;">
+                            <div style="width: 180px; height: 200px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <img src="{{ get_safe_image_url(oferta.imagen_url) }}" 
+                                     class="d-block" 
+                                     alt="{{ oferta.titulo }}" 
+                                     style="max-width: 180px; max-height: 200px; width: auto; height: auto; object-fit: contain;"
+                                     loading="lazy">
+                            </div>
                             <!-- Contenido de texto -->
                             <div class="flex-grow-1 p-3 d-flex flex-column justify-content-between" style="background: white;">
                                 <div>
