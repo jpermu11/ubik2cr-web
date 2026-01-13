@@ -2033,6 +2033,12 @@ def editar_negocio_admin(id):
         n.nombre = request.form.get("nombre", n.nombre)
         n.categoria = request.form.get("categoria", n.categoria)
         n.ubicacion = request.form.get("ubicacion", n.ubicacion)
+        
+        # Guardar ubicación geográfica (provincia, cantón, distrito)
+        n.provincia = request.form.get("provincia", "").strip() or None
+        n.canton = request.form.get("canton", "").strip() or None
+        n.distrito = request.form.get("distrito", "").strip() or None
+        
         n.descripcion = request.form.get("descripcion", n.descripcion)
         n.telefono = request.form.get("telefono", n.telefono)
         n.whatsapp = request.form.get("whatsapp", n.whatsapp)
