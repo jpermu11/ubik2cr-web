@@ -305,25 +305,24 @@
 <div class="section-modern" style="padding-top: 48px; padding-bottom: 24px;">
     <div class="container-modern">
         <form method="get" id="searchForm" style="background: white; padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
-            <div class="row g-3" style="align-items: flex-end;">
+            <div class="row g-3 align-items-end">
                 <!-- Campo de búsqueda -->
                 <div class="col-12 col-md-4">
-                    <label class="form-label d-block" style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; height: 18px; line-height: 18px;">Buscar</label>
-                    <div style="position: relative; height: 48px;">
-                        <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--gray-500); z-index: 2; pointer-events: none;"></i>
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Buscar</label>
+                    <div class="search-bar-premium" style="height: 50px; border-radius: var(--radius-md);">
+                        <i class="fas fa-search search-icon"></i>
                         <input type="text" name="q" placeholder="Ej: shampoo, comida, medicina..."
                                value="{{ q if q else '' }}" 
                                autocomplete="off"
                                id="searchInput"
-                               class="form-control"
-                               style="height: 48px; padding-left: 45px; border: 2px solid var(--gray-300); border-radius: var(--radius-md); font-size: 1rem;">
+                               style="width: 100%; height: 50px; border: none; padding-left: 45px; padding-right: 15px; border-radius: var(--radius-md); line-height: 1.5; font-size: 1rem;">
                     </div>
                 </div>
 
                 <!-- Categoría -->
                 <div class="col-12 col-md-2">
-                    <label class="form-label d-block" style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; height: 18px; line-height: 18px;">Categoría</label>
-                    <select name="cat" class="form-select custom-select-arrow" style="height: 48px; border: 2px solid var(--gray-300); border-radius: var(--radius-md); font-size: 1rem;">
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Categoría</label>
+                    <select name="cat" class="form-select custom-select-arrow" style="height: 50px; border-radius: var(--radius-md); padding: 12px 40px 12px 15px; line-height: 1.5; font-size: 1rem; appearance: none; -webkit-appearance: none; -moz-appearance: none;">
                     <option value="Todas" {% if categoria_actual == 'Todas' %}selected{% endif %}>Todas</option>
                 
                 <optgroup label="🍽️ Comida y Bebidas">
@@ -427,8 +426,8 @@
             
                 <!-- Provincia -->
                 <div class="col-12 col-md-2">
-                    <label class="form-label d-block" style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; height: 18px; line-height: 18px;">Provincia</label>
-                    <select name="provincia" id="filtro_provincia" class="form-select custom-select-arrow" style="height: 48px; border: 2px solid var(--gray-300); border-radius: var(--radius-md); font-size: 1rem;" onchange="cargarCantonesBusqueda()">
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Provincia</label>
+                    <select name="provincia" id="filtro_provincia" class="form-select custom-select-arrow" style="height: 50px; border-radius: var(--radius-md); padding: 12px 40px 12px 15px; line-height: 1.5; font-size: 1rem; appearance: none; -webkit-appearance: none; -moz-appearance: none;" onchange="cargarCantonesBusqueda()">
                         <option value="">Todas</option>
                         <option value="San José" {% if request.args.get('provincia') == 'San José' %}selected{% endif %}>San José</option>
                         <option value="Alajuela" {% if request.args.get('provincia') == 'Alajuela' %}selected{% endif %}>Alajuela</option>
@@ -442,41 +441,39 @@
                 
                 <!-- Cantón -->
                 <div class="col-12 col-md-2">
-                    <label class="form-label d-block" style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; height: 18px; line-height: 18px;">Cantón</label>
-                    <select name="canton" id="filtro_canton" class="form-select custom-select-arrow" style="height: 48px; border: 2px solid var(--gray-300); border-radius: var(--radius-md); font-size: 1rem;" onchange="cargarDistritosBusqueda()" {% if not request.args.get('provincia') %}disabled{% endif %}>
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Cantón</label>
+                    <select name="canton" id="filtro_canton" class="form-select custom-select-arrow" style="height: 50px; border-radius: var(--radius-md); padding: 12px 40px 12px 15px; line-height: 1.5; font-size: 1rem; appearance: none; -webkit-appearance: none; -moz-appearance: none;" onchange="cargarDistritosBusqueda()" {% if not request.args.get('provincia') %}disabled{% endif %}>
                         <option value="">Todos</option>
                     </select>
                 </div>
                 
                 <!-- Distrito -->
                 <div class="col-12 col-md-2">
-                    <label class="form-label d-block" style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; height: 18px; line-height: 18px;">Distrito</label>
-                    <select name="distrito" id="filtro_distrito" class="form-select custom-select-arrow" style="height: 48px; border: 2px solid var(--gray-300); border-radius: var(--radius-md); font-size: 1rem;" {% if not request.args.get('canton') %}disabled{% endif %}>
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Distrito</label>
+                    <select name="distrito" id="filtro_distrito" class="form-select custom-select-arrow" style="height: 50px; border-radius: var(--radius-md); padding: 12px 40px 12px 15px; line-height: 1.5; font-size: 1rem; appearance: none; -webkit-appearance: none; -moz-appearance: none;" {% if not request.args.get('canton') %}disabled{% endif %}>
                         <option value="">Todos</option>
                     </select>
                 </div>
 
                 <!-- Botón Buscar -->
                 <div class="col-12 col-md-2">
-                    <label class="form-label d-block" style="font-size: 0.75rem; font-weight: 600; color: transparent; margin-bottom: 6px; height: 18px; line-height: 18px;">&nbsp;</label>
-                    <button type="submit" class="btn-modern btn-modern-primary w-100" style="height: 48px; font-weight: 600; border-radius: var(--radius-md); border: none;">
+                    <button type="submit" class="btn-modern btn-modern-primary w-100" style="height: 50px; font-weight: 600; border-radius: var(--radius-md); line-height: 1.5; font-size: 1rem;">
                         <i class="fas fa-search me-2"></i>Buscar
                     </button>
                 </div>
                 
                 <!-- Botón Limpiar Filtros -->
                 <div class="col-12 col-md-1">
-                    <label class="form-label d-block" style="font-size: 0.75rem; font-weight: 600; color: transparent; margin-bottom: 6px; height: 18px; line-height: 18px;">&nbsp;</label>
                     {% if q or request.args.get('provincia') or request.args.get('canton') or request.args.get('distrito') or categoria_actual != 'Todas' %}
                     <a href="/" class="btn w-100 d-flex align-items-center justify-content-center" 
-                       style="height: 48px; background: var(--gray-100); color: var(--gray-700); border: 2px solid var(--gray-300); text-decoration: none; border-radius: var(--radius-md); transition: all 0.2s;"
+                       style="height: 50px; background: var(--gray-100); color: var(--gray-700); border: 2px solid var(--gray-300); text-decoration: none; border-radius: var(--radius-md); transition: all 0.2s;"
                        title="Limpiar todos los filtros"
                        onmouseover="this.style.background='var(--gray-200)'; this.style.borderColor='var(--gray-400)'; this.style.color='var(--gray-900)';"
                        onmouseout="this.style.background='var(--gray-100)'; this.style.borderColor='var(--gray-300)'; this.style.color='var(--gray-700)';">
                         <i class="fas fa-times" style="font-size: 1.1rem;"></i>
                     </a>
                     {% else %}
-                    <div style="height: 48px;"></div>
+                    <div style="height: 50px;"></div>
                     {% endif %}
                 </div>
             </div>
@@ -1130,34 +1127,34 @@
             }, { passive: true });
         });
         
-        // Estilos adicionales para alineación perfecta
+        // Estilos adicionales para alineación perfecta y texto completo visible
         document.addEventListener('DOMContentLoaded', function() {
-            // Asegurar que todos los selects, inputs y botones tengan exactamente la misma altura
+            // Asegurar que todos los selects y inputs tengan la misma altura y padding adecuado
             const formElements = document.querySelectorAll('#searchForm select, #searchForm input[type="text"], #searchForm button, #searchForm a[href="/"]');
             formElements.forEach(el => {
-                if (el) {
-                    el.style.height = '48px';
-                    el.style.boxSizing = 'border-box';
+                if (el && el.style) {
+                    el.style.height = '50px';
+                    if (el.tagName === 'SELECT') {
+                        el.style.padding = '12px 40px 12px 15px';
+                        el.style.lineHeight = '1.5';
+                        el.style.fontSize = '1rem';
+                        el.style.overflow = 'visible';
+                    }
+                    if (el.tagName === 'INPUT') {
+                        el.style.padding = '12px 15px';
+                        el.style.lineHeight = '1.5';
+                        el.style.fontSize = '1rem';
+                    }
                 }
             });
             
-            // Asegurar que todas las etiquetas tengan exactamente la misma altura y posición
+            // Asegurar que todas las etiquetas tengan el mismo margen
             const labels = document.querySelectorAll('#searchForm .form-label');
             labels.forEach(label => {
-                if (label) {
-                    label.style.height = '18px';
-                    label.style.lineHeight = '18px';
-                    label.style.marginBottom = '6px';
-                    label.style.display = 'block';
+                if (label && label.style) {
+                    label.style.marginBottom = '8px';
                 }
             });
-            
-            // Asegurar que el input de búsqueda tenga el mismo estilo que los selects
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.style.height = '48px';
-                searchInput.style.boxSizing = 'border-box';
-            }
         });
         
         // Funciones para cargar cantones y distritos en búsqueda
