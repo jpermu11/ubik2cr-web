@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Panel Admin | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root { 
+            --brand-blue: #0b4fa3; 
+            --brand-green: #38b24d; 
+        }
+        body { background-color: #f4f7f6; }
+        .navbar { 
+            background-color: white !important; 
+            border-bottom: 3px solid var(--brand-blue); 
+            padding: 10px 0; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--brand-blue);
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .stat-card h5 {
+            color: #6c757d;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--brand-blue);
+            margin: 0;
+        }
+        .stat-card.green { border-left-color: var(--brand-green); }
+        .stat-card.green .stat-value { color: var(--brand-green); }
+        .stat-card.orange { border-left-color: #ff9800; }
+        .stat-card.orange .stat-value { color: #ff9800; }
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .chart-container h4 {
+            color: var(--brand-blue);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .table-container h4 {
+            color: var(--brand-blue);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .badge-stat {
+            background: var(--brand-blue);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/admin">
+            <img src="/static/uploads/logo.png" alt="Admin Ubik2CR" style="height: 70px; width: auto;">
+            <span class="ms-2 fw-bold text-secondary" style="font-size: 1.2rem;">| Analytics</span>
+        </a>
+        <div class="ms-auto">
+            <a href="/admin" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="fas fa-arrow-left me-1"></i>Volver al Panel
+            </a>
+            <a href="/" class="btn btn-outline-primary btn-sm me-2">Ver Sitio Web</a>
+            <a href="/logout" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5 mb-5">
+    <h1 class="mb-4" style="color: var(--brand-blue); font-weight: 700;">
+        <i class="fas fa-chart-line me-2"></i>Analytics y Métricas
+    </h1>
+    
+    <!-- Estadísticas Principales -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h5><i class="fas fa-users me-1"></i>Visitas Totales</h5>
+                <p class="stat-value">{{ total_visitas }}</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card green">
+                <h5><i class="fas fa-calendar-alt me-1"></i>Últimos 30 días</h5>
+                <p class="stat-value">{{ visitas_30_dias }}</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card orange">
+                <h5><i class="fas fa-calendar-week me-1"></i>Últimos 7 días</h5>
+                <p class="stat-value">{{ visitas_7_dias }}</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h5><i class="fas fa-user-friends me-1"></i>Usuarios Únicos (30d)</h5>
+                <p class="stat-value">{{ usuarios_unicos_30 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas de Hoy y Ayer -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="stat-card green">
+                <h5><i class="fas fa-calendar-day me-1"></i>Visitas Hoy</h5>
+                <p class="stat-value">{{ visitas_hoy }}</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5><i class="fas fa-calendar-check me-1"></i>Visitas Ayer</h5>
+                <p class="stat-value">{{ visitas_ayer }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico: Visitas por Día (últimos 30 días) -->
+    <div class="chart-container">
+        <h4><i class="fas fa-chart-area me-2"></i>Visitas por Día (últimos 30 días)</h4>
+        <canvas id="visitasPorDiaChart"></canvas>
+    </div>
+
+    <!-- Gráfico: Visitas por Hora del Día -->
+    <div class="chart-container">
+        <h4><i class="fas fa-clock me-2"></i>Visitas por Hora del Día (promedio últimos 30 días)</h4>
+        <canvas id="visitasPorHoraChart"></canvas>
+    </div>
+
+    <!-- Páginas Más Visitadas -->
+    <div class="table-container">
+        <h4><i class="fas fa-globe me-2"></i>Páginas Más Visitadas (últimos 30 días)</h4>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Página</th>
+                        <th class="text-end">Visitas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if paginas_mas_visitadas %}
+                        {% for url, cantidad in paginas_mas_visitadas %}
+                        <tr>
+                            <td><span class="badge-stat">{{ loop.index }}</span></td>
+                            <td>
+                                <code style="color: var(--brand-blue);">{{ url }}</code>
+                            </td>
+                            <td class="text-end">
+                                <strong style="color: var(--brand-blue); font-size: 1.1rem;">{{ cantidad }}</strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No hay datos disponibles aún</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Datos para gráfico de visitas por día
+    const visitasPorDiaData = {{ visitas_por_dia_dict | tojson }};
+    
+    // Preparar datos para el gráfico (últimos 30 días)
+    const ultimos30Dias = [];
+    const visitasPorDiaValores = [];
+    const hoy = new Date();
+    
+    for (let i = 29; i >= 0; i--) {
+        const fecha = new Date(hoy);
+        fecha.setDate(fecha.getDate() - i);
+        const fechaStr = fecha.toISOString().split('T')[0];
+        ultimos30Dias.push(fechaStr.split('-').reverse().slice(0, 2).join('/'));
+        visitasPorDiaValores.push(visitasPorDiaData[fechaStr] || 0);
+    }
+    
+    // Gráfico de visitas por día
+    const ctxDia = document.getElementById('visitasPorDiaChart').getContext('2d');
+    new Chart(ctxDia, {
+        type: 'line',
+        data: {
+            labels: ultimos30Dias,
+            datasets: [{
+                label: 'Visitas',
+                data: visitasPorDiaValores,
+                borderColor: '#0b4fa3',
+                backgroundColor: 'rgba(11, 79, 163, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Datos para gráfico de visitas por hora
+    const visitasPorHoraData = {{ visitas_por_hora_dict | tojson }};
+    const horas = Array.from({length: 24}, (_, i) => i + ':00');
+    const visitasPorHoraValores = Array.from({length: 24}, (_, i) => visitasPorHoraData[i] || 0);
+    
+    // Gráfico de visitas por hora
+    const ctxHora = document.getElementById('visitasPorHoraChart').getContext('2d');
+    new Chart(ctxHora, {
+        type: 'bar',
+        data: {
+            labels: horas,
+            datasets: [{
+                label: 'Visitas',
+                data: visitasPorHoraValores,
+                backgroundColor: '#38b24d',
+                borderColor: '#38b24d',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Guía de Usuario - Ubik2CR</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<!-- HEADER PREMIUM -->
+<nav class="navbar-premium navbar-expand-lg">
+    <div class="container-modern">
+        <a class="navbar-brand-premium" href="/">
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
+            <span class="d-none d-sm-inline">Ubik2CR</span>
+        </a>
+
+        <!-- Botón hamburger para móvil -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
+                style="border: 2px solid var(--gray-300); border-radius: var(--radius-md); padding: 8px 12px; background: transparent; color: var(--gray-700);">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Menú colapsable -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+                <li class="nav-item">
+                    <a href="/" class="nav-link-premium">
+                        <i class="fas fa-home me-1"></i><span>Inicio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/noticias" class="nav-link-premium">
+                        <i class="fas fa-newspaper me-1"></i><span>Noticias</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/cuenta" class="nav-link-premium">
+                        <i class="fas fa-user me-1"></i><span>Cuenta</span>
+                    </a>
+                </li>
+                {% if session.get('user_id') %}
+                <li class="nav-item">
+                    <a href="/favoritos" class="nav-link-premium">
+                        <i class="fas fa-heart me-1"></i><span>Favoritos</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if session.get('admin_logged_in') %}
+                <li class="nav-item">
+                    <a href="/admin" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-cog me-1"></i><span>Panel Admin</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/logout" class="btn-modern btn-modern-ghost">
+                        <i class="fas fa-sign-out-alt me-1"></i><span>Salir</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a href="/login" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-lock me-1"></i><span>Administración</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="hero-premium" style="min-height: 200px; padding: 60px 0;">
+    <div class="container-modern text-center">
+        <div class="animate-fade-in-up">
+            <h1 style="color: white; font-size: 2.5rem; font-weight: 700; margin-bottom: 16px;">
+                <i class="fas fa-question-circle me-2"></i>Guía de Usuario
+            </h1>
+            <p style="color: rgba(255,255,255,0.9); font-size: 1.125rem; max-width: 700px; margin: 0 auto;">
+                Aprende cómo usar Ubik2CR para sacar el máximo provecho de tu cantón
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div class="section-modern" style="padding-top: 48px; padding-bottom: 48px; background: #f5f7fa;">
+    <div class="container-modern">
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-pills mb-4 justify-content-center flex-wrap" id="guideTabs" role="tablist" style="border-bottom: 2px solid var(--gray-200); padding-bottom: 16px;">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold" id="usuarios-tab" data-bs-toggle="pill" data-bs-target="#usuarios" type="button" role="tab" 
+                        style="background: transparent; color: var(--brand-blue); border: none; padding: 12px 24px; font-size: 1rem;">
+                    <i class="fas fa-users me-2"></i>Usuarios
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" id="dueños-tab" data-bs-toggle="pill" data-bs-target="#dueños" type="button" role="tab"
+                        style="background: transparent; color: var(--gray-600); border: none; padding: 12px 24px; font-size: 1rem;">
+                    <i class="fas fa-store me-2"></i>Dueños de Negocios
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" id="consejos-tab" data-bs-toggle="pill" data-bs-target="#consejos" type="button" role="tab"
+                        style="background: transparent; color: var(--gray-600); border: none; padding: 12px 24px; font-size: 1rem;">
+                    <i class="fas fa-lightbulb me-2"></i>Consejos y Mejores Prácticas
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="guideTabsContent">
+            <!-- TAB 1: USUARIOS -->
+            <div class="tab-pane fade show active" id="usuarios" role="tabpanel" aria-labelledby="usuarios-tab">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="card-modern" style="background: white; border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-md);">
+                            <h2 class="fw-bold mb-4" style="color: var(--brand-blue); font-size: 1.75rem;">
+                                <i class="fas fa-users me-2"></i>Guía para Usuarios
+                            </h2>
+                            <p class="text-muted mb-4">Descubre cómo navegar y aprovechar todas las funcionalidades de Ubik2CR como usuario.</p>
+
+                            <div class="accordion" id="accordionUsuarios">
+                                <!-- Búsqueda -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#buscarNegocios" 
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-search me-2"></i>1. Cómo Buscar Negocios
+                                        </button>
+                                    </h2>
+                                    <div id="buscarNegocios" class="accordion-collapse collapse show" data-bs-parent="#accordionUsuarios">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-check-circle me-2" style="color: var(--brand-green);"></i>Búsqueda por nombre:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Escribe el nombre del negocio en el campo de búsqueda en la página principal.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-check-circle me-2" style="color: var(--brand-green);"></i>Búsqueda por categoría:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Selecciona una categoría del menú desplegable (ej: Restaurantes, Farmacias, Ferreterías).</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-check-circle me-2" style="color: var(--brand-green);"></i>Búsqueda inteligente:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Escribe palabras clave como "pizza", "farmacia", "corte de pelo" y el sistema buscará automáticamente en las categorías relacionadas.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-check-circle me-2" style="color: var(--brand-green);"></i>Búsqueda por tags:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Los negocios incluyen tags (etiquetas) de productos/servicios que ofrecen. Busca por estos términos específicos.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mapa -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#usarMapa"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-map-marker-alt me-2"></i>2. Cómo Usar el Mapa
+                                        </button>
+                                    </h2>
+                                    <div id="usarMapa" class="accordion-collapse collapse" data-bs-parent="#accordionUsuarios">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-map-pin me-2" style="color: var(--brand-blue);"></i>Ver ubicaciones:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Haz clic en "Ver en mapa" en la página principal o en el menú. Todos los negocios aparecen marcados con pins en el mapa.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-info-circle me-2" style="color: var(--brand-blue);"></i>Información de negocios:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Haz clic en cualquier pin del mapa para ver el nombre y la dirección del negocio.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-external-link-alt me-2" style="color: var(--brand-blue);"></i>Ver detalles:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Haz clic en el nombre del negocio que aparece en el popup del mapa para ir a su página de detalles.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ver Detalles -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#verDetalles"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-info-circle me-2"></i>3. Ver Detalles de un Negocio
+                                        </button>
+                                    </h2>
+                                    <div id="verDetalles" class="accordion-collapse collapse" data-bs-parent="#accordionUsuarios">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-eye me-2" style="color: var(--brand-blue);"></i>Información completa:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En la página de detalles encontrarás: fotos, descripción, horarios, dirección, teléfono, WhatsApp, calificación y reseñas.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-directions me-2" style="color: var(--brand-blue);"></i>Ubicación:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Haz clic en el enlace de Google Maps para abrir la ubicación en Google Maps y obtener direcciones.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-comments me-2" style="color: var(--brand-blue);"></i>Contactar:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Usa el botón "Enviar mensaje" para contactar directamente al negocio, o haz clic en el número de WhatsApp si está disponible.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Reseñas -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#dejarResenas"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-star me-2"></i>4. Cómo Dejar Reseñas
+                                        </button>
+                                    </h2>
+                                    <div id="dejarResenas" class="accordion-collapse collapse" data-bs-parent="#accordionUsuarios">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-edit me-2" style="color: var(--brand-blue);"></i>En la página del negocio:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Ve a la sección "Reseñas" y completa el formulario con tu nombre, email, calificación (estrellas) y comentario.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-check me-2" style="color: var(--brand-green);"></i>Tu reseña ayuda:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Las reseñas ayudan a otros usuarios a conocer la calidad del negocio. Sé honesto y constructivo.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Favoritos -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#favoritos"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-heart me-2"></i>5. Agregar a Favoritos
+                                        </button>
+                                    </h2>
+                                    <div id="favoritos" class="accordion-collapse collapse" data-bs-parent="#accordionUsuarios">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-sign-in-alt me-2" style="color: var(--brand-blue);"></i>Inicia sesión:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Primero necesitas crear una cuenta o iniciar sesión desde "Cuenta" en el menú.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-heart me-2" style="color: #e91e63;"></i>Agregar favorito:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En la página de detalles del negocio, haz clic en el botón "❤️ Agregar a favoritos".</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-list me-2" style="color: var(--brand-blue);"></i>Ver favoritos:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Accede a "Favoritos" en el menú para ver todos tus negocios guardados.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Compartir -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#compartir"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-share-alt me-2"></i>6. Compartir Contenido
+                                        </button>
+                                    </h2>
+                                    <div id="compartir" class="accordion-collapse collapse" data-bs-parent="#accordionUsuarios">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-share me-2" style="color: var(--brand-blue);"></i>Compartir negocios:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En la página de detalles, usa el botón "Compartir" para compartir el negocio por WhatsApp, Facebook, Twitter o copiar el enlace.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-newspaper me-2" style="color: var(--brand-blue);"></i>Compartir noticias y ofertas:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En la página principal o en noticias/ofertas individuales, usa los botones "Compartir" para compartir en redes sociales o "Obtener" para descargar como imagen.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-download me-2" style="color: var(--brand-green);"></i>Descargar imagen:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">El botón "Obtener Noticia" o "Obtener Oferta" te permite descargar el contenido como imagen para compartir en WhatsApp u otras redes.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Noticias y Ofertas -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#noticiasOfertas"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-newspaper me-2"></i>7. Noticias y Ofertas
+                                        </button>
+                                    </h2>
+                                    <div id="noticiasOfertas" class="accordion-collapse collapse" data-bs-parent="#accordionUsuarios">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-home me-2" style="color: var(--brand-blue);"></i>Página principal:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En la página de inicio verás las noticias y ofertas más recientes con scroll automático.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-list me-2" style="color: var(--brand-blue);"></i>Ver todas:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Haz clic en "Ver todas" para ver el listado completo de noticias u ofertas.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-info-circle me-2" style="color: var(--brand-blue);"></i>Detalles:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Haz clic en cualquier noticia u oferta para ver su información completa, incluyendo el negocio asociado si aplica.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: DUEÑOS -->
+            <div class="tab-pane fade" id="dueños" role="tabpanel" aria-labelledby="dueños-tab">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="card-modern" style="background: white; border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-md);">
+                            <h2 class="fw-bold mb-4" style="color: var(--brand-blue); font-size: 1.75rem;">
+                                <i class="fas fa-store me-2"></i>Guía para Dueños de Negocios
+                            </h2>
+                            <p class="text-muted mb-4">Aprende a gestionar tu negocio en Ubik2CR y aprovecha todas las herramientas disponibles.</p>
+
+                            <div class="accordion" id="accordionDueños">
+                                <!-- Crear Cuenta -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#crearCuenta"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-user-plus me-2"></i>1. Crear una Cuenta
+                                        </button>
+                                    </h2>
+                                    <div id="crearCuenta" class="accordion-collapse collapse show" data-bs-parent="#accordionDueños">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-sign-in-alt me-2" style="color: var(--brand-blue);"></i>Registro:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Haz clic en "Cuenta" en el menú, luego en "Crear cuenta" y completa el formulario con tu nombre, email y contraseña.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-check-circle me-2" style="color: var(--brand-green);"></i>Verificación:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Una vez registrado, podrás iniciar sesión y acceder a tu panel de administración.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Publicar Negocio -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#publicarNegocio"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-plus-circle me-2"></i>2. Publicar tu Negocio
+                                        </button>
+                                    </h2>
+                                    <div id="publicarNegocio" class="accordion-collapse collapse" data-bs-parent="#accordionDueños">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-file-alt me-2" style="color: var(--brand-blue);"></i>Información básica:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Ve a "Publicar Negocio" y completa: nombre, categoría, dirección, descripción, teléfono, WhatsApp (opcional).</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-images me-2" style="color: var(--brand-blue);"></i>Fotos (hasta 10):</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Sube hasta 10 fotos de tu negocio. La primera será la imagen principal. Puedes seleccionar múltiples fotos presionando Ctrl (o Cmd en Mac).</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-map-marker-alt me-2" style="color: var(--brand-blue);"></i>Ubicación en el mapa:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Haz clic en el mapa donde está tu negocio. El pin se colocará automáticamente. Puedes moverlo arrastrándolo si es necesario.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-clock me-2" style="color: var(--brand-blue);"></i>Horarios:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Marca los días que está abierto y especifica las horas de apertura y cierre, o marca "Abierto 24 horas".</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-hourglass-half me-2" style="color: var(--orange);"></i>Aprobación:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Tu negocio quedará pendiente hasta ser aprobado por el administrador. Recibirás una notificación cuando sea aprobado.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Panel de Control -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#panelControl"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-tachometer-alt me-2"></i>3. Panel de Control
+                                        </button>
+                                    </h2>
+                                    <div id="panelControl" class="accordion-collapse collapse" data-bs-parent="#accordionDueños">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-th-large me-2" style="color: var(--brand-blue);"></i>Acceso:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Una vez que inicies sesión, accede a "Cuenta" y haz clic en "Ir a mi panel" para ver todos tus negocios.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-edit me-2" style="color: var(--brand-blue);"></i>Gestión de negocios:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En tu panel podrás ver, editar y eliminar tus negocios. También verás su estado (pendiente, aprobado, rechazado).</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-chart-line me-2" style="color: var(--brand-blue);"></i>Información:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Verás la cantidad de visitas, mensajes recibidos, reseñas y calificaciones de cada negocio.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Crear Ofertas -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#crearOfertas"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-tags me-2"></i>4. Crear Ofertas
+                                        </button>
+                                    </h2>
+                                    <div id="crearOfertas" class="accordion-collapse collapse" data-bs-parent="#accordionDueños">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-plus me-2" style="color: var(--brand-green);"></i>Nueva oferta:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En tu panel, haz clic en "Nueva Oferta" y selecciona el negocio asociado.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-edit me-2" style="color: var(--brand-blue);"></i>Información:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Completa: título, descripción, imagen, fecha de inicio y fecha de caducidad.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-eye me-2" style="color: var(--brand-blue);"></i>Publicación:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Las ofertas aparecen automáticamente en la página principal y en la página del negocio.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Crear Noticias -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#crearNoticias"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-newspaper me-2"></i>5. Crear Noticias
+                                        </button>
+                                    </h2>
+                                    <div id="crearNoticias" class="accordion-collapse collapse" data-bs-parent="#accordionDueños">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-plus me-2" style="color: var(--brand-green);"></i>Nueva noticia:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En tu panel, haz clic en "Nueva Noticia" y selecciona el negocio asociado (opcional).</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-edit me-2" style="color: var(--brand-blue);"></i>Información:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Completa: título, contenido, imagen (opcional), fecha de caducidad (opcional).</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-eye me-2" style="color: var(--brand-blue);"></i>Publicación:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Las noticias aparecen en la página principal y en la sección de noticias del sitio.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mensajes -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#mensajes"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-envelope me-2"></i>6. Gestionar Mensajes
+                                        </button>
+                                    </h2>
+                                    <div id="mensajes" class="accordion-collapse collapse" data-bs-parent="#accordionDueños">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-inbox me-2" style="color: var(--brand-blue);"></i>Ver mensajes:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En tu panel, accede a "Mensajes" para ver todos los mensajes recibidos de los usuarios.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-eye me-2" style="color: var(--brand-blue);"></i>Leer y responder:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Haz clic en cualquier mensaje para leerlo y responder por email directamente.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-bell me-2" style="color: var(--orange);"></i>Notificaciones:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Recibirás un email cada vez que alguien te envíe un mensaje a través de Ubik2CR.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Editar Negocio -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#editarNegocio"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-edit me-2"></i>7. Editar Información del Negocio
+                                        </button>
+                                    </h2>
+                                    <div id="editarNegocio" class="accordion-collapse collapse" data-bs-parent="#accordionDueños">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-pencil-alt me-2" style="color: var(--brand-blue);"></i>Desde el panel:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">En tu panel, haz clic en "Editar" junto al negocio que quieres modificar.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-save me-2" style="color: var(--brand-green);"></i>Guardar cambios:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Puedes modificar cualquier campo: nombre, categoría, descripción, fotos, horarios, ubicación, etc.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-sync me-2" style="color: var(--orange);"></i>Aprobación de cambios:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Algunos cambios importantes pueden requerir nueva aprobación del administrador.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: CONSEJOS -->
+            <div class="tab-pane fade" id="consejos" role="tabpanel" aria-labelledby="consejos-tab">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="card-modern" style="background: white; border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-md);">
+                            <h2 class="fw-bold mb-4" style="color: var(--brand-blue); font-size: 1.75rem;">
+                                <i class="fas fa-lightbulb me-2"></i>Consejos y Mejores Prácticas
+                            </h2>
+                            <p class="text-muted mb-4">Recomendaciones para obtener los mejores resultados en Ubik2CR.</p>
+
+                            <div class="accordion" id="accordionConsejos">
+                                <!-- Buenas Descripciones -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#buenasDescripciones"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-file-alt me-2"></i>1. Cómo Escribir Buenas Descripciones
+                                        </button>
+                                    </h2>
+                                    <div id="buenasDescripciones" class="accordion-collapse collapse show" data-bs-parent="#accordionConsejos">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-check me-2" style="color: var(--brand-green);"></i>Sé claro y conciso:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Describe qué ofrece tu negocio de manera clara. Menciona productos principales, servicios, especialidades.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-check me-2" style="color: var(--brand-green);"></i>Incluye información útil:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Agrega horarios especiales, formas de pago, servicios adicionales, años de experiencia, certificaciones.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-check me-2" style="color: var(--brand-green);"></i>Usa palabras clave:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Menciona términos que los clientes buscan, como "delivery", "aceptamos tarjeta", "estacionamiento", etc.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Buenas Fotos -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#buenasFotos"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-camera me-2"></i>2. Cómo Tomar Buenas Fotos
+                                        </button>
+                                    </h2>
+                                    <div id="buenasFotos" class="accordion-collapse collapse" data-bs-parent="#accordionConsejos">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-image me-2" style="color: var(--brand-blue);"></i>Foto principal:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">La primera foto es la más importante. Usa una foto de la fachada o del interior más representativo de tu negocio.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-images me-2" style="color: var(--brand-blue);"></i>Variedad:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Incluye diferentes ángulos: fachada, interior, productos, servicios, ambiente, equipo de trabajo.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-sun me-2" style="color: var(--orange);"></i>Buena iluminación:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Toma fotos con buena luz natural o artificial. Evita sombras fuertes o fotos muy oscuras.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-mobile-alt me-2" style="color: var(--brand-blue);"></i>Calidad:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Usa una cámara de buena calidad o un teléfono moderno. Las fotos nítidas atraen más clientes.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tags -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#tags"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-tags me-2"></i>3. Cómo Usar los Tags/Productos
+                                        </button>
+                                    </h2>
+                                    <div id="tags" class="accordion-collapse collapse" data-bs-parent="#accordionConsejos">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-list me-2" style="color: var(--brand-blue);"></i>Productos específicos:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Agrega productos específicos que vendes: "hamburguesa", "pizza", "corte de pelo", "servicio de plomería".</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-search me-2" style="color: var(--brand-blue);"></i>Palabras clave:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Piensa en qué palabras usarían los clientes para buscarte. Ejemplo: "delivery", "24 horas", "certificado".</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-check-double me-2" style="color: var(--brand-green);"></i>Separados por comas:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Separa cada tag con una coma. Ejemplo: "martillo, clavos, pintura, herramientas, servicio de instalación".</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mantener Actualizado -->
+                                <div class="accordion-item mb-3" style="border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden;">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#actualizar"
+                                                style="background: var(--gray-50); color: var(--brand-blue); border: none; padding: 16px 20px;">
+                                            <i class="fas fa-sync me-2"></i>4. Mantener Información Actualizada
+                                        </button>
+                                    </h2>
+                                    <div id="actualizar" class="accordion-collapse collapse" data-bs-parent="#accordionConsejos">
+                                        <div class="accordion-body" style="padding: 24px;">
+                                            <ul class="list-unstyled mb-0" style="line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-clock me-2" style="color: var(--brand-blue);"></i>Horarios:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Actualiza tus horarios si cambian, especialmente en temporadas especiales o feriados.</span>
+                                                </li>
+                                                <li class="mb-3">
+                                                    <strong><i class="fas fa-phone me-2" style="color: var(--brand-blue);"></i>Contacto:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Mantén actualizados tu teléfono y WhatsApp para que los clientes puedan contactarte fácilmente.</span>
+                                                </li>
+                                                <li class="mb-0">
+                                                    <strong><i class="fas fa-bullhorn me-2" style="color: var(--brand-green);"></i>Ofertas y noticias:</strong>
+                                                    <span class="text-muted d-block ms-4 mt-1">Publica ofertas y noticias regularmente para mantener a tus clientes informados y atraer nuevos.</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER PREMIUM -->
+<footer>
+    <div class="footer-pattern-bg"></div>
+    <div class="container-modern" style="position: relative; z-index: 1;">
+        <div class="row g-5 mb-5">
+            <div class="col-lg-6 mb-4">
+                <div class="mb-4">
+                    <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="height: 80px; width: auto; margin-bottom: 16px; filter: brightness(0) invert(1);">
+                    <h5 style="color: #FFFFFF; font-weight: 700; margin-bottom: 16px; font-size: 1.25rem; letter-spacing: -0.02em;">Ubik2CR</h5>
+                </div>
+                <p style="color: rgba(255,255,255,0.75); font-size: 0.9375rem; line-height: 1.8; margin-bottom: 32px; max-width: 90%;">
+                    Tu cantón en tu mano. Conectamos a tu comunidad con los mejores negocios, servicios y lugares de tu zona.
+                </p>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <a href="/mapa" class="footer-link">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Mapa</span>
+                    </a>
+                    <a href="/noticias" class="footer-link">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Noticias</span>
+                    </a>
+                    <a href="/cuenta" class="footer-link">
+                        <i class="fas fa-user"></i>
+                        <span>Cuenta</span>
+                    </a>
+                    <a href="/ayuda" class="footer-link">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Ayuda</span>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <h5 style="color: #FFFFFF; font-weight: 700; margin-bottom: 20px; font-size: 1.125rem; letter-spacing: -0.02em;">
+                    <i class="fas fa-code me-2" style="color: var(--primary);"></i>Desarrollado por
+                </h5>
+                <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border-radius: var(--radius-lg); padding: 28px; border: 1px solid rgba(255,255,255,0.1);">
+                    <a href="https://tico-app.com/" target="_blank" rel="noopener noreferrer" class="footer-brand-link" style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                        <div class="footer-brand-icon">
+                            <i class="fas fa-code" style="font-size: 1.25rem; color: #FFFFFF;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="color: #FFFFFF; font-weight: 700; font-size: 1.25rem; margin-bottom: 4px;">Tico-App</div>
+                            <div style="color: rgba(255,255,255,0.7); font-size: 0.875rem; font-weight: 500;">Desarrollo de Aplicaciones</div>
+                        </div>
+                        <i class="fas fa-external-link-alt" style="font-size: 0.75rem; opacity: 0.5;"></i>
+                    </a>
+                    <p style="color: rgba(255,255,255,0.65); font-size: 0.875rem; margin: 0; line-height: 1.7;">
+                        <i class="fas fa-sparkles" style="color: var(--primary); font-size: 1rem; margin-top: 2px;"></i>
+                        Aplicaciones que transforman tu día a día. Desarrollamos apps para facilitar tu vida y tu negocio con tecnología avanzada y accesible.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); margin: 48px 0 32px;"></div>
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <p style="margin: 0; color: rgba(255,255,255,0.6); font-size: 0.875rem;">
+                    <i class="far fa-copyright"></i> 2025 Ubik2CR. Todos los derechos reservados.
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="https://tico-app.com/" target="_blank" rel="noopener noreferrer" class="footer-link">
+                    <i class="fas fa-code"></i> Creado con <span style="color: var(--primary); font-weight: 700;">Tico-App</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Activar el estilo activo en los tabs
+    document.querySelectorAll('#guideTabs button').forEach(button => {
+        button.addEventListener('shown.bs.tab', function (e) {
+            // Remover estilo activo de todos
+            document.querySelectorAll('#guideTabs button').forEach(btn => {
+                btn.style.color = 'var(--gray-600)';
+            });
+            // Agregar estilo activo al tab activo
+            e.target.style.color = 'var(--brand-blue)';
+        });
+    });
+    
+    // Marcar el primer tab como activo al cargar
+    document.querySelector('#usuarios-tab').style.color = 'var(--brand-blue)';
+</script>
+
+</body>
+</html>

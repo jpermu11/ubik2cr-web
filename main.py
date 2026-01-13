@@ -27,7 +27,7 @@ try:
 except ImportError:
     CLOUDINARY_AVAILABLE = False
 
-from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje, ImagenNegocio
+from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje, ImagenNegocio, Visita
 
 
 # =====================================================
@@ -379,6 +379,54 @@ def verify_reset_token(token: str, expiration: int = 3600):
 
 
 # =====================================================
+# ANALYTICS - REGISTRAR VISITAS
+# =====================================================
+@app.before_request
+def registrar_visita():
+    """Registrar visitas automáticamente (excepto admin y rutas excluidas)"""
+    import hashlib
+    
+    # Rutas excluidas (no registrar)
+    path = request.path
+    excluded_paths = [
+        '/health', '/health/db', '/static', '/favicon.ico',
+        '/admin', '/login', '/logout', '/panel', '/owner',
+        '/api/', '/_internal'
+    ]
+    
+    # Si es ruta excluida o admin está logueado, no registrar
+    if any(path.startswith(excluded) for excluded in excluded_paths):
+        return None
+    
+    # Obtener IP (hashear para privacidad)
+    ip = request.remote_addr or 'unknown'
+    ip_hash = hashlib.sha256(ip.encode()).hexdigest()
+    
+    # Obtener datos
+    url = request.path
+    user_agent = request.headers.get('User-Agent', '')[:200] if request.headers.get('User-Agent') else None
+    referrer = request.headers.get('Referer', '')[:500] if request.headers.get('Referer') else None
+    
+    # Registrar en la base de datos (en background para no bloquear)
+    try:
+        visita = Visita(
+            ip_hash=ip_hash,
+            url=url,
+            user_agent=user_agent,
+            referrer=referrer,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(visita)
+        db.session.commit()
+    except Exception as e:
+        # Si falla, no afectar la experiencia del usuario
+        db.session.rollback()
+        pass
+    
+    return None
+
+
+# =====================================================
 # HEALTH CHECK
 # =====================================================
 @app.route("/health")
@@ -647,6 +695,11 @@ def inicio():
 @app.route("/cuenta")
 def cuenta():
     return render_template("cuenta.html")
+
+@app.route("/ayuda")
+def ayuda():
+    """Página de ayuda y manual de usuario"""
+    return render_template("ayuda.html")
 
 @app.route("/favoritos")
 def ver_favoritos():
@@ -2083,6 +2136,84 @@ def eliminar_noticia(id):
     
     flash("Noticia eliminada.")
     return redirect("/admin/noticias")
+
+@app.route("/admin/analytics")
+def admin_analytics():
+    """Panel de analytics y métricas"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    from sqlalchemy import func
+    from datetime import timedelta
+    
+    ahora = datetime.utcnow()
+    hace_30_dias = ahora - timedelta(days=30)
+    hace_7_dias = ahora - timedelta(days=7)
+    
+    # Visitas totales
+    total_visitas = Visita.query.count()
+    
+    # Visitas últimos 30 días
+    visitas_30_dias = Visita.query.filter(Visita.created_at >= hace_30_dias).count()
+    
+    # Visitas últimos 7 días
+    visitas_7_dias = Visita.query.filter(Visita.created_at >= hace_7_dias).count()
+    
+    # Usuarios únicos (por IP hash) últimos 30 días
+    usuarios_unicos_30 = db.session.query(func.count(func.distinct(Visita.ip_hash))).filter(
+        Visita.created_at >= hace_30_dias
+    ).scalar()
+    
+    # Visitas por día (últimos 30 días)
+    visitas_por_dia = db.session.query(
+        func.date(Visita.created_at).label('fecha'),
+        func.count(Visita.id).label('cantidad')
+    ).filter(
+        Visita.created_at >= hace_30_dias
+    ).group_by(func.date(Visita.created_at)).order_by('fecha').all()
+    
+    visitas_por_dia_dict = {str(fecha): cantidad for fecha, cantidad in visitas_por_dia}
+    
+    # Visitas por hora del día (0-23)
+    visitas_por_hora = db.session.query(
+        func.extract('hour', Visita.created_at).label('hora'),
+        func.count(Visita.id).label('cantidad')
+    ).filter(
+        Visita.created_at >= hace_30_dias
+    ).group_by(func.extract('hour', Visita.created_at)).order_by('hora').all()
+    
+    visitas_por_hora_dict = {int(hora): cantidad for hora, cantidad in visitas_por_hora}
+    # Completar horas faltantes con 0
+    horas_completas = {hora: visitas_por_hora_dict.get(hora, 0) for hora in range(24)}
+    
+    # Páginas más visitadas (top 10)
+    paginas_mas_visitadas = db.session.query(
+        Visita.url,
+        func.count(Visita.id).label('cantidad')
+    ).filter(
+        Visita.created_at >= hace_30_dias
+    ).group_by(Visita.url).order_by(func.count(Visita.id).desc()).limit(10).all()
+    
+    # Visitas hoy
+    hoy = ahora.date()
+    visitas_hoy = Visita.query.filter(func.date(Visita.created_at) == hoy).count()
+    
+    # Visitas ayer
+    ayer = (ahora - timedelta(days=1)).date()
+    visitas_ayer = Visita.query.filter(func.date(Visita.created_at) == ayer).count()
+    
+    return render_template(
+        "admin_analytics.html",
+        total_visitas=total_visitas,
+        visitas_30_dias=visitas_30_dias,
+        visitas_7_dias=visitas_7_dias,
+        visitas_hoy=visitas_hoy,
+        visitas_ayer=visitas_ayer,
+        usuarios_unicos_30=usuarios_unicos_30 or 0,
+        visitas_por_dia_dict=visitas_por_dia_dict,
+        visitas_por_hora_dict=horas_completas,
+        paginas_mas_visitadas=paginas_mas_visitadas
+    )
 
 
 # =====================================================

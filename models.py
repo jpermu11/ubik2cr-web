@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from datetime import datetime
+import hashlib
 
 class Base(DeclarativeBase):
     pass
@@ -177,4 +178,30 @@ class Mensaje(db.Model):
     __table_args__ = (
         db.Index("ix_mensajes_negocio_leido", "negocio_id", "leido"),
         db.Index("ix_mensajes_negocio_fecha", "negocio_id", "created_at"),
+    )
+
+# --- MODELO VISITA (Analytics) ---
+class Visita(db.Model):
+    __tablename__ = "visitas"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # IP hasheada para privacidad (últimos 8 caracteres del hash SHA256)
+    ip_hash = db.Column(db.String(64), nullable=False, index=True)
+    
+    # URL visitada (relativa, sin dominio)
+    url = db.Column(db.String(500), nullable=False, index=True)
+    
+    # User Agent básico (solo navegador/plataforma)
+    user_agent = db.Column(db.String(200), nullable=True)
+    
+    # Referrer (de dónde vino)
+    referrer = db.Column(db.String(500), nullable=True)
+    
+    # Timestamp
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    __table_args__ = (
+        db.Index("ix_visitas_fecha", "created_at"),
+        db.Index("ix_visitas_url_fecha", "url", "created_at"),
     )
