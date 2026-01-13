@@ -9,28 +9,57 @@
     <style>
         :root{ --blue:#0b4fa3; --green:#38b24d; }
         body{ background:#f5f7fa; }
-        .topbar{ background: linear-gradient(90deg,var(--blue),var(--green)); color:#fff; }
+        .topbar{ 
+            background: linear-gradient(90deg,var(--blue),var(--green)); 
+            color:#fff;
+            min-height: 70px;
+        }
         .brand img{ height:58px; }
         .cardx{ border:none; border-radius:18px; box-shadow:0 10px 25px rgba(0,0,0,.08); overflow:hidden; background:#fff; }
         .img-noticia{ width:120px; height:80px; object-fit:cover; border-radius:8px; }
+        
+        /* Asegurar que el navbar no crezca en móvil */
+        @media (max-width: 991px) {
+            .topbar {
+                min-height: 70px;
+                max-height: 70px;
+            }
+            .topbar .container {
+                flex-wrap: nowrap;
+            }
+            .brand img {
+                height: 45px !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar topbar">
-    <div class="container d-flex align-items-center justify-content-between py-2">
+<nav class="navbar topbar navbar-expand-lg">
+    <div class="container">
         <a class="navbar-brand brand d-flex align-items-center gap-2 text-white text-decoration-none" href="/admin">
-            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
-            <span class="fs-4">Ubik2CR</span>
-            <span class="ms-2 fw-bold">/ Noticias</span>
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="height: 50px;">
+            <span class="fs-4 d-none d-sm-inline">Ubik2CR</span>
+            <span class="ms-2 fw-bold d-none d-md-inline">/ Noticias</span>
         </a>
-        <div class="d-flex gap-2">
-            <a href="/admin" class="btn btn-light fw-bold">
-                <i class="fa-solid fa-gauge me-1"></i> Panel
-            </a>
-            <a href="/" class="btn btn-outline-light">
-                <i class="fa-solid fa-house me-1"></i> Sitio
-            </a>
+        
+        <!-- Botón hamburguesa para móvil -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbarNoticias" 
+                aria-controls="adminNavbarNoticias" aria-expanded="false" aria-label="Toggle navigation"
+                style="border: 2px solid rgba(255,255,255,0.5); border-radius: 6px; padding: 6px 10px; background: transparent;">
+            <i class="fas fa-bars" style="color: white;"></i>
+        </button>
+        
+        <!-- Menú colapsable -->
+        <div class="collapse navbar-collapse" id="adminNavbarNoticias">
+            <div class="ms-auto d-flex flex-column flex-lg-row gap-2">
+                <a href="/admin" class="btn btn-light fw-bold">
+                    <i class="fa-solid fa-gauge me-1"></i> Panel
+                </a>
+                <a href="/" class="btn btn-outline-light">
+                    <i class="fa-solid fa-house me-1"></i> Sitio
+                </a>
+            </div>
         </div>
     </div>
 </nav>
