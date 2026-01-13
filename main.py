@@ -2,6 +2,8 @@ import os
 import smtplib
 import threading
 import json
+import requests
+import time
 from email.message import EmailMessage
 from datetime import datetime
 
@@ -2214,6 +2216,289 @@ def eliminar_noticia(id):
     
     flash("Noticia eliminada.")
     return redirect("/admin/noticias")
+
+# =====================================================
+# IMPORTACIÓN DESDE OPENSTREETMAP
+# =====================================================
+
+def mapear_categoria_osm(categoria_osm):
+    """Mapea tipos de OpenStreetMap a categorías de Ubik2CR"""
+    mapeo = {
+        # Comida y Bebidas
+        "restaurant": "Sodas y Rest.",
+        "fast_food": "Comida Rápida",
+        "cafe": "Cafeterías",
+        "bar": "Bares y Licores",
+        "ice_cream": "Heladerías",
+        "food_court": "Comida Rápida",
+        "bakery": "Panaderías",
+        
+        # Alimentos
+        "supermarket": "Super y Pulpes",
+        "greengrocer": "Verdurerías",
+        "butcher": "Carnicerías",
+        "convenience": "Super y Pulpes",
+        
+        # Salud
+        "pharmacy": "Farmacias",
+        "hospital": "CCSS",
+        "clinic": "Clínicas y Dr.",
+        "dentist": "Dentistas",
+        "veterinary": "Veterinarias",
+        "optometrist": "Ópticas",
+        
+        # Belleza y Fitness
+        "gym": "Gimnasios",
+        "beauty_salon": "Belleza y Barbería",
+        "hairdresser": "Belleza y Barbería",
+        "spa": "Spas y Masajes",
+        
+        # Ropa y Tecnología
+        "clothes": "Ropa y Calzado",
+        "shoes": "Ropa y Calzado",
+        "electronics": "Tecnología y Cel.",
+        "mobile_phone": "Tecnología y Cel.",
+        "computer": "Reparaciones Tech",
+        
+        # Construcción y Automotriz
+        "hardware": "Ferreterías",
+        "doityourself": "Ferreterías",
+        "car_repair": "Mecánica y Llantas",
+        "car_wash": "Lavado de Autos",
+        "fuel": "Gasolineras",
+        "car": "Automotriz",
+        
+        # Educación
+        "school": "Escuelas",
+        "university": "Educacion",
+        "library": "Bibliotecas",
+        "college": "Educacion",
+        
+        # Turismo
+        "hotel": "Hoteles y Hospedaje",
+        "hostel": "Hoteles y Hospedaje",
+        "attraction": "Turismo",
+        "theme_park": "Cines y Entretenimiento",
+        "cinema": "Cines y Entretenimiento",
+        
+        # Finanzas
+        "bank": "Bancos",
+        "atm": "Bancos",
+        
+        # Servicios Públicos
+        "police": "Policía",
+        "fire_station": "Bomberos",
+        "townhall": "Municipalidad",
+        "place_of_worship": "Iglesia",
+        "government": "Instituciones Públicas",
+        
+        # Servicios Profesionales
+        "lawyer": "Abogados",
+        "accountant": "Contables",
+        "event_venue": "Salones de Eventos",
+        "moving_company": "Mudanzas y Transporte",
+        "plumber": "Plomería y Electricidad",
+        "electrician": "Plomería y Electricidad",
+        "gardener": "Jardinería",
+        "pet": "Mascotas y Suministros",
+    }
+    
+    # Buscar coincidencia exacta
+    if categoria_osm in mapeo:
+        return mapeo[categoria_osm]
+    
+    # Buscar coincidencia parcial (por si viene "amenity=restaurant")
+    categoria_lower = categoria_osm.lower()
+    for key, value in mapeo.items():
+        if key in categoria_lower:
+            return value
+    
+    # Si no hay coincidencia, usar categoría genérica
+    return "Otros"
+
+def obtener_bbox_canton(provincia, canton):
+    """Obtiene el bounding box (área) aproximada de un cantón en Costa Rica"""
+    # Coordenadas aproximadas de algunos cantones principales
+    # Formato: [min_lat, min_lng, max_lat, max_lng]
+    bboxes = {
+        ("San José", "San José"): [9.85, -84.15, 10.0, -83.95],
+        ("San José", "Escazú"): [9.88, -84.15, 9.95, -84.05],
+        ("Alajuela", "Alajuela"): [10.0, -84.25, 10.05, -84.15],
+        ("Alajuela", "Poás"): [10.05, -84.25, 10.15, -84.15],
+        ("Cartago", "Cartago"): [9.85, -83.95, 9.95, -83.85],
+        ("Heredia", "Heredia"): [9.95, -84.15, 10.05, -84.05],
+        ("Guanacaste", "Liberia"): [10.55, -85.65, 10.65, -85.55],
+        ("Puntarenas", "Puntarenas"): [9.95, -84.85, 10.05, -84.75],
+        ("Limón", "Limón"): [9.95, -83.05, 10.05, -82.95],
+    }
+    
+    key = (provincia, canton)
+    if key in bboxes:
+        return bboxes[key]
+    
+    # Si no está en la lista, usar un bbox genérico de Costa Rica
+    # Esto es menos preciso pero funcionará
+    return [8.0, -86.0, 11.2, -82.5]
+
+def importar_lugares_osm(provincia, canton, tipos_amenity=None):
+    """Importa lugares desde OpenStreetMap usando Overpass API"""
+    if not tipos_amenity:
+        # Tipos comunes de lugares comerciales en OSM
+        tipos_amenity = [
+            "restaurant", "fast_food", "cafe", "bar", "pharmacy", "bank", 
+            "supermarket", "hospital", "clinic", "school", "hotel", "fuel",
+            "car_repair", "hardware", "beauty_salon", "gym", "dentist"
+        ]
+    
+    bbox = obtener_bbox_canton(provincia, canton)
+    bbox_str = f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}"
+    
+    # Construir query Overpass
+    amenity_filters = "|".join([f'["amenity"="{t}"]' for t in tipos_amenity])
+    shop_filters = '["shop"]'
+    
+    query = f"""
+    [out:json][timeout:25];
+    (
+      node{amenity_filters}({bbox_str});
+      way{amenity_filters}({bbox_str});
+      relation{amenity_filters}({bbox_str});
+      node{shop_filters}({bbox_str});
+      way{shop_filters}({bbox_str});
+      relation{shop_filters}({bbox_str});
+    );
+    out body;
+    >;
+    out skel qt;
+    """
+    
+    try:
+        # Consultar Overpass API
+        overpass_url = "https://overpass-api.de/api/interpreter"
+        response = requests.post(overpass_url, data=query, timeout=60)
+        response.raise_for_status()
+        
+        data = response.json()
+        elementos = data.get("elements", [])
+        
+        lugares_importados = []
+        lugares_duplicados = 0
+        
+        for elemento in elementos:
+            if elemento.get("type") != "node":
+                continue
+            
+            tags = elemento.get("tags", {})
+            if not tags:
+                continue
+            
+            # Obtener información básica
+            nombre = tags.get("name") or tags.get("name:es") or "Sin nombre"
+            if not nombre or nombre == "Sin nombre":
+                continue
+            
+            # Obtener categoría
+            amenity = tags.get("amenity", "")
+            shop = tags.get("shop", "")
+            categoria_osm = amenity or shop
+            categoria = mapear_categoria_osm(categoria_osm)
+            
+            # Obtener ubicación
+            lat = elemento.get("lat")
+            lon = elemento.get("lon")
+            if not lat or not lon:
+                continue
+            
+            # Obtener dirección
+            direccion = tags.get("addr:full") or tags.get("addr:street") or ""
+            if direccion and tags.get("addr:housenumber"):
+                direccion = f"{tags.get('addr:housenumber')} {direccion}"
+            
+            # Obtener teléfono
+            telefono = tags.get("phone") or tags.get("contact:phone") or None
+            
+            # Verificar si ya existe (por nombre y coordenadas cercanas)
+            existe = Negocio.query.filter(
+                Negocio.nombre.ilike(f"%{nombre}%"),
+                Negocio.latitud.between(lat - 0.001, lat + 0.001),
+                Negocio.longitud.between(lon - 0.001, lon + 0.001)
+            ).first()
+            
+            if existe:
+                lugares_duplicados += 1
+                continue
+            
+            # Crear nuevo negocio
+            nuevo_negocio = Negocio(
+                nombre=nombre[:100],  # Limitar a 100 caracteres
+                categoria=categoria,
+                ubicacion=direccion[:200] if direccion else f"{canton}, {provincia}",
+                provincia=provincia,
+                canton=canton,
+                distrito=None,  # OSM no siempre tiene distrito
+                latitud=lat,
+                longitud=lon,
+                telefono=telefono[:20] if telefono else None,
+                descripcion=f"Lugar importado desde OpenStreetMap. {tags.get('description', '')}"[:500],
+                estado="pendiente",  # Requiere aprobación manual
+                es_vip=False
+            )
+            
+            db.session.add(nuevo_negocio)
+            lugares_importados.append(nuevo_negocio)
+        
+        db.session.commit()
+        
+        return {
+            "importados": len(lugares_importados),
+            "duplicados": lugares_duplicados,
+            "total_encontrados": len(elementos)
+        }
+        
+    except requests.exceptions.RequestException as e:
+        print(f"[OSM IMPORT ERROR] Error al consultar Overpass API: {e}")
+        db.session.rollback()
+        return {"error": f"Error al consultar OpenStreetMap: {str(e)}"}
+    except Exception as e:
+        print(f"[OSM IMPORT ERROR] Error inesperado: {e}")
+        db.session.rollback()
+        return {"error": f"Error inesperado: {str(e)}"}
+
+@app.route("/admin/importar-osm", methods=["GET", "POST"])
+def importar_osm():
+    """Panel para importar lugares desde OpenStreetMap"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    if request.method == "POST":
+        provincia = request.form.get("provincia", "").strip()
+        canton = request.form.get("canton", "").strip()
+        
+        if not provincia or not canton:
+            flash("Debés seleccionar provincia y cantón.")
+            return redirect("/admin/importar-osm")
+        
+        # Importar lugares
+        resultado = importar_lugares_osm(provincia, canton)
+        
+        if "error" in resultado:
+            flash(f"Error: {resultado['error']}")
+        else:
+            flash(f"✅ Importados: {resultado['importados']} lugares | Duplicados: {resultado['duplicados']} | Total encontrados: {resultado['total_encontrados']}")
+        
+        return redirect("/admin/importar-osm")
+    
+    # Cargar datos de ubicaciones para los selectores
+    import os
+    json_path = os.path.join(os.path.dirname(__file__), "static", "data", "costa_rica_ubicaciones.json")
+    ubicaciones_data = {}
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            ubicaciones_data = json.load(f)
+    except Exception as e:
+        print(f"[ERROR] No se pudo cargar ubicaciones: {e}")
+    
+    return render_template("admin_importar_osm.html", ubicaciones_data=ubicaciones_data)
 
 @app.route("/admin/analytics")
 def admin_analytics():

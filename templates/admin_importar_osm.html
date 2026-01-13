@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Importar Lugares desde OpenStreetMap | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --brand-blue: #0056b3; --brand-green: #7ab800; }
+        body { background-color: #f4f7f6; }
+
+        .navbar { 
+            background-color: white !important; 
+            border-bottom: 3px solid var(--brand-blue); 
+            padding: 10px 0; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+        }
+        
+        @media (max-width: 991px) {
+            .navbar {
+                height: 80px !important;
+                min-height: 80px !important;
+                max-height: 80px !important;
+                overflow: visible !important;
+                display: flex !important;
+                align-items: center !important;
+                flex-wrap: nowrap !important;
+            }
+            
+            .navbar .container {
+                display: flex !important;
+                align-items: center !important;
+                flex-wrap: nowrap !important;
+                height: 80px !important;
+                position: relative !important;
+            }
+            
+            .navbar-brand {
+                flex-shrink: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                height: 100% !important;
+            }
+            
+            .navbar-brand span {
+                display: none !important;
+            }
+            
+            .navbar-brand img {
+                height: 50px !important;
+            }
+            
+            .navbar-toggler {
+                flex-shrink: 0 !important;
+                margin-left: auto !important;
+                height: auto !important;
+            }
+            
+            .navbar-collapse {
+                position: absolute !important;
+                top: 80px !important;
+                left: 0 !important;
+                right: 0 !important;
+                background: white !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+                border-top: 3px solid var(--brand-blue) !important;
+                padding: 16px !important;
+                z-index: 1000 !important;
+                margin-top: 0 !important;
+                width: 100% !important;
+            }
+            
+            .navbar-collapse:not(.show) {
+                display: none !important;
+            }
+            
+            .navbar-collapse.show {
+                display: block !important;
+            }
+            
+            .navbar-collapse .d-flex {
+                flex-direction: column !important;
+                gap: 12px !important;
+                width: 100% !important;
+            }
+            
+            .navbar-collapse .btn {
+                width: 100% !important;
+            }
+        }
+
+        .card-import {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            background: white;
+            padding: 30px;
+        }
+
+        .btn-import {
+            background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-import:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            color: white;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, rgba(11, 79, 163, 0.08), rgba(56, 178, 77, 0.08));
+            border: 2px solid var(--brand-blue);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/admin">
+            <img src="/static/uploads/logo.png" alt="Admin Ubik2CR" style="height: 70px; width: auto;">
+            <span class="ms-2 fw-bold text-secondary d-none d-md-inline" style="font-size: 1.2rem;">| Panel Admin</span>
+        </a>
+        
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbarImportar" 
+                aria-controls="adminNavbarImportar" aria-expanded="false" aria-label="Toggle navigation"
+                style="border: 2px solid var(--brand-blue); border-radius: 6px; padding: 6px 10px; background: transparent;">
+            <i class="fas fa-bars" style="color: var(--brand-blue);"></i>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="adminNavbarImportar">
+            <div class="ms-auto d-flex flex-column flex-lg-row gap-2">
+                <a href="/admin" class="btn btn-outline-primary btn-sm">Volver al Panel</a>
+                <a href="/" class="btn btn-outline-secondary btn-sm">Ver Sitio Web</a>
+                <a href="/logout" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card-import">
+                <h2 class="mb-4" style="color: var(--brand-blue);">
+                    <i class="fas fa-download me-2"></i>Importar Lugares desde OpenStreetMap
+                </h2>
+
+                <div class="info-box">
+                    <h5 class="fw-bold mb-3" style="color: var(--brand-blue);">
+                        <i class="fas fa-info-circle me-2"></i>¿Cómo funciona?
+                    </h5>
+                    <ul class="mb-0">
+                        <li>Seleccioná una <strong>provincia</strong> y un <strong>cantón</strong></li>
+                        <li>El sistema buscará lugares comerciales en OpenStreetMap para esa zona</li>
+                        <li>Los lugares se importarán con estado <strong>"pendiente"</strong> para que los revises</li>
+                        <li>Se categorizarán automáticamente según su tipo</li>
+                        <li>Los duplicados se detectarán y no se importarán</li>
+                    </ul>
+                </div>
+
+                <form method="POST" id="importForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Provincia</label>
+                            <select name="provincia" id="provincia" class="form-select form-select-lg" required onchange="cargarCantonesImportar()">
+                                <option value="">Seleccionar provincia</option>
+                                {% for provincia in ubicaciones_data.keys() %}
+                                <option value="{{ provincia }}">{{ provincia }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Cantón</label>
+                            <select name="canton" id="canton" class="form-select form-select-lg" required disabled>
+                                <option value="">Primero seleccioná una provincia</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Importante:</strong> La importación puede tardar varios minutos dependiendo de la cantidad de lugares encontrados. 
+                        No cierres esta página hasta que termine.
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn-import" id="btnImportar">
+                            <i class="fas fa-download me-2"></i>Importar Lugares
+                        </button>
+                        <a href="/admin" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const ubicacionesData = {{ ubicaciones_data | tojson }};
+
+    function cargarCantonesImportar() {
+        const provinciaSelect = document.getElementById('provincia');
+        const cantonSelect = document.getElementById('canton');
+        
+        const provincia = provinciaSelect.value;
+        
+        if (!provincia) {
+            cantonSelect.innerHTML = '<option value="">Primero seleccioná una provincia</option>';
+            cantonSelect.disabled = true;
+            return;
+        }
+        
+        cantonSelect.innerHTML = '<option value="">Seleccionar cantón</option>';
+        
+        if (ubicacionesData[provincia]) {
+            const cantones = Object.keys(ubicacionesData[provincia]);
+            cantones.forEach(canton => {
+                const option = document.createElement('option');
+                option.value = canton;
+                option.textContent = canton;
+                cantonSelect.appendChild(option);
+            });
+            cantonSelect.disabled = false;
+        } else {
+            cantonSelect.innerHTML = '<option value="">No hay cantones disponibles</option>';
+            cantonSelect.disabled = true;
+        }
+    }
+
+    // Prevenir múltiples envíos
+    document.getElementById('importForm').addEventListener('submit', function(e) {
+        const btn = document.getElementById('btnImportar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Importando...';
+    });
+</script>
+</body>
+</html>
