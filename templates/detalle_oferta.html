@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ oferta.titulo }} | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --brand-blue: #0056b3; --brand-green: #7ab800; }
+        body { background-color: #f8f9fa; }
+
+        /* NAVBAR CLEAN ESTILO (Público) */
+        .navbar {
+            background-color: white !important;
+            padding: 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-bottom: 3px solid var(--brand-green);
+        }
+        .btn-outline-custom { border-color: var(--brand-green); color: var(--brand-green); font-weight: bold; }
+        .btn-outline-custom:hover { background-color: var(--brand-green); color: white; }
+
+        /* Estilos del Detalle */
+        .header-oferta { background-color: white; border-bottom: 1px solid #eee; padding: 40px 0; margin-bottom: 30px; }
+        .img-principal { width: 100%; max-height: 500px; object-fit: cover; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .badge-expirada { background-color: #dc3545; font-size: 0.9rem; padding: 6px 12px; border-radius: 20px; }
+        .badge-activa { background-color: var(--brand-green); font-size: 0.9rem; padding: 6px 12px; border-radius: 20px; }
+        
+        h1 { color: var(--brand-green); font-weight: 800; }
+        .info-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 4px solid var(--brand-green); }
+        .oferta-content { line-height: 1.8; color: #374151; white-space: pre-line; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <img src="/static/uploads/logo.png" alt="Ubik2CR" style="height: 85px; width: auto; object-fit: contain;">
+        </a>
+        <a href="/" class="btn btn-outline-custom btn-sm"><i class="fas fa-arrow-left"></i> Volver al Inicio</a>
+    </div>
+</nav>
+
+<div class="header-oferta">
+    <div class="container">
+        {% if esta_expirada %}
+        <div class="alert alert-warning mb-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>Esta oferta ha expirado.
+        </div>
+        {% endif %}
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3">
+                {% if esta_expirada %}
+                <span class="badge-expirada text-white mb-2"><i class="fas fa-clock me-1"></i> Expirada</span>
+                {% else %}
+                <span class="badge-activa text-white mb-2"><i class="fas fa-check-circle me-1"></i> Activa</span>
+                {% endif %}
+                <h1 class="display-4">{{ oferta.titulo }}</h1>
+                {% if oferta.descripcion %}
+                <p class="lead text-muted">{{ oferta.descripcion[:150] }}{% if oferta.descripcion|length > 150 %}...{% endif %}</p>
+                {% endif %}
+                <small class="text-muted d-flex align-items-center mb-3">
+                    <i class="far fa-calendar-alt me-2"></i>
+                    Válido hasta: {{ oferta.fecha_caducidad.strftime('%d/%m/%Y') }}
+                </small>
+                
+                <div class="d-flex gap-2 mt-4 align-items-center flex-wrap">
+                    <button type="button" class="btn btn-outline-success rounded-pill px-4 py-2" 
+                            style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation; border-color: var(--brand-green); color: var(--brand-green);" 
+                            onclick="compartirOferta({{ oferta.id }}, {{ oferta.negocio_id }}, '{{ oferta.titulo|e }}')">
+                        <i class="fas fa-share-alt me-1"></i> <span>Compartir</span>
+                    </button>
+                    {% if negocio %}
+                    <a href="/negocio/{{ oferta.negocio_id }}" class="btn btn-primary rounded-pill px-4 py-2" 
+                       style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation; background-color: var(--brand-blue); border-color: var(--brand-blue);">
+                        <i class="fas fa-store me-1"></i> <span>Ver Negocio</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                {% if oferta.imagen_url %}
+                <img src="{{ get_safe_image_url(oferta.imagen_url) }}" class="img-principal" alt="{{ oferta.titulo }}">
+                {% else %}
+                <div style="width: 100%; height: 400px; background: linear-gradient(135deg, #e8f5e9, #f1f8e9); border-radius: 15px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-tag" style="font-size: 5rem; color: var(--brand-green); opacity: 0.3;"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="info-card mb-4">
+                {% if oferta.descripcion %}
+                <div class="oferta-content">{{ oferta.descripcion }}</div>
+                {% else %}
+                <p class="text-muted">No hay descripción adicional para esta oferta.</p>
+                {% endif %}
+            </div>
+            
+            {% if negocio %}
+            <div class="info-card">
+                <h5 class="fw-bold mb-3" style="color: var(--brand-blue);">
+                    <i class="fas fa-store me-2"></i>Negocio que ofrece esta promoción
+                </h5>
+                <hr>
+                <div class="d-flex align-items-center gap-3">
+                    {% if negocio.imagen_url %}
+                    <img src="{{ get_safe_image_url(negocio.imagen_url) }}" alt="{{ negocio.nombre }}" 
+                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px;">
+                    {% endif %}
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1">{{ negocio.nombre }}</h6>
+                        <p class="text-muted mb-1 small">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ negocio.ubicacion }}
+                        </p>
+                        <a href="/negocio/{{ negocio.id }}" class="btn btn-sm btn-outline-primary">
+                            Ver detalles del negocio <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Función para compartir oferta
+    function compartirOferta(ofertaId, negocioId, titulo) {
+        const url = `${window.location.origin}/oferta/${ofertaId}`;
+        const texto = `🎯 ${titulo}\n\n¡Mira esta oferta en Ubik2CR!\n${url}`;
+        
+        // Intentar usar Web Share API (dispositivos móviles)
+        if (navigator.share) {
+            navigator.share({
+                title: titulo,
+                text: texto,
+                url: url
+            }).catch(err => {
+                console.log('Error al compartir:', err);
+                fallbackCompartirOferta(texto, url);
+            });
+        } else {
+            fallbackCompartirOferta(texto, url);
+        }
+    }
+
+    // Función auxiliar para compartir oferta (fallback)
+    function fallbackCompartirOferta(texto, url) {
+        // Copiar al portapapeles
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(texto + '\n' + url).then(() => {
+                alert('¡Enlace copiado al portapapeles! Ahora puedes compartirlo.');
+            }).catch(() => {
+                mostrarModalCompartirOferta(texto, url);
+            });
+        } else {
+            mostrarModalCompartirOferta(texto, url);
+        }
+    }
+
+    // Modal para compartir oferta
+    function mostrarModalCompartirOferta(texto, url) {
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(texto + '\n' + url)}`;
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(texto)}&url=${encodeURIComponent(url)}`;
+        
+        const modal = `
+            <div class="modal fade" id="modalCompartirOferta" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Compartir Oferta</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="d-grid gap-2">
+                                <a href="${whatsappUrl}" target="_blank" class="btn btn-success">
+                                    <i class="fab fa-whatsapp me-2"></i> WhatsApp
+                                </a>
+                                <a href="${facebookUrl}" target="_blank" class="btn btn-primary">
+                                    <i class="fab fa-facebook me-2"></i> Facebook
+                                </a>
+                                <a href="${twitterUrl}" target="_blank" class="btn btn-info text-white">
+                                    <i class="fab fa-twitter me-2"></i> Twitter
+                                </a>
+                                <button class="btn btn-outline-secondary" onclick="copiarEnlaceOferta('${url}')">
+                                    <i class="fas fa-copy me-2"></i> Copiar Enlace
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remover modal anterior si existe
+        const modalExistente = document.getElementById('modalCompartirOferta');
+        if (modalExistente) {
+            modalExistente.remove();
+        }
+        
+        // Agregar modal al body
+        document.body.insertAdjacentHTML('beforeend', modal);
+        const modalElement = new bootstrap.Modal(document.getElementById('modalCompartirOferta'));
+        modalElement.show();
+        
+        // Remover modal del DOM después de cerrarse
+        document.getElementById('modalCompartirOferta').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+    }
+
+    // Copiar enlace al portapapeles
+    function copiarEnlaceOferta(url) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('¡Enlace copiado al portapapeles!');
+            });
+        } else {
+            // Fallback para navegadores antiguos
+            const textarea = document.createElement('textarea');
+            textarea.value = url;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('¡Enlace copiado al portapapeles!');
+        }
+    }
+</script>
+
+</body>
+</html>

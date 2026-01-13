@@ -83,7 +83,7 @@
 
         {% if noticias %}
             {% for noticia in noticias %}
-            <div class="news-card">
+            <div class="news-card" style="cursor: pointer;" onclick="window.location.href='/noticia/{{ noticia.id }}'">
                 {% if noticia.imagen_url %}
                 <img src="{{ get_safe_image_url(noticia.imagen_url) if get_safe_image_url else noticia.imagen_url }}" 
                      class="news-img" 
@@ -99,7 +99,7 @@
                 <div class="news-body">
                     <span class="news-date">📅 {{ noticia.fecha.strftime('%d-%m-%Y') }}</span>
                     <h2 class="news-title">{{ noticia.titulo }}</h2>
-                    <p class="news-content">{{ noticia.contenido }}</p>
+                    <p class="news-content">{{ noticia.contenido[:300] }}{% if noticia.contenido|length > 300 %}... <span class="text-primary">Ver más</span>{% endif %}</p>
                 </div>
             </div>
             {% endfor %}

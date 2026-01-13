@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ noticia.titulo }} | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --brand-blue: #0056b3; --brand-green: #7ab800; }
+        body { background-color: #f8f9fa; }
+
+        /* NAVBAR CLEAN ESTILO (Público) */
+        .navbar {
+            background-color: white !important;
+            padding: 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-bottom: 3px solid var(--brand-blue);
+        }
+        .btn-outline-custom { border-color: var(--brand-blue); color: var(--brand-blue); font-weight: bold; }
+        .btn-outline-custom:hover { background-color: var(--brand-blue); color: white; }
+
+        /* Estilos del Detalle */
+        .header-noticia { background-color: white; border-bottom: 1px solid #eee; padding: 40px 0; margin-bottom: 30px; }
+        .img-principal { width: 100%; max-height: 500px; object-fit: cover; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        h1 { color: var(--brand-blue); font-weight: 800; }
+        .info-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 4px solid var(--brand-blue); }
+        .news-content { line-height: 1.8; color: #374151; white-space: pre-line; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <img src="/static/uploads/logo.png" alt="Ubik2CR" style="height: 85px; width: auto; object-fit: contain;">
+        </a>
+        <a href="/noticias" class="btn btn-outline-custom btn-sm"><i class="fas fa-arrow-left"></i> Volver a Noticias</a>
+    </div>
+</nav>
+
+<div class="header-noticia">
+    <div class="container">
+        {% if esta_caducada %}
+        <div class="alert alert-warning mb-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>Esta noticia ha caducado.
+        </div>
+        {% endif %}
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3">
+                <small class="text-muted d-flex align-items-center mb-2">
+                    <i class="far fa-calendar-alt me-2"></i>
+                    {{ noticia.fecha.strftime('%d/%m/%Y') }}
+                </small>
+                <h1 class="display-4">{{ noticia.titulo }}</h1>
+                
+                <div class="d-flex gap-2 mt-4 align-items-center flex-wrap">
+                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2" 
+                            style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;" 
+                            onclick="compartirNoticia({{ noticia.id }}, '{{ noticia.titulo|e }}')">
+                        <i class="fas fa-share-alt me-1"></i> <span>Compartir</span>
+                    </button>
+                    {% if noticia.negocio_id and noticia.negocio %}
+                    <a href="/negocio/{{ noticia.negocio_id }}" class="btn btn-outline-success rounded-pill px-4 py-2" 
+                       style="font-weight: bold; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation; border-color: var(--brand-green); color: var(--brand-green);">
+                        <i class="fas fa-store me-1"></i> <span>Ver Negocio</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                {% if noticia.imagen_url %}
+                <img src="{{ get_safe_image_url(noticia.imagen_url) }}" class="img-principal" alt="{{ noticia.titulo }}"
+                     onerror="if(this.src.indexOf('placeholder') === -1) { this.src='https://via.placeholder.com/800x500?text=Ubik2CR+Noticia'; this.onerror=null; }">
+                {% else %}
+                <div style="width: 100%; height: 400px; background: linear-gradient(135deg, #e8f0f8, #f0f5f9); border-radius: 15px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-newspaper" style="font-size: 5rem; color: var(--brand-blue); opacity: 0.3;"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="info-card mb-4">
+                <div class="news-content">{{ noticia.contenido }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Función para compartir noticia
+    function compartirNoticia(noticiaId, titulo) {
+        const url = `${window.location.origin}/noticia/${noticiaId}`;
+        const texto = `📰 ${titulo}\n\nDescubre esta y más noticias en Ubik2CR:\n${url}`;
+        
+        // Intentar usar Web Share API (dispositivos móviles)
+        if (navigator.share) {
+            navigator.share({
+                title: titulo,
+                text: texto,
+                url: url
+            }).catch(err => {
+                console.log('Error al compartir:', err);
+                fallbackCompartirNoticia(texto, url);
+            });
+        } else {
+            fallbackCompartirNoticia(texto, url);
+        }
+    }
+
+    // Función auxiliar para compartir noticia (fallback)
+    function fallbackCompartirNoticia(texto, url) {
+        // Copiar al portapapeles
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(texto + '\n' + url).then(() => {
+                alert('¡Enlace copiado al portapapeles! Ahora puedes compartirlo.');
+            }).catch(() => {
+                mostrarModalCompartirNoticia(texto, url);
+            });
+        } else {
+            mostrarModalCompartirNoticia(texto, url);
+        }
+    }
+
+    // Modal para compartir noticia
+    function mostrarModalCompartirNoticia(texto, url) {
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(texto + '\n' + url)}`;
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(texto)}&url=${encodeURIComponent(url)}`;
+        
+        const modal = `
+            <div class="modal fade" id="modalCompartirNoticia" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Compartir Noticia</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="d-grid gap-2">
+                                <a href="${whatsappUrl}" target="_blank" class="btn btn-success">
+                                    <i class="fab fa-whatsapp me-2"></i> WhatsApp
+                                </a>
+                                <a href="${facebookUrl}" target="_blank" class="btn btn-primary">
+                                    <i class="fab fa-facebook me-2"></i> Facebook
+                                </a>
+                                <a href="${twitterUrl}" target="_blank" class="btn btn-info text-white">
+                                    <i class="fab fa-twitter me-2"></i> Twitter
+                                </a>
+                                <button class="btn btn-outline-secondary" onclick="copiarEnlaceNoticia('${url}')">
+                                    <i class="fas fa-copy me-2"></i> Copiar Enlace
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remover modal anterior si existe
+        const modalExistente = document.getElementById('modalCompartirNoticia');
+        if (modalExistente) {
+            modalExistente.remove();
+        }
+        
+        // Agregar modal al body
+        document.body.insertAdjacentHTML('beforeend', modal);
+        const modalElement = new bootstrap.Modal(document.getElementById('modalCompartirNoticia'));
+        modalElement.show();
+        
+        // Remover modal del DOM después de cerrarse
+        document.getElementById('modalCompartirNoticia').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+    }
+
+    // Copiar enlace al portapapeles
+    function copiarEnlaceNoticia(url) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('¡Enlace copiado al portapapeles!');
+            });
+        } else {
+            // Fallback para navegadores antiguos
+            const textarea = document.createElement('textarea');
+            textarea.value = url;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('¡Enlace copiado al portapapeles!');
+        }
+    }
+</script>
+
+</body>
+</html>

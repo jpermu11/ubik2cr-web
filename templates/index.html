@@ -120,7 +120,7 @@
                     {% for noticia in noticias_recientes %}
                     <div class="carousel-item {% if loop.first %}active{% endif %}" 
                          style="cursor: pointer; touch-action: manipulation; height: 200px;" 
-                         onclick="window.location.href='/noticias'"
+                         onclick="window.location.href='/noticia/{{ noticia.id }}'"
                          ontouchstart="this.style.opacity='0.9'" 
                          ontouchend="this.style.opacity='1'">
                         <div class="position-relative d-flex" style="height: 200px; overflow: hidden;">
@@ -204,7 +204,7 @@
                     {% for oferta in ofertas_activas %}
                     <div class="carousel-item {% if loop.first %}active{% endif %}" 
                          style="cursor: pointer; touch-action: manipulation; height: 200px;" 
-                         onclick="window.location.href='/negocio/{{ oferta.negocio_id }}'"
+                         onclick="window.location.href='/oferta/{{ oferta.id }}'"
                          ontouchstart="this.style.opacity='0.9'" 
                          ontouchend="this.style.opacity='1'">
                         <div class="position-relative d-flex" style="height: 200px; overflow: hidden;">

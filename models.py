@@ -71,11 +71,15 @@ class Noticia(db.Model):
     __tablename__ = "noticias"
 
     id = db.Column(db.Integer, primary_key=True)
+    negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=True, index=True)  # Opcional: noticias pueden ser de un negocio o generales
     titulo = db.Column(db.String(200), nullable=False, index=True)
     contenido = db.Column(db.Text, nullable=False)
     imagen_url = db.Column(db.String(500))
     fecha = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     fecha_caducidad = db.Column(db.DateTime, nullable=True, index=True)  # Fecha de desaparición automática
+    
+    # Relación
+    negocio = db.relationship("Negocio", backref="noticias")
 
 # --- MODELO FAVORITOS (relación muchos-a-muchos) ---
 favoritos = db.Table(

@@ -760,6 +760,48 @@ def noticias():
     ).order_by(Noticia.fecha.desc()).all()
     return render_template("noticias.html", noticias=noticias_list, get_safe_image_url=get_safe_image_url)
 
+@app.route("/noticia/<int:id>")
+def detalle_noticia(id):
+    """Ver detalle de una noticia"""
+    noticia = db.session.get(Noticia, id)
+    if not noticia:
+        return "Noticia no encontrada", 404
+    
+    # Verificar si está caducada
+    ahora = datetime.utcnow()
+    esta_caducada = False
+    if noticia.fecha_caducidad and noticia.fecha_caducidad <= ahora:
+        esta_caducada = True
+    
+    return render_template(
+        "detalle_noticia.html",
+        noticia=noticia,
+        esta_caducada=esta_caducada,
+        get_safe_image_url=get_safe_image_url
+    )
+
+@app.route("/oferta/<int:id>")
+def detalle_oferta(id):
+    """Ver detalle de una oferta"""
+    oferta = db.session.get(Oferta, id)
+    if not oferta:
+        return "Oferta no encontrada", 404
+    
+    # Verificar si está expirada
+    ahora = datetime.utcnow()
+    esta_expirada = oferta.fecha_caducidad <= ahora or oferta.estado != "activa"
+    
+    # Obtener el negocio asociado
+    negocio = db.session.get(Negocio, oferta.negocio_id)
+    
+    return render_template(
+        "detalle_oferta.html",
+        oferta=oferta,
+        negocio=negocio,
+        esta_expirada=esta_expirada,
+        get_safe_image_url=get_safe_image_url
+    )
+
 @app.route("/negocio/<int:id>")
 def detalle_negocio(id):
     n = db.session.get(Negocio, id)
