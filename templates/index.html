@@ -304,21 +304,26 @@
 <!-- BUSCADOR PREMIUM -->
 <div class="section-modern" style="padding-top: 48px; padding-bottom: 24px;">
     <div class="container-modern">
-        <form method="get" class="row g-3" id="searchForm">
-            <div class="col-12 col-md-5">
-                <div class="search-bar-premium">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" name="q" placeholder="Ej: shampoo, comida, medicina, gasolina..."
-                           value="{{ q if q else '' }}" 
-                           autocomplete="off"
-                           id="searchInput"
-                           style="width: 100%;">
+        <form method="get" id="searchForm" style="background: white; padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+            <div class="row g-3 align-items-end">
+                <!-- Campo de búsqueda -->
+                <div class="col-12 col-md-4">
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Buscar</label>
+                    <div class="search-bar-premium" style="height: 48px; border-radius: var(--radius-md);">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" name="q" placeholder="Ej: shampoo, comida, medicina..."
+                               value="{{ q if q else '' }}" 
+                               autocomplete="off"
+                               id="searchInput"
+                               style="width: 100%; height: 48px; border: none; padding-left: 45px; border-radius: var(--radius-md);">
+                    </div>
                 </div>
-            </div>
 
-            <div class="col-12 col-md-3">
-                <select name="cat" class="form-select custom-select-arrow">
-                <option value="Todas" {% if categoria_actual == 'Todas' %}selected{% endif %}>Todas las categorías</option>
+                <!-- Categoría -->
+                <div class="col-12 col-md-2">
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Categoría</label>
+                    <select name="cat" class="form-select custom-select-arrow" style="height: 48px; border-radius: var(--radius-md);">
+                    <option value="Todas" {% if categoria_actual == 'Todas' %}selected{% endif %}>Todas</option>
                 
                 <optgroup label="🍽️ Comida y Bebidas">
                     <option value="Sodas y Rest." {% if categoria_actual == 'Sodas y Rest.' %}selected{% endif %}>🍴 Sodas y Rest.</option>
@@ -417,41 +422,60 @@
                     <option value="Otros" {% if categoria_actual == 'Otros' %}selected{% endif %}>✨ Otros</option>
                 </optgroup>
             </select>
-        </div>
-        
-        <!-- Filtros de ubicación (opcionales para refinar búsqueda) -->
-        <div class="col-12 col-md-2">
-            <label class="form-label small text-muted mb-1" style="font-size: 0.75rem;">Filtrar por zona (opcional)</label>
-            <select name="provincia" id="filtro_provincia" class="form-select custom-select-arrow" onchange="cargarCantonesBusqueda()">
-                <option value="">Todas las provincias</option>
-                <option value="San José" {% if request.args.get('provincia') == 'San José' %}selected{% endif %}>San José</option>
-                <option value="Alajuela" {% if request.args.get('provincia') == 'Alajuela' %}selected{% endif %}>Alajuela</option>
-                <option value="Cartago" {% if request.args.get('provincia') == 'Cartago' %}selected{% endif %}>Cartago</option>
-                <option value="Heredia" {% if request.args.get('provincia') == 'Heredia' %}selected{% endif %}>Heredia</option>
-                <option value="Guanacaste" {% if request.args.get('provincia') == 'Guanacaste' %}selected{% endif %}>Guanacaste</option>
-                <option value="Puntarenas" {% if request.args.get('provincia') == 'Puntarenas' %}selected{% endif %}>Puntarenas</option>
-                <option value="Limón" {% if request.args.get('provincia') == 'Limón' %}selected{% endif %}>Limón</option>
-            </select>
-        </div>
-        
-        <div class="col-12 col-md-2">
-            <label class="form-label small text-muted mb-1" style="font-size: 0.75rem; visibility: hidden;">&nbsp;</label>
-            <select name="canton" id="filtro_canton" class="form-select custom-select-arrow" onchange="cargarDistritosBusqueda()" {% if not request.args.get('provincia') %}disabled{% endif %}>
-                <option value="">Todos los cantones</option>
-            </select>
-        </div>
-        
-        <div class="col-12 col-md-2">
-            <label class="form-label small text-muted mb-1" style="font-size: 0.75rem; visibility: hidden;">&nbsp;</label>
-            <select name="distrito" id="filtro_distrito" class="form-select custom-select-arrow" {% if not request.args.get('canton') %}disabled{% endif %}>
-                <option value="">Todos los distritos</option>
-            </select>
-        </div>
+                </div>
+            
+                <!-- Provincia -->
+                <div class="col-12 col-md-2">
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Provincia</label>
+                    <select name="provincia" id="filtro_provincia" class="form-select custom-select-arrow" style="height: 48px; border-radius: var(--radius-md);" onchange="cargarCantonesBusqueda()">
+                        <option value="">Todas</option>
+                        <option value="San José" {% if request.args.get('provincia') == 'San José' %}selected{% endif %}>San José</option>
+                        <option value="Alajuela" {% if request.args.get('provincia') == 'Alajuela' %}selected{% endif %}>Alajuela</option>
+                        <option value="Cartago" {% if request.args.get('provincia') == 'Cartago' %}selected{% endif %}>Cartago</option>
+                        <option value="Heredia" {% if request.args.get('provincia') == 'Heredia' %}selected{% endif %}>Heredia</option>
+                        <option value="Guanacaste" {% if request.args.get('provincia') == 'Guanacaste' %}selected{% endif %}>Guanacaste</option>
+                        <option value="Puntarenas" {% if request.args.get('provincia') == 'Puntarenas' %}selected{% endif %}>Puntarenas</option>
+                        <option value="Limón" {% if request.args.get('provincia') == 'Limón' %}selected{% endif %}>Limón</option>
+                    </select>
+                </div>
+                
+                <!-- Cantón -->
+                <div class="col-12 col-md-2">
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Cantón</label>
+                    <select name="canton" id="filtro_canton" class="form-select custom-select-arrow" style="height: 48px; border-radius: var(--radius-md);" onchange="cargarDistritosBusqueda()" {% if not request.args.get('provincia') %}disabled{% endif %}>
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                
+                <!-- Distrito -->
+                <div class="col-12 col-md-2">
+                    <label class="form-label small text-muted mb-2 d-block" style="font-size: 0.75rem; font-weight: 600; margin-bottom: 8px !important;">Distrito</label>
+                    <select name="distrito" id="filtro_distrito" class="form-select custom-select-arrow" style="height: 48px; border-radius: var(--radius-md);" {% if not request.args.get('canton') %}disabled{% endif %}>
+                        <option value="">Todos</option>
+                    </select>
+                </div>
 
-            <div class="col-12 col-md-3">
-                <button type="submit" class="btn-modern btn-modern-primary w-100" style="min-height: 52px;">
-                    <i class="fas fa-search me-2"></i><span>Buscar</span>
-                </button>
+                <!-- Botón Buscar -->
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn-modern btn-modern-primary w-100" style="height: 48px; font-weight: 600; border-radius: var(--radius-md);">
+                        <i class="fas fa-search me-2"></i>Buscar
+                    </button>
+                </div>
+                
+                <!-- Botón Limpiar Filtros -->
+                <div class="col-12 col-md-1">
+                    {% if q or request.args.get('provincia') or request.args.get('canton') or request.args.get('distrito') or categoria_actual != 'Todas' %}
+                    <a href="/" class="btn w-100 d-flex align-items-center justify-content-center" 
+                       style="height: 48px; background: var(--gray-100); color: var(--gray-700); border: 2px solid var(--gray-300); text-decoration: none; border-radius: var(--radius-md); transition: all 0.2s;"
+                       title="Limpiar todos los filtros"
+                       onmouseover="this.style.background='var(--gray-200)'; this.style.borderColor='var(--gray-400)'; this.style.color='var(--gray-900)';"
+                       onmouseout="this.style.background='var(--gray-100)'; this.style.borderColor='var(--gray-300)'; this.style.color='var(--gray-700)';">
+                        <i class="fas fa-times" style="font-size: 1.1rem;"></i>
+                    </a>
+                    {% else %}
+                    <div style="height: 48px;"></div>
+                    {% endif %}
+                </div>
             </div>
         </form>
     </div>
@@ -1101,6 +1125,25 @@
                     this.style.opacity = '';
                 }, 150);
             }, { passive: true });
+        });
+        
+        // Estilos adicionales para alineación perfecta
+        document.addEventListener('DOMContentLoaded', function() {
+            // Asegurar que todos los selects y inputs tengan la misma altura
+            const formElements = document.querySelectorAll('#searchForm select, #searchForm input[type="text"], #searchForm button, #searchForm a[href="/"]');
+            formElements.forEach(el => {
+                if (el && el.style) {
+                    el.style.height = '48px';
+                }
+            });
+            
+            // Asegurar que todas las etiquetas tengan el mismo margen
+            const labels = document.querySelectorAll('#searchForm .form-label');
+            labels.forEach(label => {
+                if (label && label.style) {
+                    label.style.marginBottom = '8px';
+                }
+            });
         });
         
         // Funciones para cargar cantones y distritos en búsqueda
