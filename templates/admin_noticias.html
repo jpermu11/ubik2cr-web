@@ -21,41 +21,70 @@
         /* Asegurar que el navbar no crezca en móvil */
         @media (max-width: 991px) {
             .topbar {
-                min-height: 70px;
-                max-height: 70px;
-                height: 70px;
-                overflow: visible;
-                position: relative;
+                height: 70px !important;
+                min-height: 70px !important;
+                max-height: 70px !important;
+                overflow: visible !important;
+                position: relative !important;
+                display: flex !important;
+                align-items: center !important;
+                flex-wrap: nowrap !important;
             }
+            
             .topbar .container {
-                flex-wrap: nowrap;
-                position: relative;
-                height: 100%;
+                display: flex !important;
+                align-items: center !important;
+                flex-wrap: nowrap !important;
+                height: 70px !important;
+                position: relative !important;
             }
+            
+            .brand {
+                flex-shrink: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                height: 100% !important;
+            }
+            
             .brand img {
                 height: 45px !important;
             }
             
-            /* Menú colapsable fuera del flujo del navbar */
+            .navbar-toggler {
+                flex-shrink: 0 !important;
+                margin-left: auto !important;
+            }
+            
+            /* Menú colapsable completamente fuera del flujo */
             .navbar-collapse {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: linear-gradient(90deg,var(--blue),var(--green));
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                padding: 16px;
-                z-index: 1000;
-                margin-top: 0;
+                position: absolute !important;
+                top: 70px !important;
+                left: 0 !important;
+                right: 0 !important;
+                background: linear-gradient(90deg,var(--blue),var(--green)) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+                padding: 16px !important;
+                z-index: 1000 !important;
+                margin-top: 0 !important;
+                width: 100% !important;
+            }
+            
+            .navbar-collapse:not(.show) {
+                display: none !important;
+            }
+            
+            .navbar-collapse.show {
+                display: block !important;
             }
             
             .navbar-collapse .d-flex {
-                flex-direction: column;
-                gap: 12px;
+                flex-direction: column !important;
+                gap: 12px !important;
+                width: 100% !important;
             }
             
             .navbar-collapse .btn {
-                width: 100%;
+                width: 100% !important;
             }
         }
     </style>
