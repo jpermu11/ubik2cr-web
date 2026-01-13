@@ -284,15 +284,17 @@
                 </div>
                 <div style="flex-grow: 1;">
                     <h5 class="fw-bold mb-2" style="color: var(--brand-blue); font-size: 1.2rem;">
-                        <i class="fas fa-map-marked-alt me-2"></i>¿Buscás negocios en tu zona?
+                        <i class="fas fa-map-marked-alt me-2"></i>Filtrá por zona para encontrar negocios cerca de vos
                     </h5>
                     <p class="mb-2" style="color: var(--gray-700); font-size: 1rem; line-height: 1.6;">
-                        Las localidades aparecen en Ubik2CR conforme los negocios se van registrando. 
-                        <strong>¿Querés que tu negocio aparezca en tu provincia, cantón o distrito?</strong>
+                        Usá los filtros de provincia, cantón o distrito para refinar tu búsqueda y encontrar negocios en tu zona específica. 
+                        <strong>Si no seleccionás ningún filtro, verás todos los negocios disponibles.</strong>
                     </p>
-                    <a href="/publicar" class="btn btn-primary fw-bold" style="background: var(--brand-blue); border: none; border-radius: var(--radius-md); padding: 10px 20px; margin-top: 8px;">
-                        <i class="fas fa-plus-circle me-2"></i>Publicá tu negocio gratis
-                    </a>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="/publicar" class="btn btn-primary fw-bold" style="background: var(--brand-blue); border: none; border-radius: var(--radius-md); padding: 10px 20px; margin-top: 8px;">
+                            <i class="fas fa-plus-circle me-2"></i>Publicá tu negocio gratis
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -417,8 +419,9 @@
             </select>
         </div>
         
-        <!-- Filtros de ubicación -->
+        <!-- Filtros de ubicación (opcionales para refinar búsqueda) -->
         <div class="col-12 col-md-2">
+            <label class="form-label small text-muted mb-1" style="font-size: 0.75rem;">Filtrar por zona (opcional)</label>
             <select name="provincia" id="filtro_provincia" class="form-select custom-select-arrow" onchange="cargarCantonesBusqueda()">
                 <option value="">Todas las provincias</option>
                 <option value="San José" {% if request.args.get('provincia') == 'San José' %}selected{% endif %}>San José</option>
@@ -432,12 +435,14 @@
         </div>
         
         <div class="col-12 col-md-2">
+            <label class="form-label small text-muted mb-1" style="font-size: 0.75rem; visibility: hidden;">&nbsp;</label>
             <select name="canton" id="filtro_canton" class="form-select custom-select-arrow" onchange="cargarDistritosBusqueda()" {% if not request.args.get('provincia') %}disabled{% endif %}>
                 <option value="">Todos los cantones</option>
             </select>
         </div>
         
         <div class="col-12 col-md-2">
+            <label class="form-label small text-muted mb-1" style="font-size: 0.75rem; visibility: hidden;">&nbsp;</label>
             <select name="distrito" id="filtro_distrito" class="form-select custom-select-arrow" {% if not request.args.get('canton') %}disabled{% endif %}>
                 <option value="">Todos los distritos</option>
             </select>
@@ -474,7 +479,7 @@
         </div>
         {% endif %}
         
-        {% if (q or request.args.get('provincia') or request.args.get('canton') or request.args.get('distrito') or categoria_actual != 'Todas') and negocios|length == 0 %}
+        {% if (q or (request.args.get('provincia') and request.args.get('provincia') != '') or (request.args.get('canton') and request.args.get('canton') != '') or (request.args.get('distrito') and request.args.get('distrito') != '') or categoria_actual != 'Todas') and negocios|length == 0 %}
         <div class="text-center py-5">
             <i class="fas fa-search" style="font-size: 4rem; color: var(--gray-400); margin-bottom: 20px;"></i>
             <h4 style="color: var(--gray-700); margin-bottom: 12px;">No se encontraron resultados</h4>
@@ -498,7 +503,7 @@
                 <i class="fas fa-home me-2"></i>Volver al inicio
             </a>
         </div>
-        {% elif q or request.args.get('provincia') or request.args.get('canton') or request.args.get('distrito') or categoria_actual != 'Todas' %}
+        {% elif q or (request.args.get('provincia') and request.args.get('provincia') != '') or (request.args.get('canton') and request.args.get('canton') != '') or (request.args.get('distrito') and request.args.get('distrito') != '') or categoria_actual != 'Todas' %}
         <div class="mb-4">
             <h5 style="color: var(--gray-700); font-weight: 600;">
                 {% if q %}

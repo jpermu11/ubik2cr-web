@@ -476,12 +476,8 @@ def inicio():
 
     PER_PAGE = 24
 
-    # Query base: solo negocios aprobados CON datos completos de ubicación
-    query = Negocio.query.filter_by(estado="aprobado").filter(
-        Negocio.provincia.isnot(None),
-        Negocio.canton.isnot(None),
-        Negocio.distrito.isnot(None)
-    )
+    # Query base: solo negocios aprobados (todos, sin importar si tienen ubicación completa)
+    query = Negocio.query.filter_by(estado="aprobado")
 
     # =====================================================
     # BÚSQUEDA INTELIGENTE CON IA - MAPEO DE PALABRAS CLAVE
@@ -616,11 +612,12 @@ def inicio():
         # Eliminar duplicados y devolver
         return list(set(categorias_sugeridas))
     
-    # Filtros de ubicación (aplicar primero para que funcionen independientemente)
+    # Filtros de ubicación (OPCIONALES - solo se aplican si el usuario los selecciona para refinar la búsqueda)
     provincia_filtro = request.args.get("provincia", "").strip()
     canton_filtro = request.args.get("canton", "").strip()
     distrito_filtro = request.args.get("distrito", "").strip()
     
+    # Solo aplicar filtros de ubicación si el usuario los seleccionó explícitamente
     if provincia_filtro:
         query = query.filter_by(provincia=provincia_filtro)
     if canton_filtro:
