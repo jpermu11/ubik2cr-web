@@ -39,9 +39,23 @@
     }
 
     #map{
-      height: 360px;
+      height: 360px !important;
+      min-height: 360px;
+      width: 100%;
       border-radius: 14px;
       border:1px solid rgba(0,0,0,.10);
+      background-color: #f5f5f5;
+      position: relative;
+    }
+    
+    #map:empty::before {
+      content: "Cargando mapa...";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #666;
+      font-size: 14px;
     }
 
     .hint{
@@ -426,26 +440,76 @@
     console.error("No se encontraron los inputs de latitud/longitud");
   }
 
-  const map = L.map('map').setView([defaultLat, defaultLng], 12);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 19
-  }).addTo(map);
-
+  // Inicializar mapa solo cuando el DOM esté listo y el elemento sea visible
+  let map = null;
   let marker = null;
 
+  function initMap() {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) {
+      console.error("No se encontró el elemento #map");
+      return;
+    }
+
+    // Verificar que el elemento tenga dimensiones
+    if (mapElement.offsetWidth === 0 || mapElement.offsetHeight === 0) {
+      // Si no tiene dimensiones, intentar de nuevo después de un breve delay
+      setTimeout(initMap, 100);
+      return;
+    }
+
+    try {
+      // Inicializar el mapa
+      map = L.map('map', {
+        center: [defaultLat, defaultLng],
+        zoom: 12,
+        zoomControl: true
+      });
+
+      // Agregar capa de tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Asegurar que el mapa se renderice correctamente
+      setTimeout(function() {
+        if (map) {
+          map.invalidateSize();
+        }
+      }, 100);
+
+      // Click para poner pin
+      map.on('click', function(e){
+        setMarker(e.latlng.lat, e.latlng.lng);
+      });
+
+      console.log("Mapa inicializado correctamente");
+    } catch (error) {
+      console.error("Error al inicializar el mapa:", error);
+    }
+  }
+
   function setMarker(lat, lng){
+    if (!map) {
+      console.error("El mapa no está inicializado");
+      return;
+    }
     if(marker) map.removeLayer(marker);
     marker = L.marker([lat, lng]).addTo(map);
     if (latInput) latInput.value = lat.toFixed(6);
     if (lngInput) lngInput.value = lng.toFixed(6);
   }
 
-  // Click para poner pin
-  map.on('click', function(e){
-    setMarker(e.latlng.lat, e.latlng.lng);
-  });
+  // Inicializar el mapa cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(initMap, 200);
+    });
+  } else {
+    // DOM ya está listo
+    setTimeout(initMap, 200);
+  }
 
   // Sistema de tags/productos
   const productosTagsInput = document.getElementById('productos_tags');
