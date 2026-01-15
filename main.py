@@ -2678,19 +2678,20 @@ def admin_panel():
     total_agencias_pendientes = 0
     total_agencias_aprobadas = 0
     
-    if VEHICULOS_AVAILABLE and Vehiculo is not None:
-        try:
-            total_vehiculos_pendientes = Vehiculo.query.filter_by(estado="pendiente").count()
-            total_vehiculos_aprobados = Vehiculo.query.filter_by(estado="aprobado").count()
-        except:
-            pass
-    
-    if VEHICULOS_AVAILABLE and Agencia is not None:
-        try:
-            total_agencias_pendientes = Agencia.query.filter_by(estado="pendiente").count()
-            total_agencias_aprobadas = Agencia.query.filter_by(estado="aprobado").count()
-        except:
-            pass
+    if VEHICULOS_AVAILABLE:
+        if Vehiculo is not None:
+            try:
+                total_vehiculos_pendientes = Vehiculo.query.filter_by(estado="pendiente").count()
+                total_vehiculos_aprobados = Vehiculo.query.filter_by(estado="aprobado").count()
+            except:
+                pass
+        
+        if Agencia is not None:
+            try:
+                total_agencias_pendientes = Agencia.query.filter_by(estado="pendiente").count()
+                total_agencias_aprobadas = Agencia.query.filter_by(estado="aprobado").count()
+            except:
+                pass
 
     return render_template("dashboard.html", 
                          vehiculos_pendientes=total_vehiculos_pendientes,
@@ -3345,42 +3346,13 @@ def limpiar_base_datos():
                          total_resenas=total_resenas)
 
 # DEPRECATED: Sistema de importar lugares eliminado (ya no es relevante para vehículos)
-# @app.route("/admin/importar-osm", methods=["GET", "POST"])
 @app.route("/admin/importar-osm", methods=["GET", "POST"])
 def importar_osm():
-    """Panel para importar lugares desde OpenStreetMap"""
+    """DEPRECATED: Redirigir al panel principal - ya no se importan lugares"""
     if not admin_logged_in():
         return redirect("/login")
-    
-    if request.method == "POST":
-        provincia = request.form.get("provincia", "").strip()
-        canton = request.form.get("canton", "").strip()
-        
-        if not provincia or not canton:
-            flash("Debés seleccionar provincia y cantón.")
-            return redirect("/admin/importar-osm")
-        
-        # Importar lugares
-        resultado = importar_lugares_osm(provincia, canton)
-        
-        if "error" in resultado:
-            flash(f"Error: {resultado['error']}")
-        else:
-            flash(f"✅ Importados: {resultado['importados']} lugares | Duplicados: {resultado['duplicados']} | Total encontrados: {resultado['total_encontrados']}")
-        
-        return redirect("/admin/importar-osm")
-    
-    # Cargar datos de ubicaciones para los selectores
-    import os
-    json_path = os.path.join(os.path.dirname(__file__), "static", "data", "costa_rica_ubicaciones.json")
-    ubicaciones_data = {}
-    try:
-        with open(json_path, "r", encoding="utf-8") as f:
-            ubicaciones_data = json.load(f)
-    except Exception as e:
-        print(f"[ERROR] No se pudo cargar ubicaciones: {e}")
-    
-    return render_template("admin_importar_osm.html", ubicaciones_data=ubicaciones_data)
+    flash("La importación de lugares ya no está disponible. Esta aplicación ahora es para venta de vehículos.")
+    return redirect("/admin")
 
 @app.route("/admin/analytics")
 def admin_analytics():
