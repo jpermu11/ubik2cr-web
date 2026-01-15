@@ -21,14 +21,16 @@ class Usuario(db.Model):
     nombre = db.Column(db.String(100))
     rol = db.Column(db.String(20), default="VENDEDOR", index=True)  # ADMIN, VENDEDOR, AGENCIA, VENDEDOR_AGENCIA
     
-    # Campos para sistema de vehículos (TEMPORALMENTE DESHABILITADO)
+    # Campos para sistema de vehículos
     tipo_usuario = db.Column(db.String(20), default="individual", index=True)  # individual, agencia
-    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # TEMPORALMENTE COMENTADO
+    # agencia_id se agregará después de crear la tabla agencias
+    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     negocios = db.relationship("Negocio", backref="owner", lazy=True)
-    # vehiculos = db.relationship("Vehiculo", foreign_keys="Vehiculo.owner_id", backref="vendedor", lazy=True)  # TEMPORALMENTE COMENTADO
+    # vehiculos se agregará después de crear la tabla vehiculos
+    # vehiculos = db.relationship("Vehiculo", foreign_keys="Vehiculo.owner_id", backref="vendedor", lazy=True)
 
 # --- MODELO NEGOCIO ---
 class Negocio(db.Model):
@@ -85,7 +87,8 @@ class Noticia(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     # Ahora las noticias son de agencias (no de negocios)
-    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # TEMPORALMENTE COMENTADO
+    # agencia_id se agregará después de crear la tabla agencias
+    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)
     # Mantener negocio_id por compatibilidad durante migración, pero será NULL
     negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=True, index=True)  # DEPRECATED - mantener por compatibilidad
     
@@ -97,7 +100,8 @@ class Noticia(db.Model):
     
     # Relaciones
     # negocio = db.relationship("Negocio", backref="noticias")  # DEPRECATED
-    # agencia = db.relationship("Agencia", backref="noticias")  # TEMPORALMENTE COMENTADO
+    # agencia se agregará después de crear la tabla agencias
+    # agencia = db.relationship("Agencia", backref="noticias")
 
 # --- MODELO FAVORITOS (relación muchos-a-muchos) ---
 favoritos = db.Table(
@@ -135,7 +139,8 @@ class Resena(db.Model):
     # Relaciones
     # negocio = db.relationship("Negocio", backref="resenas")  # DEPRECATED
     vendedor = db.relationship("Usuario", foreign_keys=[vendedor_id], backref="resenas_recibidas")
-    # agencia = db.relationship("Agencia", backref="resenas")  # TEMPORALMENTE COMENTADO
+    # agencia se agregará después de crear la tabla agencias
+    # agencia = db.relationship("Agencia", backref="resenas")
     usuario = db.relationship("Usuario", foreign_keys=[usuario_id], backref="resenas_enviadas")
 
 # --- MODELO IMAGEN DE NEGOCIO ---
