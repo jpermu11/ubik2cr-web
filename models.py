@@ -97,7 +97,7 @@ class Noticia(db.Model):
     
     # Relaciones
     # negocio = db.relationship("Negocio", backref="noticias")  # DEPRECATED
-    agencia = db.relationship("Agencia", backref="noticias")
+    # agencia = db.relationship("Agencia", backref="noticias")  # TEMPORALMENTE COMENTADO
 
 # --- MODELO FAVORITOS (relación muchos-a-muchos) ---
 favoritos = db.Table(
@@ -135,7 +135,7 @@ class Resena(db.Model):
     # Relaciones
     # negocio = db.relationship("Negocio", backref="resenas")  # DEPRECATED
     vendedor = db.relationship("Usuario", foreign_keys=[vendedor_id], backref="resenas_recibidas")
-    agencia = db.relationship("Agencia", backref="resenas")
+    # agencia = db.relationship("Agencia", backref="resenas")  # TEMPORALMENTE COMENTADO
     usuario = db.relationship("Usuario", foreign_keys=[usuario_id], backref="resenas_enviadas")
 
 # --- MODELO IMAGEN DE NEGOCIO ---
