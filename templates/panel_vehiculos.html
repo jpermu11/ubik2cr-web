@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mi Panel - Mis Vehículos | Ubik2CR</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --brand-blue: #19539D;
+      --brand-green: #69D41B;
+    }
+    
+    .container{max-width:1200px;margin:0 auto;padding:20px;}
+    .topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:20px;padding:20px;background:white;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}
+    .brand{display:flex;flex-direction:column;gap:5px}
+    .brand h1{margin:0;font-size:24px;color:var(--brand-blue);font-weight:800}
+    .muted{opacity:.75;font-size:14px;color:#666}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{display:inline-block;padding:12px 20px;border-radius:10px;text-decoration:none;border:none;font-weight:700;transition:all 0.3s}
+    .btn-primary{background:linear-gradient(135deg, var(--brand-blue), var(--brand-green));color:#fff}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(25,83,157,0.3);color:#fff}
+    .btn-ghost{background:transparent;border:2px solid var(--brand-blue);color:var(--brand-blue)}
+    .btn-danger{background:#dc3545;color:#fff}
+    .btn-danger:hover{background:#c82333;color:#fff}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:15px;margin:20px 0;}
+    .card{border:1px solid rgba(0,0,0,.12);border-radius:15px;padding:20px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+    .card h3{margin:0 0 8px 0;font-size:14px;opacity:.9;color:#666}
+    .big{font-size:32px;font-weight:800;color:var(--brand-blue)}
+    .table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:15px;border:1px solid rgba(0,0,0,.12);background:#fff}
+    .table th,.table td{padding:15px 12px;border-bottom:1px solid rgba(0,0,0,.08);text-align:left;vertical-align:middle}
+    .table th{background:var(--brand-blue);color:white;font-weight:700}
+    .badge{display:inline-block;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700}
+    .b-ok{background:rgba(25,83,157,.15);color:var(--brand-blue);border:1px solid rgba(25,83,157,.3)}
+    .b-warn{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
+    .b-vip{background:rgba(105,212,27,.15);color:var(--brand-green);border:1px solid rgba(105,212,27,.3)}
+    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .hint{margin-top:6px;font-size:13px;opacity:.75;color:#666}
+    .empty{padding:40px;border:2px dashed rgba(0,0,0,.22);border-radius:15px;margin-top:20px;background:#fff;text-align:center}
+    .vehiculo-img{width:80px;height:60px;object-fit:cover;border-radius:8px}
+    .price-cell{font-weight:700;color:var(--brand-green);font-size:1.1rem}
+  </style>
+</head>
+
+<body style="background:linear-gradient(180deg, rgba(25, 83, 157, 0.03), rgba(105, 212, 27, 0.03));min-height:100vh;">
+  <div class="container">
+
+    <div class="topbar">
+      <div class="brand">
+        <h1><i class="fas fa-car me-2"></i>Mi Panel de Vendedor</h1>
+        <div class="muted">Cuenta: {{ user_email }}</div>
+      </div>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="/vehiculos/publicar">
+          <i class="fas fa-plus-circle me-2"></i>Publicar Vehículo
+        </a>
+        <a class="btn btn-ghost" href="/">
+          <i class="fas fa-home me-2"></i>Ver Ubik2CR
+        </a>
+        <a class="btn btn-danger" href="/logout">
+          <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+        </a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3><i class="fas fa-car me-2"></i>Total Vehículos</h3>
+        <div class="big">{{ total }}</div>
+        <div class="hint">Publicados por vos</div>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-check-circle me-2"></i>Aprobados</h3>
+        <div class="big" style="color:var(--brand-green);">{{ aprobados }}</div>
+        <div class="hint">Visibles al público</div>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-clock me-2"></i>Pendientes</h3>
+        <div class="big" style="color:#f59e0b;">{{ pendientes }}</div>
+        <div class="hint">En revisión del admin</div>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-star me-2"></i>Destacados</h3>
+        <div class="big" style="color:var(--brand-green);">{{ destacados }}</div>
+        <div class="hint">Con plan VIP</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 15px 0;color:var(--brand-blue);"><i class="fas fa-list me-2"></i>Mis Vehículos</h2>
+
+      {% if vehiculos and vehiculos|length > 0 %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Imagen</th>
+            <th>Vehículo</th>
+            <th>Precio</th>
+            <th>Estado</th>
+            <th>Destacado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in vehiculos %}
+          <tr>
+            <td>
+              <img src="{{ v.imagen_url or '/static/uploads/logo.png' }}" 
+                   class="vehiculo-img" 
+                   alt="{{ v.marca }} {{ v.modelo }}"
+                   onerror="this.src='/static/uploads/logo.png'">
+            </td>
+            <td>
+              <strong>{{ v.marca }} {{ v.modelo }}</strong><br>
+              <span class="muted">{{ v.año }} • {{ v.tipo_vehiculo }}</span><br>
+              {% if v.kilometraje %}
+              <span class="muted"><i class="fas fa-tachometer-alt me-1"></i>{{ "{:,}".format(v.kilometraje) }} km</span>
+              {% endif %}
+            </td>
+            <td class="price-cell">₡{{ "{:,.0f}".format(v.precio) }}</td>
+            <td>
+              {% if v.estado == "aprobado" %}
+                <span class="badge b-ok"><i class="fas fa-check me-1"></i>Aprobado</span>
+              {% elif v.estado == "pendiente" %}
+                <span class="badge b-warn"><i class="fas fa-clock me-1"></i>Pendiente</span>
+              {% elif v.estado == "vendido" %}
+                <span class="badge" style="background:#6c757d;color:#fff;"><i class="fas fa-check-double me-1"></i>Vendido</span>
+              {% else %}
+                <span class="badge" style="background:#dc3545;color:#fff;"><i class="fas fa-times me-1"></i>{{ v.estado|title }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if v.es_vip or v.destacado %}
+                <span class="badge b-vip"><i class="fas fa-star me-1"></i>Destacado</span>
+              {% else %}
+                <span class="badge" style="background:#f0f0f0;color:#666;">Normal</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="row-actions">
+                <a class="btn btn-ghost" href="/vehiculo/{{ v.id }}" target="_blank">
+                  <i class="fas fa-eye me-1"></i>Ver
+                </a>
+                <a class="btn btn-primary" href="/panel/vehiculo/{{ v.id }}/editar" style="padding:8px 12px;font-size:0.9rem;">
+                  <i class="fas fa-edit me-1"></i>Editar
+                </a>
+                {% if v.estado == "aprobado" %}
+                <form method="POST" action="/panel/vehiculo/{{ v.id }}/marcar-vendido" style="display:inline;">
+                  <button type="submit" class="btn" 
+                          style="background:#28a745;color:#fff;padding:8px 12px;font-size:0.9rem;border:none;cursor:pointer;"
+                          onclick="return confirm('¿Marcar este vehículo como vendido?');">
+                    <i class="fas fa-check-double me-1"></i>Vendido
+                  </button>
+                </form>
+                {% endif %}
+                <form method="POST" action="/panel/vehiculo/{{ v.id }}/eliminar" style="display:inline;">
+                  <button type="submit" class="btn btn-danger" 
+                          style="padding:8px 12px;font-size:0.9rem;border:none;cursor:pointer;"
+                          onclick="return confirm('¿Estás seguro de eliminar este vehículo? Esta acción no se puede deshacer.');">
+                    <i class="fas fa-trash me-1"></i>Eliminar
+                  </button>
+                </form>
+              </div>
+              <div class="hint">Publicado el {{ v.created_at.strftime('%d/%m/%Y') }}</div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="empty">
+          <i class="fas fa-car" style="font-size:4rem;color:#ccc;margin-bottom:15px;"></i>
+          <h3 style="color:#666;margin-bottom:10px;">Aún no tenés vehículos publicados</h3>
+          <div class="hint">Empezá ahora publicando tu primer vehículo</div>
+          <a href="/vehiculos/publicar" class="btn btn-primary" style="margin-top:20px;">
+            <i class="fas fa-plus-circle me-2"></i>Publicar Mi Primer Vehículo
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</body>
+</html>

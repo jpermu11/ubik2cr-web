@@ -1712,6 +1712,34 @@ def owner_logout():
 # =====================================================
 @app.route("/panel")
 def panel_owner():
+    """Panel de vendedor - Gestionar vehículos"""
+    if "user_id" not in session:
+        flash("Iniciá sesión para acceder a tu panel.")
+        return redirect("/cuenta")
+    
+    # Si el sistema de vehículos está disponible, mostrar panel de vehículos
+    if VEHICULOS_AVAILABLE:
+        user_id = session["user_id"]
+        vehiculos = Vehiculo.query.filter_by(owner_id=user_id).order_by(Vehiculo.created_at.desc()).all()
+        
+        total = len(vehiculos)
+        aprobados = len([v for v in vehiculos if v.estado == "aprobado"])
+        pendientes = len([v for v in vehiculos if v.estado == "pendiente"])
+        destacados = len([v for v in vehiculos if (v.es_vip or v.destacado) and v.estado == "aprobado"])
+        
+        user_email = session.get("user_email", "Usuario")
+        
+        return render_template(
+            "panel_vehiculos.html",
+            vehiculos=vehiculos,
+            total=total,
+            aprobados=aprobados,
+            pendientes=pendientes,
+            destacados=destacados,
+            user_email=user_email
+        )
+    
+    # Panel antiguo para negocios (fallback)
     if not owner_required():
         return redirect("/cuenta")
 
@@ -2214,6 +2242,55 @@ def detalle_vehiculo(vehiculo_id):
         vehiculo=vehiculo,
         imagenes_adicionales=imagenes_adicionales
     )
+
+
+@app.route("/panel/vehiculo/<int:vehiculo_id>/marcar-vendido", methods=["POST"])
+def marcar_vehiculo_vendido(vehiculo_id):
+    """Marcar un vehículo como vendido"""
+    if "user_id" not in session:
+        flash("Debés iniciar sesión.")
+        return redirect("/cuenta")
+    
+    vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
+    
+    # Verificar que el vehículo pertenece al usuario
+    if vehiculo.owner_id != session["user_id"]:
+        flash("No tenés permiso para modificar este vehículo.")
+        return redirect("/panel")
+    
+    vehiculo.estado = "vendido"
+    vehiculo.fecha_venta = datetime.utcnow()
+    db.session.commit()
+    
+    flash("¡Vehículo marcado como vendido!")
+    return redirect("/panel")
+
+
+@app.route("/panel/vehiculo/<int:vehiculo_id>/eliminar", methods=["POST"])
+def eliminar_vehiculo(vehiculo_id):
+    """Eliminar un vehículo"""
+    if "user_id" not in session:
+        flash("Debés iniciar sesión.")
+        return redirect("/cuenta")
+    
+    vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
+    
+    # Verificar que el vehículo pertenece al usuario
+    if vehiculo.owner_id != session["user_id"]:
+        flash("No tenés permiso para eliminar este vehículo.")
+        return redirect("/panel")
+    
+    # Eliminar imágenes asociadas
+    try:
+        ImagenVehiculo.query.filter_by(vehiculo_id=vehiculo_id).delete()
+    except Exception as e:
+        print(f"[ERROR] No se pudieron eliminar imágenes: {e}")
+    
+    db.session.delete(vehiculo)
+    db.session.commit()
+    
+    flash("Vehículo eliminado exitosamente.")
+    return redirect("/panel")
 
 
 # =====================================================
