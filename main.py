@@ -395,11 +395,23 @@ def verify_reset_token(token: str, expiration: int = 3600):
 # =====================================================
 # MODO MANTENIMIENTO
 # =====================================================
-# Activar modo mantenimiento: Agregar MAINTENANCE_MODE=true en Render.com
-# En desarrollo local, está desactivado por defecto para que puedas ver los cambios
-# En producción (Render.com), activalo con la variable de entorno MAINTENANCE_MODE=true
-is_local = os.environ.get("RENDER") is None  # Si no está en Render, es local
-MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "false" if is_local else "true").lower() == "true"
+# FORZAR MODO MANTENIMIENTO EN RENDER.COM
+# En Render.com, el modo mantenimiento está ACTIVADO por defecto
+# Para desactivarlo, agrega MAINTENANCE_MODE=false en las variables de entorno de Render.com
+# En desarrollo local, está desactivado automáticamente
+
+# Detectar si estamos en Render.com
+is_render = os.environ.get("RENDER") is not None or os.environ.get("RENDER_EXTERNAL_HOSTNAME") is not None
+
+# En Render: activado por defecto (true)
+# En local: desactivado por defecto (false)
+# Se puede sobrescribir con variable de entorno MAINTENANCE_MODE
+if is_render:
+    # En Render.com: ACTIVADO por defecto
+    MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "true").lower() == "true"
+else:
+    # En local: DESACTIVADO por defecto
+    MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "false").lower() == "true"
 
 # Este before_request debe ejecutarse PRIMERO (antes de registrar_visita)
 @app.before_request
