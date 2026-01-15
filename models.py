@@ -232,7 +232,8 @@ class Visita(db.Model):
         db.Index("ix_visitas_url_fecha", "url", "created_at"),
     )
 
-# --- MODELO AGENCIA (Para agencias de autos) ---
+# --- MODELO AGENCIA (Para agencias de autos) --- (TEMPORALMENTE DESHABILITADO)
+"""
 class Agencia(db.Model):
     __tablename__ = "agencias"
     
@@ -272,6 +273,7 @@ class Agencia(db.Model):
         db.Index("ix_agencias_provincia", "provincia"),
     )
 """
+"""
 
 # --- MODELO VEHICULO --- (TEMPORALMENTE DESHABILITADO)
 """
@@ -282,7 +284,7 @@ class Vehiculo(db.Model):
     
     # Vendedor (puede ser individual o agencia)
     owner_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False, index=True)
-    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Si pertenece a una agencia
+    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # TEMPORALMENTE COMENTADO
     
     # Información básica
     marca = db.Column(db.String(50), nullable=False, index=True)
