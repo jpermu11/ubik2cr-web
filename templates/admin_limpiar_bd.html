@@ -64,14 +64,20 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="stats-box">
-                                <h5><i class="fas fa-store text-primary me-2"></i>Negocios</h5>
-                                <p class="fs-3 fw-bold text-primary mb-0">{{ total_negocios }}</p>
+                                <h5><i class="fas fa-car text-primary me-2"></i>Vehículos</h5>
+                                <p class="fs-3 fw-bold text-primary mb-0">{{ total_vehiculos }}</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="stats-box">
-                                <h5><i class="fas fa-users text-info me-2"></i>Usuarios</h5>
-                                <p class="fs-3 fw-bold text-info mb-0">{{ total_usuarios }}</p>
+                                <h5><i class="fas fa-building text-info me-2"></i>Agencias</h5>
+                                <p class="fs-3 fw-bold text-info mb-0">{{ total_agencias }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stats-box">
+                                <h5><i class="fas fa-users text-secondary me-2"></i>Usuarios</h5>
+                                <p class="fs-3 fw-bold text-secondary mb-0">{{ total_usuarios }}</p>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -80,24 +86,13 @@
                                 <p class="fs-3 fw-bold text-success mb-0">{{ total_noticias }}</p>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="stats-box">
-                                <h5><i class="fas fa-tags text-warning me-2"></i>Ofertas</h5>
-                                <p class="fs-3 fw-bold text-warning mb-0">{{ total_ofertas }}</p>
+                        {% if total_negocios > 0 or total_ofertas > 0 or total_mensajes > 0 or total_resenas > 0 %}
+                        <div class="col-12 mt-3">
+                            <div class="alert alert-warning">
+                                <strong>Datos del sistema anterior:</strong> También se eliminarán datos antiguos (negocios, ofertas, mensajes, reseñas) si existen.
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="stats-box">
-                                <h5><i class="fas fa-envelope text-danger me-2"></i>Mensajes</h5>
-                                <p class="fs-3 fw-bold text-danger mb-0">{{ total_mensajes }}</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="stats-box">
-                                <h5><i class="fas fa-star text-warning me-2"></i>Reseñas</h5>
-                                <p class="fs-3 fw-bold text-warning mb-0">{{ total_resenas }}</p>
-                            </div>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

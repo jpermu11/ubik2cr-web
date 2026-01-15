@@ -3330,17 +3330,43 @@ def limpiar_base_datos():
         return redirect("/admin")
     
     # Mostrar información antes de limpiar
-    total_negocios = Negocio.query.count()
     total_usuarios = Usuario.query.count()
     total_noticias = Noticia.query.count()
-    total_ofertas = Oferta.query.count()
-    total_mensajes = Mensaje.query.count()
-    total_resenas = Resena.query.count()
+    
+    # Estadísticas de vehículos (si existe)
+    total_vehiculos = 0
+    total_agencias = 0
+    if VEHICULOS_AVAILABLE:
+        if Vehiculo is not None:
+            try:
+                total_vehiculos = Vehiculo.query.count()
+            except:
+                pass
+        if Agencia is not None:
+            try:
+                total_agencias = Agencia.query.count()
+            except:
+                pass
+    
+    # Estadísticas de sistema antiguo (para limpiar también)
+    total_negocios = 0
+    total_ofertas = 0
+    total_mensajes = 0
+    total_resenas = 0
+    try:
+        total_negocios = Negocio.query.count()
+        total_ofertas = Oferta.query.count()
+        total_mensajes = Mensaje.query.count()
+        total_resenas = Resena.query.count()
+    except:
+        pass
     
     return render_template("admin_limpiar_bd.html", 
-                         total_negocios=total_negocios,
+                         total_vehiculos=total_vehiculos,
+                         total_agencias=total_agencias,
                          total_usuarios=total_usuarios,
                          total_noticias=total_noticias,
+                         total_negocios=total_negocios,
                          total_ofertas=total_ofertas,
                          total_mensajes=total_mensajes,
                          total_resenas=total_resenas)
