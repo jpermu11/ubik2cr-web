@@ -2630,7 +2630,11 @@ def limpiar_base_datos():
         
         # Importar y ejecutar script de limpieza
         try:
+            import sys
+            import os
+            sys.path.insert(0, os.path.dirname(__file__))
             from scripts.limpiar_base_datos import limpiar_base_datos
+            
             resultado = limpiar_base_datos()
             
             if resultado:
@@ -2638,6 +2642,9 @@ def limpiar_base_datos():
             else:
                 flash("❌ Error al limpiar la base de datos. Revisá los logs.")
         except Exception as e:
+            import traceback
+            error_msg = str(e) + "\n" + traceback.format_exc()
+            print(f"[ERROR LIMPIEZA] {error_msg}")
             flash(f"❌ Error: {str(e)}")
         
         return redirect("/admin")

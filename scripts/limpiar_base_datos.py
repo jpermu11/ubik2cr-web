@@ -3,7 +3,7 @@ Script de Limpieza de Base de Datos
 Limpia todos los datos excepto la estructura de tablas
 Mantiene las credenciales de admin (están en variables de entorno)
 """
-from models import db, Negocio, Usuario, Noticia, Resena, Oferta, Mensaje, ImagenNegocio, Visita, favoritos
+from models import db, Negocio, Usuario, Noticia, Resena, Oferta, Mensaje, ImagenNegocio, Visita
 from sqlalchemy import text
 
 def limpiar_base_datos():
@@ -16,7 +16,10 @@ def limpiar_base_datos():
         ImagenNegocio.query.delete()
         
         print("  - Eliminando favoritos...")
-        db.session.execute(text("DELETE FROM favoritos"))
+        try:
+            db.session.execute(text("DELETE FROM favoritos"))
+        except Exception as e:
+            print(f"    (Tabla favoritos puede no existir: {e})")
         
         print("  - Eliminando reseñas...")
         Resena.query.delete()
@@ -52,6 +55,8 @@ def limpiar_base_datos():
     except Exception as e:
         db.session.rollback()
         print(f"❌ Error durante la limpieza: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 if __name__ == "__main__":
