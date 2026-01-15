@@ -2672,22 +2672,85 @@ def admin_panel():
     if not admin_logged_in():
         return redirect("/login")
 
-    total_pendientes = Negocio.query.filter_by(estado="pendiente").count()
-    total_activos = Negocio.query.filter_by(estado="aprobado").count()
-    total_vip = Negocio.query.filter_by(estado="aprobado", es_vip=True).count()
+    # Estadísticas para sistema de vehículos (si existe)
+    total_vehiculos_pendientes = 0
+    total_vehiculos_aprobados = 0
+    total_agencias_pendientes = 0
+    total_agencias_aprobadas = 0
+    
+    if VEHICULOS_AVAILABLE and Vehiculo is not None:
+        try:
+            total_vehiculos_pendientes = Vehiculo.query.filter_by(estado="pendiente").count()
+            total_vehiculos_aprobados = Vehiculo.query.filter_by(estado="aprobado").count()
+        except:
+            pass
+    
+    if VEHICULOS_AVAILABLE and Agencia is not None:
+        try:
+            total_agencias_pendientes = Agencia.query.filter_by(estado="pendiente").count()
+            total_agencias_aprobadas = Agencia.query.filter_by(estado="aprobado").count()
+        except:
+            pass
 
-    # 👇 Compatibilidad con tu dashboard viejo: p/a/v
-    return render_template("dashboard.html", p=total_pendientes, a=total_activos, v=total_vip)
+    return render_template("dashboard.html", 
+                         vehiculos_pendientes=total_vehiculos_pendientes,
+                         vehiculos_aprobados=total_vehiculos_aprobados,
+                         agencias_pendientes=total_agencias_pendientes,
+                         agencias_aprobadas=total_agencias_aprobadas)
 
-@app.route("/admin/comercios")
-def gestionar_comercios():
+@app.route("/admin/vehiculos")
+def gestionar_vehiculos():
+    """Gestionar vehículos pendientes y aprobados"""
     if not admin_logged_in():
         return redirect("/login")
+    
+    if not VEHICULOS_AVAILABLE or Vehiculo is None:
+        flash("El sistema de vehículos aún no está disponible. Ejecutá las migraciones primero.")
+        return redirect("/admin")
+    
+    try:
+        pendientes = Vehiculo.query.filter_by(estado="pendiente").order_by(Vehiculo.id.desc()).all()
+        aprobados = Vehiculo.query.filter_by(estado="aprobado").order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.id.desc()).all()
+        vendidos = Vehiculo.query.filter_by(estado="vendido").order_by(Vehiculo.id.desc()).all()
+        
+        return render_template("admin_vehiculos.html", 
+                             pendientes=pendientes, 
+                             aprobados=aprobados,
+                             vendidos=vendidos)
+    except Exception as e:
+        print(f"[ERROR ADMIN VEHICULOS] {e}")
+        flash("Error al cargar vehículos. Verificá que las tablas existan.")
+        return redirect("/admin")
 
-    pendientes = Negocio.query.filter_by(estado="pendiente").order_by(Negocio.id.desc()).all()
-    activos = Negocio.query.filter_by(estado="aprobado").order_by(Negocio.es_vip.desc(), Negocio.id.desc()).all()
+@app.route("/admin/agencias")
+def gestionar_agencias():
+    """Gestionar agencias pendientes y aprobadas"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    if not VEHICULOS_AVAILABLE or Agencia is None:
+        flash("El sistema de agencias aún no está disponible. Ejecutá las migraciones primero.")
+        return redirect("/admin")
+    
+    try:
+        pendientes = Agencia.query.filter_by(estado="pendiente").order_by(Agencia.id.desc()).all()
+        aprobadas = Agencia.query.filter_by(estado="aprobado").order_by(Agencia.es_vip.desc(), Agencia.id.desc()).all()
+        
+        return render_template("admin_agencias.html", 
+                             pendientes=pendientes, 
+                             aprobadas=aprobadas)
+    except Exception as e:
+        print(f"[ERROR ADMIN AGENCIAS] {e}")
+        flash("Error al cargar agencias. Verificá que las tablas existan.")
+        return redirect("/admin")
 
-    return render_template("comercios.html", pendientes=pendientes, activos=activos)
+# DEPRECATED: Mantener por compatibilidad pero redirigir a vehículos
+@app.route("/admin/comercios")
+def gestionar_comercios():
+    """DEPRECATED: Redirigir a gestión de vehículos"""
+    if not admin_logged_in():
+        return redirect("/login")
+    return redirect("/admin/vehiculos")
 
 @app.route("/admin/aprobar/<int:id>")
 def aprobar_negocio(id):
@@ -3281,6 +3344,8 @@ def limpiar_base_datos():
                          total_mensajes=total_mensajes,
                          total_resenas=total_resenas)
 
+# DEPRECATED: Sistema de importar lugares eliminado (ya no es relevante para vehículos)
+# @app.route("/admin/importar-osm", methods=["GET", "POST"])
 @app.route("/admin/importar-osm", methods=["GET", "POST"])
 def importar_osm():
     """Panel para importar lugares desde OpenStreetMap"""
