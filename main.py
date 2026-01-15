@@ -31,17 +31,9 @@ except ImportError:
 
 from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje, ImagenNegocio, Visita
 
-# Importar modelos de vehículos de forma segura (pueden no existir si la migración no se ejecutó)
-try:
-    from models import Vehiculo, Agencia, ImagenVehiculo, favoritos_vehiculos
-    VEHICULOS_AVAILABLE = True
-except Exception as e:
-    print(f"[WARNING] Modelos de vehículos no disponibles: {e}")
-    Vehiculo = None
-    Agencia = None
-    ImagenVehiculo = None
-    favoritos_vehiculos = None
-    VEHICULOS_AVAILABLE = False
+# Importar modelos de vehículos
+from models import Vehiculo, Agencia, ImagenVehiculo, favoritos_vehiculos
+VEHICULOS_AVAILABLE = True
 
 
 # =====================================================

@@ -19,16 +19,16 @@ class Usuario(db.Model):
     password = db.Column(db.String(255), nullable=False)
 
     nombre = db.Column(db.String(100))
-    rol = db.Column(db.String(20), default="OWNER", index=True)
+    rol = db.Column(db.String(20), default="VENDEDOR", index=True)  # ADMIN, VENDEDOR, AGENCIA, VENDEDOR_AGENCIA
     
-    # Campos para sistema de vehículos (se agregarán con migración)
-    # tipo_usuario = db.Column(db.String(20), default="individual", index=True)  # individual, agencia
-    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Si es vendedor de agencia
+    # Campos para sistema de vehículos
+    tipo_usuario = db.Column(db.String(20), default="individual", index=True)  # individual, agencia
+    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Si es vendedor de agencia
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     negocios = db.relationship("Negocio", backref="owner", lazy=True)
-    # vehiculos = db.relationship("Vehiculo", backref="vendedor", lazy=True)  # Se agregará después de la migración
+    vehiculos = db.relationship("Vehiculo", foreign_keys="Vehiculo.owner_id", backref="vendedor", lazy=True)
 
 # --- MODELO NEGOCIO ---
 class Negocio(db.Model):
@@ -97,7 +97,7 @@ class Noticia(db.Model):
     
     # Relaciones
     # negocio = db.relationship("Negocio", backref="noticias")  # DEPRECATED
-    # agencia = db.relationship("Agencia", backref="noticias")  # Se agregará cuando se descomente Agencia
+    agencia = db.relationship("Agencia", backref="noticias")
 
 # --- MODELO FAVORITOS (relación muchos-a-muchos) ---
 favoritos = db.Table(
@@ -135,7 +135,7 @@ class Resena(db.Model):
     # Relaciones
     # negocio = db.relationship("Negocio", backref="resenas")  # DEPRECATED
     vendedor = db.relationship("Usuario", foreign_keys=[vendedor_id], backref="resenas_recibidas")
-    agencia = db.relationship("Agencia", backref="resenas")  # Se agregará cuando se descomente Agencia
+    agencia = db.relationship("Agencia", backref="resenas")
     usuario = db.relationship("Usuario", foreign_keys=[usuario_id], backref="resenas_enviadas")
 
 # --- MODELO IMAGEN DE NEGOCIO ---
@@ -233,8 +233,6 @@ class Visita(db.Model):
     )
 
 # --- MODELO AGENCIA (Para agencias de autos) ---
-# TEMPORALMENTE COMENTADO - Descomentar después de ejecutar la migración
-"""
 class Agencia(db.Model):
     __tablename__ = "agencias"
     
@@ -273,11 +271,8 @@ class Agencia(db.Model):
         db.Index("ix_agencias_estado", "estado"),
         db.Index("ix_agencias_provincia", "provincia"),
     )
-"""
 
 # --- MODELO VEHICULO ---
-# TEMPORALMENTE COMENTADO - Descomentar después de ejecutar la migración
-"""
 class Vehiculo(db.Model):
     __tablename__ = "vehiculos"
     
@@ -333,11 +328,8 @@ class Vehiculo(db.Model):
         db.Index("ix_vehiculos_tipo_estado", "tipo_vehiculo", "estado"),
         db.Index("ix_vehiculos_provincia_estado", "provincia", "estado"),
     )
-"""
 
 # --- MODELO IMAGEN DE VEHICULO ---
-# TEMPORALMENTE COMENTADO - Descomentar después de ejecutar la migración
-"""
 class ImagenVehiculo(db.Model):
     __tablename__ = "imagenes_vehiculo"
     
@@ -349,15 +341,11 @@ class ImagenVehiculo(db.Model):
     
     # Relación
     vehiculo = db.relationship("Vehiculo", backref="imagenes")
-"""
 
 # --- TABLA FAVORITOS VEHICULOS (relación muchos-a-muchos) ---
-# TEMPORALMENTE COMENTADO - Descomentar después de ejecutar la migración
-"""
 favoritos_vehiculos = db.Table(
     'favoritos_vehiculos',
     db.Column('usuario_id', db.Integer, db.ForeignKey('usuarios.id'), primary_key=True),
     db.Column('vehiculo_id', db.Integer, db.ForeignKey('vehiculos.id'), primary_key=True),
     db.Column('created_at', db.DateTime, default=datetime.utcnow)
 )
-"""
