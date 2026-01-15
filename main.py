@@ -393,6 +393,119 @@ def verify_reset_token(token: str, expiration: int = 3600):
 
 
 # =====================================================
+# MODO MANTENIMIENTO
+# =====================================================
+MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "false").lower() == "true"
+
+@app.before_request
+def check_maintenance_mode():
+    """Verificar si la aplicación está en modo mantenimiento"""
+    if not MAINTENANCE_MODE:
+        return None
+    
+    # Rutas permitidas durante mantenimiento
+    path = request.path
+    allowed_paths = [
+        '/static', '/favicon.ico', '/health', '/health/db',
+        '/login', '/logout', '/admin', '/admin/', '/api/'
+    ]
+    
+    # Permitir acceso a rutas de admin y login
+    if any(path.startswith(allowed) for allowed in allowed_paths):
+        return None
+    
+    # Si el usuario es admin, permitir acceso
+    if admin_logged_in():
+        return None
+    
+    # Para todos los demás, mostrar página de mantenimiento
+    from flask import render_template_string
+    return render_template_string("""
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitio en Mantenimiento | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0b4fa3 0%, #38b24d 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .maintenance-card {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 600px;
+            margin: 20px;
+        }
+        .maintenance-icon {
+            font-size: 5rem;
+            color: #0b4fa3;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        h1 {
+            color: #0b4fa3;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        .btn-admin {
+            background: linear-gradient(135deg, #0b4fa3, #38b24d);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        .btn-admin:hover {
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="maintenance-card">
+        <div class="maintenance-icon">
+            <i class="fas fa-tools"></i>
+        </div>
+        <h1>Estamos en Mantenimiento</h1>
+        <p>
+            Estamos realizando mejoras importantes en nuestro sitio web.
+            <br><br>
+            <strong>Volveremos pronto con una experiencia mejorada.</strong>
+        </p>
+        <p style="font-size: 0.9rem; color: #999; margin-top: 40px;">
+            Si sos administrador, podés <a href="/login" class="btn-admin">iniciar sesión aquí</a>
+        </p>
+    </div>
+</body>
+</html>
+    """), 503
+
+# =====================================================
 # ANALYTICS - REGISTRAR VISITAS
 # =====================================================
 @app.before_request
