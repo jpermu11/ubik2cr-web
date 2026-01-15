@@ -218,9 +218,9 @@
 <!-- HEADER -->
 <nav class="navbar-premium navbar-expand-lg" style="background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
     <div class="container-modern">
-        <a class="navbar-brand-premium" href="/" style="font-weight: 800; font-size: 1.5rem;">
-            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="height: 50px;">
-            <span class="d-none d-sm-inline" style="background: linear-gradient(135deg, var(--brand-blue), var(--brand-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">UBIK2CR</span>
+        <a class="navbar-brand-premium" href="/" style="font-weight: 800; font-size: 1.5rem; display: flex; align-items: center; gap: 12px; text-decoration: none;">
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="height: 60px; width: auto; object-fit: contain;">
+            <span class="d-none d-sm-inline" style="background: linear-gradient(135deg, var(--brand-blue), var(--brand-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.8rem; font-weight: 900;">UBIK2CR</span>
         </a>
         <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <i class="fas fa-bars"></i>
@@ -256,8 +256,11 @@
             <img src="{{ url_for('static', filename='uploads/logo.png') }}" 
                  alt="Ubik2CR" 
                  style="max-width: 300px; width: 100%; height: auto; margin-bottom: 30px; filter: brightness(0) invert(1);">
-            <h1><i class="fas fa-car me-2"></i>Compra y Vende Vehículos Usados</h1>
-            <p>La plataforma más completa para encontrar tu vehículo ideal en Costa Rica</p>
+            <div style="margin-bottom: 30px;">
+                <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="height: 120px; width: auto; margin-bottom: 20px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">
+            </div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 15px;"><i class="fas fa-car me-2"></i>Compra y Vende Vehículos Usados</h1>
+            <p style="font-size: 1.2rem; opacity: 0.95;">La plataforma más completa para encontrar tu vehículo ideal en Costa Rica</p>
         </div>
     </div>
 </section>
