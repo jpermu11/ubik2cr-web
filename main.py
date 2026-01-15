@@ -31,26 +31,24 @@ except ImportError:
 
 from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje, ImagenNegocio, Visita
 
-# Importar modelos de vehículos (con manejo de errores)
+# Importar modelos de vehículos (TEMPORALMENTE DESHABILITADO hasta que migraciones estén listas)
 VEHICULOS_AVAILABLE = False
 Vehiculo = None
 Agencia = None
 ImagenVehiculo = None
 favoritos_vehiculos = None
 
-try:
-    from models import Vehiculo, Agencia, ImagenVehiculo, favoritos_vehiculos
-    # Verificar que las tablas existen haciendo una query de prueba
-    try:
-        db.session.execute(db.text("SELECT 1 FROM vehiculos LIMIT 1"))
-        VEHICULOS_AVAILABLE = True
-    except Exception:
-        # Las tablas no existen aún
-        VEHICULOS_AVAILABLE = False
-        print("[INFO] Tablas de vehículos no existen aún. Ejecutá: flask db upgrade")
-except Exception as e:
-    print(f"[WARNING] No se pudieron importar modelos de vehículos: {e}")
-    VEHICULOS_AVAILABLE = False
+# COMENTADO TEMPORALMENTE - Descomentar después de ejecutar migraciones
+# try:
+#     from models import Vehiculo, Agencia, ImagenVehiculo, favoritos_vehiculos
+#     try:
+#         db.session.execute(db.text("SELECT 1 FROM vehiculos LIMIT 1"))
+#         VEHICULOS_AVAILABLE = True
+#     except Exception:
+#         VEHICULOS_AVAILABLE = False
+# except Exception as e:
+#     print(f"[WARNING] No se pudieron importar modelos de vehículos: {e}")
+#     VEHICULOS_AVAILABLE = False
 
 
 # =====================================================
