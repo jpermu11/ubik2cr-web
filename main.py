@@ -395,12 +395,12 @@ def verify_reset_token(token: str, expiration: int = 3600):
 # Detectar si estamos en Render.com
 is_render = os.environ.get("RENDER") is not None or os.environ.get("RENDER_EXTERNAL_HOSTNAME") is not None
 
-# En Render: activado por defecto (true)
+# En Render: DESACTIVADO por defecto (para poder trabajar)
 # En local: desactivado por defecto (false)
 # Se puede sobrescribir con variable de entorno MAINTENANCE_MODE
 if is_render:
-    # En Render.com: ACTIVADO por defecto
-    MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "true").lower() == "true"
+    # En Render.com: DESACTIVADO por defecto (cambiar a "true" si querés activarlo)
+    MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "false").lower() == "true"
 else:
     # En local: DESACTIVADO por defecto
     MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "false").lower() == "true"
@@ -416,15 +416,17 @@ def check_maintenance_mode():
     path = request.path
     allowed_paths = [
         '/static', '/favicon.ico', '/health', '/health/db',
-        '/login', '/logout', '/admin', '/admin/', '/api/'
+        '/login', '/logout', '/admin', '/admin/', '/api/',
+        '/cuenta', '/owner/login', '/owner/registro', '/panel',
+        '/vehiculos', '/vehiculo', '/publicar'
     ]
-    
+
     # Permitir acceso a rutas de admin y login
     if any(path.startswith(allowed) for allowed in allowed_paths):
         return None
-    
-    # Si el usuario es admin, permitir acceso
-    if admin_logged_in():
+
+    # Si el usuario es admin o está logueado, permitir acceso
+    if admin_logged_in() or owner_logged_in():
         return None
     
     # Para todos los demás, mostrar página de mantenimiento
