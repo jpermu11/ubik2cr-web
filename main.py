@@ -1778,59 +1778,90 @@ def marcar_mensaje_leido(id):
 @app.route("/owner/registro", methods=["GET", "POST"])
 def owner_registro():
     if request.method == "POST":
-        email = (request.form.get("email") or "").strip().lower()
-        password = (request.form.get("password") or "").strip()
-        nombre = (request.form.get("nombre") or "").strip()
+        try:
+            email = (request.form.get("email") or "").strip().lower()
+            password = (request.form.get("password") or "").strip()
+            nombre = (request.form.get("nombre") or "").strip()
 
-        if not email or not password:
-            flash("Por favor ingresá email y contraseña.")
+            if not email or not password:
+                flash("Por favor ingresá email y contraseña.")
+                return redirect("/owner/registro")
+
+            # Verificar si el usuario ya existe
+            existe = Usuario.query.filter_by(email=email).first()
+            if existe:
+                flash("Ese correo ya existe. Iniciá sesión.")
+                return redirect("/owner/login")
+
+            # Generar hash de contraseña
+            pwd_hash = generate_password_hash(password)
+
+            # Crear nuevo usuario con rol VENDEDOR (compatible con sistema de vehículos)
+            nuevo = Usuario(
+                email=email, 
+                password=pwd_hash, 
+                nombre=nombre if nombre else None,
+                rol="VENDEDOR",  # Cambiado de "OWNER" a "VENDEDOR" para consistencia
+                tipo_usuario="individual",
+                agencia_id=None  # Sin agencia por defecto
+            )
+            db.session.add(nuevo)
+            db.session.commit()
+
+            # Iniciar sesión automáticamente
+            session["user_id"] = nuevo.id
+            session["user_email"] = nuevo.email
+            session["user_rol"] = nuevo.rol
+
+            flash("✅ Cuenta creada exitosamente. Ahora podés publicar tus vehículos.")
+            return redirect("/panel")
+        except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"[ERROR REGISTRO] {error_trace}")
+            flash(f"Error al crear cuenta: {str(e)}. Por favor, intentá nuevamente o contactá soporte.")
             return redirect("/owner/registro")
-
-        existe = Usuario.query.filter_by(email=email).first()
-        if existe:
-            flash("Ese correo ya existe. Iniciá sesión.")
-            return redirect("/owner/login")
-
-        pwd_hash = generate_password_hash(password)
-
-        nuevo = Usuario(email=email, password=pwd_hash, nombre=nombre, rol="OWNER")
-        db.session.add(nuevo)
-        db.session.commit()
-
-        session["user_id"] = nuevo.id
-        session["user_email"] = nuevo.email
-        session["user_rol"] = nuevo.rol
-
-        flash("Cuenta creada. Ahora podés crear tus negocios.")
-        return redirect("/panel")
 
     return render_template("owner_registro.html")
 
 @app.route("/owner/login", methods=["GET", "POST"])
 def owner_login():
     if request.method == "POST":
-        email = (request.form.get("usuario") or request.form.get("email") or "").strip().lower()
-        password = (request.form.get("password") or "").strip()
+        try:
+            email = (request.form.get("usuario") or request.form.get("email") or "").strip().lower()
+            password = (request.form.get("password") or "").strip()
 
-        u = Usuario.query.filter_by(email=email).first()
-        if not u:
-            flash("No existe ese usuario.")
+            if not email or not password:
+                flash("Por favor ingresá email y contraseña.")
+                return redirect("/owner/login")
+
+            u = Usuario.query.filter_by(email=email).first()
+            if not u:
+                flash("No existe ese usuario. Verificá tu correo o creá una cuenta.")
+                return redirect("/owner/login")
+
+            if not normalize_password_check(u.password, password):
+                flash("Contraseña incorrecta. Si la olvidaste, usá '¿Olvidaste tu contraseña?'.")
+                return redirect("/owner/login")
+
+            # Si venía en texto plano en algún momento, se actualiza a hash
+            if not (u.password.startswith(("pbkdf2:", "scrypt:"))):
+                u.password = generate_password_hash(password)
+                db.session.commit()
+
+            # Iniciar sesión
+            session["user_id"] = u.id
+            session["user_email"] = u.email
+            session["user_rol"] = u.rol
+
+            flash("✅ Sesión iniciada correctamente.")
+            return redirect("/panel")
+        except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"[ERROR LOGIN] {error_trace}")
+            flash(f"Error al iniciar sesión: {str(e)}. Por favor, intentá nuevamente.")
             return redirect("/owner/login")
-
-        if not normalize_password_check(u.password, password):
-            flash("Contraseña incorrecta. Si la olvidaste, usá '¿Olvidaste tu contraseña?'.")
-            return redirect("/owner/login")
-
-        # Si venía en texto plano en algún momento, se actualiza a hash
-        if not (u.password.startswith(("pbkdf2:", "scrypt:"))):
-            u.password = generate_password_hash(password)
-            db.session.commit()
-
-        session["user_id"] = u.id
-        session["user_email"] = u.email
-        session["user_rol"] = u.rol
-
-        return redirect("/panel")
 
     return render_template("owner_login.html")
 
@@ -1852,7 +1883,7 @@ def panel_owner():
         return redirect("/cuenta")
     
     # Intentar mostrar panel de vehículos
-    if VEHICULOS_AVAILABLE:
+    if VEHICULOS_AVAILABLE and Vehiculo is not None:
         try:
             user_id = session["user_id"]
             vehiculos = Vehiculo.query.filter_by(owner_id=user_id).order_by(Vehiculo.created_at.desc()).all()

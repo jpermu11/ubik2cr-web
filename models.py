@@ -23,12 +23,14 @@ class Usuario(db.Model):
     
     # Campos para sistema de vehículos
     tipo_usuario = db.Column(db.String(20), default="individual", index=True)  # individual, agencia
-    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Si es vendedor de agencia
+    # agencia_id se agregará después de crear la tabla agencias (comentado para evitar errores si la tabla no existe)
+    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Si es vendedor de agencia
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     negocios = db.relationship("Negocio", backref="owner", lazy=True)
-    vehiculos = db.relationship("Vehiculo", foreign_keys="Vehiculo.owner_id", backref="vendedor", lazy=True)
+    # vehiculos se agregará después de crear la tabla vehiculos (comentado para evitar errores si la tabla no existe)
+    # vehiculos = db.relationship("Vehiculo", foreign_keys="Vehiculo.owner_id", backref="vendedor", lazy=True)
 
 # --- MODELO NEGOCIO ---
 class Negocio(db.Model):
