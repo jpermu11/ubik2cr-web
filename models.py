@@ -115,7 +115,7 @@ class Resena(db.Model):
     
     # Reseña para vendedor individual o agencia (NO para vehículos)
     vendedor_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True, index=True)  # Vendedor individual
-    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # TEMPORALMENTE COMENTADO
+    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Agencia
     
     # Mantener negocio_id por compatibilidad durante migración
     negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=True, index=True)  # DEPRECATED
