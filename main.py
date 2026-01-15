@@ -31,15 +31,63 @@ except ImportError:
 
 from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje, ImagenNegocio, Visita
 
-# Importar modelos de vehículos
-from models import Vehiculo, Agencia, ImagenVehiculo, favoritos_vehiculos
-VEHICULOS_AVAILABLE = True
+# Importar modelos de vehículos (con manejo de errores)
+VEHICULOS_AVAILABLE = False
+Vehiculo = None
+Agencia = None
+ImagenVehiculo = None
+favoritos_vehiculos = None
+
+try:
+    from models import Vehiculo, Agencia, ImagenVehiculo, favoritos_vehiculos
+    # Verificar que las tablas existen haciendo una query de prueba
+    try:
+        db.session.execute(db.text("SELECT 1 FROM vehiculos LIMIT 1"))
+        VEHICULOS_AVAILABLE = True
+    except Exception:
+        # Las tablas no existen aún
+        VEHICULOS_AVAILABLE = False
+        print("[INFO] Tablas de vehículos no existen aún. Ejecutá: flask db upgrade")
+except Exception as e:
+    print(f"[WARNING] No se pudieron importar modelos de vehículos: {e}")
+    VEHICULOS_AVAILABLE = False
 
 
 # =====================================================
 # APP
 # =====================================================
 app = Flask(__name__)
+
+# Manejo global de errores para evitar 500
+@app.errorhandler(500)
+def handle_500_error(e):
+    """Manejo de errores 500"""
+    import traceback
+    error_trace = traceback.format_exc()
+    print(f"[ERROR 500] {error_trace}")
+    
+    # Si es una ruta de admin, mostrar error detallado
+    if request.path.startswith('/admin'):
+        return f"<h1>Error 500</h1><pre>{error_trace}</pre>", 500
+    
+    # Para rutas públicas, redirigir a inicio
+    flash("Ocurrió un error. Por favor, intentá más tarde.")
+    return redirect("/")
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Manejo de todas las excepciones no capturadas"""
+    import traceback
+    error_trace = traceback.format_exc()
+    print(f"[ERROR] {error_trace}")
+    
+    # Si es una ruta de admin, mostrar error detallado
+    if request.path.startswith('/admin'):
+        return f"<h1>Error</h1><pre>{error_trace}</pre>", 500
+    
+    # Para rutas públicas, redirigir a inicio
+    flash("Ocurrió un error. Por favor, intentá más tarde.")
+    return redirect("/")
 
 # Agregar filtro personalizado para parsear JSON en templates
 @app.template_filter('from_json')
