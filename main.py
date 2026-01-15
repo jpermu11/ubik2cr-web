@@ -583,6 +583,174 @@ def health_db():
 # =====================================================
 @app.route("/")
 def inicio():
+    """Página principal - Búsqueda de vehículos"""
+    if not VEHICULOS_AVAILABLE:
+        # Si los modelos no están disponibles, mostrar página antigua
+        return inicio_negocios()
+    
+    # BÚSQUEDA DE VEHÍCULOS
+    busqueda_original = (request.args.get("q") or "").strip()
+    q = busqueda_original.lower()
+    
+    # Filtros
+    marca_filtro = request.args.get("marca", "").strip()
+    modelo_filtro = request.args.get("modelo", "").strip()
+    año_desde = request.args.get("año_desde", "").strip()
+    año_hasta = request.args.get("año_hasta", "").strip()
+    precio_min = request.args.get("precio_min", "").strip()
+    precio_max = request.args.get("precio_max", "").strip()
+    km_min = request.args.get("km_min", "").strip()
+    km_max = request.args.get("km_max", "").strip()
+    tipo_filtro = request.args.get("tipo", "").strip()
+    transmision_filtro = request.args.get("transmision", "").strip()
+    combustible_filtro = request.args.get("combustible", "").strip()
+    provincia_filtro = request.args.get("provincia", "").strip()
+    canton_filtro = request.args.get("canton", "").strip()
+    estado_vehiculo_filtro = request.args.get("estado_vehiculo", "").strip()
+    ordenar = request.args.get("ordenar", "recientes").strip()
+    
+    # Paginación
+    try:
+        page = int(request.args.get("page", 1))
+    except ValueError:
+        page = 1
+    if page < 1:
+        page = 1
+    
+    PER_PAGE = 24
+    
+    # Query base: solo vehículos aprobados
+    query = Vehiculo.query.filter_by(estado="aprobado")
+    
+    # Aplicar filtros
+    if marca_filtro:
+        query = query.filter_by(marca=marca_filtro)
+    if modelo_filtro:
+        query = query.filter_by(modelo=modelo_filtro)
+    if año_desde:
+        try:
+            query = query.filter(Vehiculo.año >= int(año_desde))
+        except ValueError:
+            pass
+    if año_hasta:
+        try:
+            query = query.filter(Vehiculo.año <= int(año_hasta))
+        except ValueError:
+            pass
+    if precio_min:
+        try:
+            query = query.filter(Vehiculo.precio >= float(precio_min))
+        except ValueError:
+            pass
+    if precio_max:
+        try:
+            query = query.filter(Vehiculo.precio <= float(precio_max))
+        except ValueError:
+            pass
+    if km_min:
+        try:
+            query = query.filter(Vehiculo.kilometraje >= int(km_min))
+        except ValueError:
+            pass
+    if km_max:
+        try:
+            query = query.filter(Vehiculo.kilometraje <= int(km_max))
+        except ValueError:
+            pass
+    if tipo_filtro:
+        query = query.filter_by(tipo_vehiculo=tipo_filtro)
+    if transmision_filtro:
+        query = query.filter_by(transmision=transmision_filtro)
+    if combustible_filtro:
+        query = query.filter_by(combustible=combustible_filtro)
+    if provincia_filtro:
+        query = query.filter_by(provincia=provincia_filtro)
+    if canton_filtro:
+        query = query.filter_by(canton=canton_filtro)
+    if estado_vehiculo_filtro:
+        query = query.filter_by(estado_vehiculo=estado_vehiculo_filtro)
+    
+    # Búsqueda por texto
+    if q:
+        query = query.filter(
+            or_(
+                Vehiculo.marca.ilike(f"%{q}%"),
+                Vehiculo.modelo.ilike(f"%{q}%"),
+                Vehiculo.descripcion.ilike(f"%{q}%")
+            )
+        )
+    
+    # Ordenamiento
+    if ordenar == "recientes":
+        query = query.order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.created_at.desc())
+    elif ordenar == "antiguos":
+        query = query.order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.created_at.asc())
+    elif ordenar == "precio_asc":
+        query = query.order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.precio.asc())
+    elif ordenar == "precio_desc":
+        query = query.order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.precio.desc())
+    elif ordenar == "km_asc":
+        query = query.order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.kilometraje.asc())
+    elif ordenar == "km_desc":
+        query = query.order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.kilometraje.desc())
+    elif ordenar == "destacados":
+        query = query.order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.created_at.desc())
+    else:
+        query = query.order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.created_at.desc())
+    
+    total = query.count()
+    total_pages = (total + PER_PAGE - 1) // PER_PAGE if total > 0 else 1
+    if page > total_pages:
+        page = total_pages
+    
+    vehiculos = query.offset((page - 1) * PER_PAGE).limit(PER_PAGE).all()
+    
+    # Obtener marcas únicas para el dropdown
+    marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").distinct().order_by(Vehiculo.marca).all()
+    marcas = [m[0] for m in marcas_unicas]
+    
+    # Cargar datos de ubicaciones
+    import os
+    json_path = os.path.join(os.path.dirname(__file__), "static", "data", "costa_rica_ubicaciones.json")
+    ubicaciones_data = {}
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            ubicaciones_data = json.load(f)
+    except Exception as e:
+        print(f"[ERROR] No se pudo cargar ubicaciones: {e}")
+    
+    return render_template(
+        "vehiculos_index.html",
+        vehiculos=vehiculos,
+        total=total,
+        page=page,
+        total_pages=total_pages,
+        has_prev=page > 1,
+        has_next=page < total_pages,
+        prev_page=page - 1,
+        next_page=page + 1,
+        q=busqueda_original,
+        marcas=marcas,
+        ubicaciones_data=ubicaciones_data,
+        # Pasar filtros actuales
+        marca_actual=marca_filtro,
+        modelo_actual=modelo_filtro,
+        año_desde_actual=año_desde,
+        año_hasta_actual=año_hasta,
+        precio_min_actual=precio_min,
+        precio_max_actual=precio_max,
+        km_min_actual=km_min,
+        km_max_actual=km_max,
+        tipo_actual=tipo_filtro,
+        transmision_actual=transmision_filtro,
+        combustible_actual=combustible_filtro,
+        provincia_actual=provincia_filtro,
+        canton_actual=canton_filtro,
+        estado_vehiculo_actual=estado_vehiculo_filtro,
+        ordenar_actual=ordenar
+    )
+
+def inicio_negocios():
     # Obtener ofertas activas (no expiradas y de negocios aprobados)
     ahora = datetime.utcnow()
     ofertas_activas = Oferta.query.join(Negocio).filter(
@@ -863,6 +1031,24 @@ def api_cantones():
             return {"cantones": []}
     except Exception as e:
         print(f"[API ERROR] Error al obtener cantones: {e}")
+        return {"error": "Error al cargar datos"}, 500
+
+@app.route("/api/vehiculos/modelos")
+def api_modelos_vehiculos():
+    """API para obtener modelos de una marca"""
+    marca = request.args.get("marca", "").strip()
+    if not marca:
+        return {"error": "Marca requerida"}, 400
+    
+    try:
+        modelos_unicos = db.session.query(Vehiculo.modelo).filter_by(
+            marca=marca,
+            estado="aprobado"
+        ).distinct().order_by(Vehiculo.modelo).all()
+        modelos = [m[0] for m in modelos_unicos]
+        return {"modelos": modelos}
+    except Exception as e:
+        print(f"[API ERROR] Error al obtener modelos: {e}")
         return {"error": "Error al cargar datos"}, 500
 
 @app.route("/api/ubicaciones/distritos")

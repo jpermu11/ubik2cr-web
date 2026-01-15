@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venta de Vehículos Usados en Costa Rica | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        :root {
+            --brand-blue: #0b4fa3;
+            --brand-green: #38b24d;
+        }
+        
+        /* Hero Section para Vehículos */
+        .hero-vehiculos {
+            background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-green) 100%);
+            padding: 80px 0 60px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-vehiculos::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .hero-vehiculos .container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-vehiculos h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .hero-vehiculos p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
+        
+        /* Búsqueda Avanzada */
+        .search-advanced {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            margin-top: -40px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            color: var(--brand-blue);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .filter-group input,
+        .filter-group select {
+            border: 2px solid var(--gray-300);
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: all 0.3s;
+        }
+        
+        .filter-group input:focus,
+        .filter-group select:focus {
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 3px rgba(11, 79, 163, 0.1);
+            outline: none;
+        }
+        
+        .btn-search {
+            background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(11, 79, 163, 0.3);
+            color: white;
+        }
+        
+        /* Tarjetas de Vehículos */
+        .vehiculo-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .vehiculo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .vehiculo-card-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background: var(--gray-200);
+        }
+        
+        .vehiculo-card-body {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .vehiculo-card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--brand-blue);
+            margin-bottom: 10px;
+        }
+        
+        .vehiculo-card-price {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--brand-green);
+            margin-bottom: 15px;
+        }
+        
+        .vehiculo-card-info {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+        
+        .vehiculo-card-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .badge-vip {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+        
+        .btn-contactar {
+            background: var(--brand-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: auto;
+        }
+        
+        .btn-contactar:hover {
+            background: var(--brand-blue-dark);
+            color: white;
+        }
+        
+        /* Ordenamiento */
+        .sort-options {
+            background: var(--gray-100);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .sort-options select {
+            border: 2px solid var(--gray-300);
+            border-radius: 8px;
+            padding: 8px 15px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<nav class="navbar-premium navbar-expand-lg">
+    <div class="container-modern">
+        <a class="navbar-brand-premium" href="/">
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
+            <span class="d-none d-sm-inline">Ubik2CR</span>
+        </a>
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
+                <li class="nav-item">
+                    <a href="/vehiculos/publicar" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-plus-circle me-1"></i>Publicar Vehículo
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/cuenta" class="nav-link-premium">
+                        <i class="fas fa-user me-1"></i>Cuenta
+                    </a>
+                </li>
+                {% if session.get('user_id') %}
+                <li class="nav-item">
+                    <a href="/panel" class="nav-link-premium">
+                        <i class="fas fa-tachometer-alt me-1"></i>Mi Panel
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="hero-vehiculos">
+    <div class="container">
+        <div class="text-center">
+            <h1><i class="fas fa-car me-2"></i>Encontrá tu Vehículo Ideal</h1>
+            <p>La plataforma más completa para comprar y vender vehículos usados en Costa Rica</p>
+        </div>
+    </div>
+</section>
+
+<!-- BÚSQUEDA AVANZADA -->
+<div class="container" style="margin-top: -40px; margin-bottom: 50px;">
+    <div class="search-advanced">
+        <form method="GET" action="/" id="searchForm">
+            <div class="row g-3">
+                <!-- Búsqueda por texto -->
+                <div class="col-md-12">
+                    <div class="filter-group">
+                        <label><i class="fas fa-search me-2"></i>Buscar</label>
+                        <input type="text" 
+                               name="q" 
+                               class="form-control" 
+                               placeholder="Ej: Toyota Corolla, Honda Civic..."
+                               value="{{ q }}">
+                    </div>
+                </div>
+                
+                <!-- Filtros principales -->
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label><i class="fas fa-tag me-2"></i>Marca</label>
+                        <select name="marca" class="form-select" id="marcaSelect" onchange="cargarModelos()">
+                            <option value="">Todas las marcas</option>
+                            {% for marca in marcas %}
+                            <option value="{{ marca }}" {% if marca_actual == marca %}selected{% endif %}>{{ marca }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label><i class="fas fa-car-side me-2"></i>Modelo</label>
+                        <select name="modelo" class="form-select" id="modeloSelect" {% if not marca_actual %}disabled{% endif %}>
+                            <option value="">{% if marca_actual %}Todos los modelos{% else %}Primero seleccioná una marca{% endif %}</option>
+                            <!-- Se llenará dinámicamente -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label><i class="fas fa-calendar me-2"></i>Año</label>
+                        <div class="d-flex gap-2">
+                            <input type="number" name="año_desde" class="form-control" placeholder="Desde" min="1950" max="2025" value="{{ año_desde_actual }}">
+                            <input type="number" name="año_hasta" class="form-control" placeholder="Hasta" min="1950" max="2025" value="{{ año_hasta_actual }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label><i class="fas fa-money-bill-wave me-2"></i>Precio (₡)</label>
+                        <div class="d-flex gap-2">
+                            <input type="number" name="precio_min" class="form-control" placeholder="Mín" min="0" value="{{ precio_min_actual }}">
+                            <input type="number" name="precio_max" class="form-control" placeholder="Máx" min="0" value="{{ precio_max_actual }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Más filtros (colapsable) -->
+                <div class="col-12">
+                    <button type="button" class="btn btn-link p-0" data-bs-toggle="collapse" data-bs-target="#filtrosAvanzados">
+                        <i class="fas fa-filter me-2"></i>Filtros Avanzados <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                
+                <div class="collapse" id="filtrosAvanzados">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="filter-group">
+                                <label><i class="fas fa-tachometer-alt me-2"></i>Kilometraje</label>
+                                <div class="d-flex gap-2">
+                                    <input type="number" name="km_min" class="form-control" placeholder="Mín" min="0" value="{{ km_min_actual }}">
+                                    <input type="number" name="km_max" class="form-control" placeholder="Máx" min="0" value="{{ km_max_actual }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="filter-group">
+                                <label><i class="fas fa-car me-2"></i>Tipo</label>
+                                <select name="tipo" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="Sedán" {% if tipo_actual == "Sedán" %}selected{% endif %}>Sedán</option>
+                                    <option value="SUV" {% if tipo_actual == "SUV" %}selected{% endif %}>SUV</option>
+                                    <option value="Pickup" {% if tipo_actual == "Pickup" %}selected{% endif %}>Pickup</option>
+                                    <option value="Hatchback" {% if tipo_actual == "Hatchback" %}selected{% endif %}>Hatchback</option>
+                                    <option value="Moto" {% if tipo_actual == "Moto" %}selected{% endif %}>Moto</option>
+                                    <option value="Otro" {% if tipo_actual == "Otro" %}selected{% endif %}>Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="filter-group">
+                                <label><i class="fas fa-cog me-2"></i>Transmisión</label>
+                                <select name="transmision" class="form-select">
+                                    <option value="">Todas</option>
+                                    <option value="Manual" {% if transmision_actual == "Manual" %}selected{% endif %}>Manual</option>
+                                    <option value="Automática" {% if transmision_actual == "Automática" %}selected{% endif %}>Automática</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="filter-group">
+                                <label><i class="fas fa-gas-pump me-2"></i>Combustible</label>
+                                <select name="combustible" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="Gasolina" {% if combustible_actual == "Gasolina" %}selected{% endif %}>Gasolina</option>
+                                    <option value="Diésel" {% if combustible_actual == "Diésel" %}selected{% endif %}>Diésel</option>
+                                    <option value="Eléctrico" {% if combustible_actual == "Eléctrico" %}selected{% endif %}>Eléctrico</option>
+                                    <option value="Híbrido" {% if combustible_actual == "Híbrido" %}selected{% endif %}>Híbrido</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="filter-group">
+                                <label><i class="fas fa-map-marker-alt me-2"></i>Provincia</label>
+                                <select name="provincia" class="form-select" id="provinciaSelect" onchange="cargarCantones()">
+                                    <option value="">Todas</option>
+                                    {% for provincia in ubicaciones_data.keys() %}
+                                    <option value="{{ provincia }}" {% if provincia_actual == provincia %}selected{% endif %}>{{ provincia }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="filter-group">
+                                <label><i class="fas fa-map me-2"></i>Cantón</label>
+                                <select name="canton" class="form-select" id="cantonSelect" {% if not provincia_actual %}disabled{% endif %} onchange="cargarDistritos()">
+                                    <option value="">{% if provincia_actual %}Todos{% else %}Primero seleccioná una provincia{% endif %}</option>
+                                    <!-- Se llenará dinámicamente -->
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="filter-group">
+                                <label><i class="fas fa-check-circle me-2"></i>Estado</label>
+                                <select name="estado_vehiculo" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="Nuevo" {% if estado_vehiculo_actual == "Nuevo" %}selected{% endif %}>Nuevo</option>
+                                    <option value="Usado" {% if estado_vehiculo_actual == "Usado" %}selected{% endif %}>Usado</option>
+                                    <option value="Seminuevo" {% if estado_vehiculo_actual == "Seminuevo" %}selected{% endif %}>Seminuevo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botones -->
+                <div class="col-md-8">
+                    <button type="submit" class="btn-search">
+                        <i class="fas fa-search me-2"></i>Buscar Vehículos
+                    </button>
+                </div>
+                
+                <div class="col-md-4">
+                    <a href="/" class="btn btn-outline-secondary w-100" style="padding: 14px; border-radius: 10px;">
+                        <i class="fas fa-times me-2"></i>Limpiar Filtros
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ORDENAMIENTO Y RESULTADOS -->
+<div class="container mb-5">
+    <div class="sort-options d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <strong>Ordenar por:</strong>
+            <select name="ordenar" class="form-select d-inline-block" style="width: auto; margin-left: 10px;" onchange="cambiarOrden(this.value)">
+                <option value="recientes" {% if ordenar_actual == "recientes" %}selected{% endif %}>Más recientes primero</option>
+                <option value="antiguos" {% if ordenar_actual == "antiguos" %}selected{% endif %}>Más antiguos primero</option>
+                <option value="precio_asc" {% if ordenar_actual == "precio_asc" %}selected{% endif %}>Precio: menor a mayor</option>
+                <option value="precio_desc" {% if ordenar_actual == "precio_desc" %}selected{% endif %}>Precio: mayor a menor</option>
+                <option value="km_asc" {% if ordenar_actual == "km_asc" %}selected{% endif %}>Kilometraje: menor a mayor</option>
+                <option value="km_desc" {% if ordenar_actual == "km_desc" %}selected{% endif %}>Kilometraje: mayor a menor</option>
+                <option value="destacados" {% if ordenar_actual == "destacados" %}selected{% endif %}>Destacados primero</option>
+            </select>
+        </div>
+        <div>
+            <strong id="totalResultados">{{ total }} vehículo{{ 's' if total != 1 else '' }} encontrado{{ 's' if total != 1 else '' }}</strong>
+        </div>
+    </div>
+    
+    <!-- Grid de Vehículos -->
+    <div class="row g-4" id="vehiculosGrid">
+        {% if vehiculos %}
+            {% for vehiculo in vehiculos %}
+            <div class="col-md-4 col-lg-3">
+                <div class="vehiculo-card">
+                    <div style="position: relative;">
+                        <img src="{{ vehiculo.imagen_url or '/static/uploads/logo.png' }}" 
+                             alt="{{ vehiculo.marca }} {{ vehiculo.modelo }}" 
+                             class="vehiculo-card-img"
+                             onerror="this.src='/static/uploads/logo.png'">
+                        {% if vehiculo.es_vip or vehiculo.destacado %}
+                        <span class="badge-vip" style="position: absolute; top: 10px; right: 10px;">
+                            <i class="fas fa-star me-1"></i>Destacado
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="vehiculo-card-body">
+                        <h5 class="vehiculo-card-title">{{ vehiculo.marca }} {{ vehiculo.modelo }}</h5>
+                        <div class="vehiculo-card-price">₡{{ "{:,.0f}".format(vehiculo.precio) }}</div>
+                        <div class="vehiculo-card-info">
+                            <span><i class="fas fa-calendar"></i> {{ vehiculo.año }}</span>
+                            {% if vehiculo.kilometraje %}
+                            <span><i class="fas fa-tachometer-alt"></i> {{ "{:,}".format(vehiculo.kilometraje) }} km</span>
+                            {% endif %}
+                            <span><i class="fas fa-car"></i> {{ vehiculo.tipo_vehiculo }}</span>
+                        </div>
+                        <a href="/vehiculo/{{ vehiculo.id }}" class="btn-contactar">
+                            <i class="fas fa-eye me-2"></i>Ver Detalles
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-car" style="font-size: 4rem; color: var(--gray-300); margin-bottom: 20px;"></i>
+                <h3 style="color: var(--gray-600);">No se encontraron vehículos</h3>
+                <p style="color: var(--gray-500);">Probá ajustar los filtros de búsqueda</p>
+                <a href="/vehiculos/publicar" class="btn btn-primary btn-lg mt-3">
+                    <i class="fas fa-plus-circle me-2"></i>Publicar Vehículo
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Paginación -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Paginación" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ prev_page }}{% if q %}&q={{ q }}{% endif %}">Anterior</a>
+            </li>
+            {% endif %}
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="?page={{ p }}{% if q %}&q={{ q }}{% endif %}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            {% if has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ next_page }}{% if q %}&q={{ q }}{% endif %}">Siguiente</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- FOOTER -->
+<footer class="bg-dark text-white py-5 mt-5">
+    <div class="container text-center">
+        <p>&copy; 2024 Ubik2CR. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const ubicacionesData = {{ ubicaciones_data | tojson }};
+
+function cargarCantones() {
+    const provinciaSelect = document.getElementById('provinciaSelect');
+    const cantonSelect = document.getElementById('cantonSelect');
+    const provincia = provinciaSelect.value;
+    
+    cantonSelect.innerHTML = '<option value="">Todos</option>';
+    
+    if (provincia && ubicacionesData[provincia]) {
+        const cantones = Object.keys(ubicacionesData[provincia]);
+        cantones.forEach(canton => {
+            const option = document.createElement('option');
+            option.value = canton;
+            option.textContent = canton;
+            {% if canton_actual %}
+            if (canton === '{{ canton_actual }}') option.selected = true;
+            {% endif %}
+            cantonSelect.appendChild(option);
+        });
+        cantonSelect.disabled = false;
+    } else {
+        cantonSelect.disabled = true;
+    }
+}
+
+function cargarModelos() {
+    const marcaSelect = document.getElementById('marcaSelect');
+    const modeloSelect = document.getElementById('modeloSelect');
+    const marca = marcaSelect.value;
+    
+    modeloSelect.innerHTML = '<option value="">Todos los modelos</option>';
+    
+    if (marca) {
+        // Cargar modelos desde API
+        fetch(`/api/vehiculos/modelos?marca=${encodeURIComponent(marca)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.modelos && data.modelos.length > 0) {
+                    data.modelos.forEach(modelo => {
+                        const option = document.createElement('option');
+                        option.value = modelo;
+                        option.textContent = modelo;
+                        {% if modelo_actual %}
+                        if (modelo === '{{ modelo_actual }}') option.selected = true;
+                        {% endif %}
+                        modeloSelect.appendChild(option);
+                    });
+                }
+                modeloSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error al cargar modelos:', error);
+                modeloSelect.disabled = false;
+            });
+    } else {
+        modeloSelect.disabled = true;
+    }
+}
+
+function cambiarOrden(valor) {
+    const form = document.getElementById('searchForm');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'ordenar';
+    input.value = valor;
+    form.appendChild(input);
+    form.submit();
+}
+
+// Cargar cantones si hay provincia seleccionada
+{% if provincia_actual %}
+document.addEventListener('DOMContentLoaded', function() {
+    cargarCantones();
+});
+{% endif %}
+
+// Cargar modelos si hay marca seleccionada
+{% if marca_actual %}
+document.addEventListener('DOMContentLoaded', function() {
+    cargarModelos();
+});
+{% endif %}
+</script>
+</body>
+</html>
