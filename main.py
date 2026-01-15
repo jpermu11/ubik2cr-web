@@ -395,12 +395,16 @@ def verify_reset_token(token: str, expiration: int = 3600):
 # =====================================================
 # MODO MANTENIMIENTO
 # =====================================================
-# Activar modo mantenimiento: Cambiar a True o agregar MAINTENANCE_MODE=true en Render.com
-MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "true").lower() == "true"  # CAMBIADO A TRUE POR DEFECTO
+# Activar modo mantenimiento: Agregar MAINTENANCE_MODE=true en Render.com
+# En desarrollo local, está desactivado por defecto para que puedas ver los cambios
+# En producción (Render.com), activalo con la variable de entorno MAINTENANCE_MODE=true
+is_local = os.environ.get("RENDER") is None  # Si no está en Render, es local
+MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "false" if is_local else "true").lower() == "true"
 
+# Este before_request debe ejecutarse PRIMERO (antes de registrar_visita)
 @app.before_request
 def check_maintenance_mode():
-    """Verificar si la aplicación está en modo mantenimiento"""
+    """Verificar si la aplicación está en modo mantenimiento - SE EJECUTA PRIMERO"""
     if not MAINTENANCE_MODE:
         return None
     
