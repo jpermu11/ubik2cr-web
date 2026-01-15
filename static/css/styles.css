@@ -13,14 +13,15 @@
     --primary-light: #E8F8F0;
     
     /* Azul del Logo - Color Principal de Ubik2CR */
-    --brand-blue: #0b4fa3;        /* Azul del logo (color principal) */
-    --brand-blue-dark: #083d7d;
-    --brand-blue-light: #1a6bc7;
+    --brand-blue: #19539D;        /* Azul oscuro del logo (color principal) */
+    --brand-blue-dark: #115293;
+    --brand-blue-light: #004F9F;
     --brand-blue-lightest: #E8F0F8;
     
-    --brand-green: #38b24d;       /* Verde complementario del logo */
-    --brand-green-dark: #2d8f3f;
-    --brand-green-light: #4ec862;
+    --brand-green: #69D41B;       /* Verde lima brillante del logo */
+    --brand-green-dark: #60B427;
+    --brand-green-light: #7EE832;
+    --brand-green-lightest: #E8F8E0;
     
     --secondary: #1A1A1A;         /* Negro elegante (Xiaomi style) */
     --secondary-light: #2D2D2D;

@@ -9,8 +9,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
         :root {
-            --brand-blue: #0b4fa3;
-            --brand-green: #38b24d;
+            --brand-blue: #19539D;
+            --brand-blue-dark: #115293;
+            --brand-blue-light: #004F9F;
+            --brand-green: #69D41B;
+            --brand-green-dark: #60B427;
+            --brand-green-light: #7EE832;
         }
         
         /* Hero Section para Vehículos */
@@ -149,6 +153,7 @@
             font-weight: 800;
             color: var(--brand-green);
             margin-bottom: 15px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
         .vehiculo-card-info {
@@ -167,13 +172,14 @@
         }
         
         .badge-vip {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #000;
+            background: linear-gradient(135deg, var(--brand-green), var(--brand-green-dark));
+            color: white;
             padding: 5px 12px;
             border-radius: 20px;
             font-weight: 700;
             font-size: 0.75rem;
             text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(105, 212, 27, 0.3);
         }
         
         .btn-contactar {
@@ -210,11 +216,11 @@
 <body>
 
 <!-- HEADER -->
-<nav class="navbar-premium navbar-expand-lg">
+<nav class="navbar-premium navbar-expand-lg" style="background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
     <div class="container-modern">
-        <a class="navbar-brand-premium" href="/">
-            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR">
-            <span class="d-none d-sm-inline">Ubik2CR</span>
+        <a class="navbar-brand-premium" href="/" style="font-weight: 800; font-size: 1.5rem;">
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Ubik2CR" style="height: 50px;">
+            <span class="d-none d-sm-inline" style="background: linear-gradient(135deg, var(--brand-blue), var(--brand-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">UBIK2CR</span>
         </a>
         <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <i class="fas fa-bars"></i>
@@ -247,6 +253,9 @@
 <section class="hero-vehiculos">
     <div class="container">
         <div class="text-center">
+            <img src="{{ url_for('static', filename='uploads/logo.png') }}" 
+                 alt="Ubik2CR" 
+                 style="max-width: 300px; width: 100%; height: auto; margin-bottom: 30px; filter: brightness(0) invert(1);">
             <h1><i class="fas fa-car me-2"></i>Encontrá tu Vehículo Ideal</h1>
             <p>La plataforma más completa para comprar y vender vehículos usados en Costa Rica</p>
         </div>
