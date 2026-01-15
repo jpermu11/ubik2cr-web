@@ -29,7 +29,7 @@ try:
 except ImportError:
     CLOUDINARY_AVAILABLE = False
 
-from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje, ImagenNegocio, Visita
+from models import db, Negocio, Usuario, Noticia, Resena, Oferta, favoritos, Mensaje, ImagenNegocio, Visita, Vehiculo, Agencia, ImagenVehiculo, favoritos_vehiculos
 
 
 # =====================================================

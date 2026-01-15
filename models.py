@@ -20,10 +20,15 @@ class Usuario(db.Model):
 
     nombre = db.Column(db.String(100))
     rol = db.Column(db.String(20), default="OWNER", index=True)
+    
+    # Campos para sistema de vehículos
+    tipo_usuario = db.Column(db.String(20), default="individual", index=True)  # individual, agencia
+    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Si es vendedor de agencia
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     negocios = db.relationship("Negocio", backref="owner", lazy=True)
+    vehiculos = db.relationship("Vehiculo", backref="vendedor", lazy=True)
 
 # --- MODELO NEGOCIO ---
 class Negocio(db.Model):
@@ -212,3 +217,121 @@ class Visita(db.Model):
         db.Index("ix_visitas_fecha", "created_at"),
         db.Index("ix_visitas_url_fecha", "url", "created_at"),
     )
+
+# --- MODELO AGENCIA (Para agencias de autos) ---
+class Agencia(db.Model):
+    __tablename__ = "agencias"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False, index=True)
+    
+    nombre = db.Column(db.String(100), nullable=False, index=True)
+    descripcion = db.Column(db.Text, nullable=True)
+    
+    telefono = db.Column(db.String(20), nullable=True)
+    whatsapp = db.Column(db.String(20), nullable=True)
+    email = db.Column(db.String(180), nullable=True)
+    
+    ubicacion = db.Column(db.String(200), nullable=True)
+    provincia = db.Column(db.String(50), nullable=True, index=True)
+    canton = db.Column(db.String(100), nullable=True, index=True)
+    distrito = db.Column(db.String(100), nullable=True, index=True)
+    
+    latitud = db.Column(db.Float, nullable=True)
+    longitud = db.Column(db.Float, nullable=True)
+    
+    logo_url = db.Column(db.String(500), nullable=True)
+    imagen_url = db.Column(db.String(500), nullable=True)
+    
+    estado = db.Column(db.String(20), default="pendiente", index=True)  # pendiente, aprobado
+    es_vip = db.Column(db.Boolean, default=False, index=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relaciones
+    owner = db.relationship("Usuario", backref="agencia_owned")
+    vehiculos = db.relationship("Vehiculo", backref="agencia", lazy=True)
+    
+    __table_args__ = (
+        db.Index("ix_agencias_estado", "estado"),
+        db.Index("ix_agencias_provincia", "provincia"),
+    )
+
+# --- MODELO VEHICULO ---
+class Vehiculo(db.Model):
+    __tablename__ = "vehiculos"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Vendedor (puede ser individual o agencia)
+    owner_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False, index=True)
+    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Si pertenece a una agencia
+    
+    # Información básica
+    marca = db.Column(db.String(50), nullable=False, index=True)
+    modelo = db.Column(db.String(100), nullable=False, index=True)
+    año = db.Column(db.Integer, nullable=False, index=True)
+    
+    # Precio y características
+    precio = db.Column(db.Numeric(12, 2), nullable=False, index=True)  # Precio en colones
+    kilometraje = db.Column(db.Integer, nullable=True, index=True)  # En kilómetros
+    
+    # Tipo y especificaciones
+    tipo_vehiculo = db.Column(db.String(50), nullable=False, index=True)  # Sedán, SUV, Pickup, Moto, etc.
+    transmision = db.Column(db.String(20), nullable=True, index=True)  # Manual, Automática
+    combustible = db.Column(db.String(30), nullable=True, index=True)  # Gasolina, Diésel, Eléctrico, Híbrido
+    color = db.Column(db.String(50), nullable=True)
+    estado_vehiculo = db.Column(db.String(20), default="usado", index=True)  # Nuevo, Usado, Seminuevo
+    
+    # Descripción y ubicación
+    descripcion = db.Column(db.Text, nullable=False)
+    provincia = db.Column(db.String(50), nullable=True, index=True)
+    canton = db.Column(db.String(100), nullable=True, index=True)
+    distrito = db.Column(db.String(100), nullable=True, index=True)
+    
+    # Contacto
+    telefono = db.Column(db.String(20), nullable=True)
+    whatsapp = db.Column(db.String(20), nullable=True)
+    
+    # Imagen principal
+    imagen_url = db.Column(db.String(500), nullable=True)
+    
+    # Estado de publicación
+    estado = db.Column(db.String(20), default="pendiente", index=True)  # pendiente, aprobado, vendido, eliminado
+    es_vip = db.Column(db.Boolean, default=False, index=True)
+    destacado = db.Column(db.Boolean, default=False, index=True)
+    
+    # Fechas
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, index=True)
+    fecha_venta = db.Column(db.DateTime, nullable=True)  # Cuando se marca como vendido
+    
+    __table_args__ = (
+        db.Index("ix_vehiculos_marca_modelo", "marca", "modelo"),
+        db.Index("ix_vehiculos_estado_precio", "estado", "precio"),
+        db.Index("ix_vehiculos_año_precio", "año", "precio"),
+        db.Index("ix_vehiculos_tipo_estado", "tipo_vehiculo", "estado"),
+        db.Index("ix_vehiculos_provincia_estado", "provincia", "estado"),
+    )
+
+# --- MODELO IMAGEN DE VEHICULO ---
+class ImagenVehiculo(db.Model):
+    __tablename__ = "imagenes_vehiculo"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    vehiculo_id = db.Column(db.Integer, db.ForeignKey("vehiculos.id"), nullable=False, index=True)
+    imagen_url = db.Column(db.String(500), nullable=False)
+    orden = db.Column(db.Integer, default=0, index=True)  # Para ordenar las imágenes
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Relación
+    vehiculo = db.relationship("Vehiculo", backref="imagenes")
+
+# --- TABLA FAVORITOS VEHICULOS (relación muchos-a-muchos) ---
+favoritos_vehiculos = db.Table(
+    'favoritos_vehiculos',
+    db.Column('usuario_id', db.Integer, db.ForeignKey('usuarios.id'), primary_key=True),
+    db.Column('vehiculo_id', db.Integer, db.ForeignKey('vehiculos.id'), primary_key=True),
+    db.Column('created_at', db.DateTime, default=datetime.utcnow)
+)
