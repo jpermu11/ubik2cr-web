@@ -588,6 +588,15 @@ def inicio():
         # Si los modelos no están disponibles, mostrar página antigua
         return inicio_negocios()
     
+    # Verificar que las tablas existen antes de usarlas
+    try:
+        # Test query para verificar que la tabla existe
+        Vehiculo.query.limit(1).all()
+    except Exception as e:
+        print(f"[ERROR] Tabla de vehículos no existe aún: {e}")
+        # Si las tablas no existen, mostrar página antigua
+        return inicio_negocios()
+    
     # BÚSQUEDA DE VEHÍCULOS
     busqueda_original = (request.args.get("q") or "").strip()
     q = busqueda_original.lower()
