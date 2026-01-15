@@ -1,0 +1,120 @@
+═══════════════════════════════════════════════════════════════
+🚀 CÓMO EJECUTAR run_local.bat - PASO A PASO
+═══════════════════════════════════════════════════════════════
+
+MÉTODO 1: Desde el Explorador de Archivos (Más Fácil)
+═══════════════════════════════════════════════════════════════
+
+1. Abrí el Explorador de Archivos de Windows
+   - Presioná la tecla Windows + E
+   - O hacé clic en el ícono de carpeta en la barra de tareas
+
+2. Navegá a esta carpeta:
+   C:\Users\jperm\.cursor\flask-app
+
+   (Podés copiar y pegar esta ruta en la barra de direcciones del explorador)
+
+3. Buscá el archivo llamado: run_local.bat
+
+4. Hacé DOBLE CLIC en ese archivo
+
+5. Se abrirá una ventana negra (CMD) que empezará a instalar todo
+
+6. Esperá a que termine (puede tardar varios minutos la primera vez)
+
+7. Cuando veas el mensaje:
+   "Aplicacion iniciada! Abri en tu navegador: http://localhost:5000"
+
+8. Abrí tu navegador y escribí: http://localhost:5000
+
+
+═══════════════════════════════════════════════════════════════
+MÉTODO 2: Desde Cursor (Si estás en Cursor)
+═══════════════════════════════════════════════════════════════
+
+1. En Cursor, en el panel izquierdo (Explorador de archivos)
+
+2. Buscá el archivo: run_local.bat
+
+3. Hacé CLIC DERECHO sobre el archivo
+
+4. Seleccioná: "Reveal in File Explorer" o "Abrir en Explorador"
+
+5. Se abrirá el Explorador de Archivos en esa carpeta
+
+6. Hacé DOBLE CLIC en run_local.bat
+
+
+═══════════════════════════════════════════════════════════════
+MÉTODO 3: Desde la Terminal (PowerShell/CMD)
+═══════════════════════════════════════════════════════════════
+
+1. Abrí PowerShell o CMD
+
+2. Escribí estos comandos (uno por uno, presionando Enter):
+
+   cd c:\Users\jperm\.cursor\flask-app
+   
+   .\run_local.bat
+
+3. Esperá a que termine la instalación
+
+4. Abrí http://localhost:5000 en tu navegador
+
+
+═══════════════════════════════════════════════════════════════
+⚠️ SI NO VES EL ARCHIVO run_local.bat
+═══════════════════════════════════════════════════════════════
+
+El archivo debería estar en:
+C:\Users\jperm\.cursor\flask-app\run_local.bat
+
+Si no lo encontrás:
+
+1. Verificá que estés en la carpeta correcta
+2. Verificá que el archivo no esté oculto
+3. En el Explorador, andá a: Ver → Mostrar → Elementos ocultos
+
+
+═══════════════════════════════════════════════════════════════
+✅ QUÉ ESPERAR CUANDO LO EJECUTÁS
+═══════════════════════════════════════════════════════════════
+
+1. Se abrirá una ventana negra (CMD/PowerShell)
+
+2. Verás mensajes como:
+   - "Iniciando Ubik2CR en modo local"
+   - "Creando entorno virtual..." (solo primera vez)
+   - "Instalando dependencias..." (puede tardar varios minutos)
+   - "Inicializando base de datos..."
+   - "Aplicacion iniciada!"
+
+3. Al final verás:
+   "Aplicacion iniciada! Abri en tu navegador: http://localhost:5000"
+
+4. NO CIERRES esa ventana negra (déjala abierta)
+
+5. Abrí tu navegador y escribí: http://localhost:5000
+
+
+═══════════════════════════════════════════════════════════════
+🛑 PARA DETENER LA APLICACIÓN
+═══════════════════════════════════════════════════════════════
+
+En la ventana negra, presioná: Ctrl + C
+
+Luego escribí: exit
+
+Y presioná Enter
+
+
+═══════════════════════════════════════════════════════════════
+❓ SI TENÉS PROBLEMAS
+═══════════════════════════════════════════════════════════════
+
+Mandame:
+1. Una captura de pantalla de la ventana negra
+2. El error exacto que te sale
+3. En qué paso estás
+
+¡Y te ayudo a solucionarlo!

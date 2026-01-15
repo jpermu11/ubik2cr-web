@@ -2189,6 +2189,33 @@ def publicar_vehiculo():
     return render_template("vehiculos_publicar.html", ubicaciones_data=ubicaciones_data)
 
 
+@app.route("/vehiculo/<int:vehiculo_id>")
+def detalle_vehiculo(vehiculo_id):
+    """Página de detalle de un vehículo"""
+    if not VEHICULOS_AVAILABLE:
+        flash("El sistema de vehículos aún no está disponible.")
+        return redirect("/")
+    
+    vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
+    
+    # Solo mostrar vehículos aprobados (o si es el dueño/admin)
+    if vehiculo.estado != "aprobado":
+        if "user_id" not in session or (vehiculo.owner_id != session["user_id"] and not admin_logged_in()):
+            flash("Este vehículo no está disponible.")
+            return redirect("/")
+    
+    # Obtener imágenes adicionales
+    imagenes_adicionales = ImagenVehiculo.query.filter_by(
+        vehiculo_id=vehiculo_id
+    ).order_by(ImagenVehiculo.orden).all()
+    
+    return render_template(
+        "vehiculo_detalle.html",
+        vehiculo=vehiculo,
+        imagenes_adicionales=imagenes_adicionales
+    )
+
+
 # =====================================================
 # GESTIONAR OFERTAS (DUEÑOS)
 # =====================================================

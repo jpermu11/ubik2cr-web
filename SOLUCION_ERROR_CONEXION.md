@@ -1,86 +1,190 @@
-# 🔧 SOLUCIÓN: Error de Conexión en Cursor
+# 🔧 Solución: "No se puede conectar a localhost:5000"
 
-## ❌ ¿Qué significa este error?
+## ❌ El Problema
 
-El mensaje "Connection Error" significa que Cursor no puede conectarse a sus servidores. Esto puede afectar:
-- Auto-guardado de código
-- Sincronización con GitHub
-- Funciones que requieren internet
+Si ves este error en Firefox:
+> "No se puede conectar" / "Firefox no puede establecer una conexión con el servidor en localhost:5000"
 
-## ✅ SOLUCIONES RÁPIDAS
-
-### Opción 1: Reintentar (Más Rápido)
-
-1. Haz clic en el botón **"Resume"** (Reanudar) en la ventana de error
-2. Espera unos segundos
-3. Intenta de nuevo
-
-### Opción 2: Verificar tu conexión a Internet
-
-1. Abre tu navegador
-2. Intenta entrar a cualquier página (ej: google.com)
-3. Si no carga, el problema es tu internet
-
-### Opción 3: Si usas VPN
-
-1. **Desactiva tu VPN temporalmente**
-2. Intenta de nuevo
-3. Si funciona, la VPN está bloqueando la conexión
-
-### Opción 4: Reiniciar Cursor
-
-1. Cierra completamente Cursor (todas las ventanas)
-2. Vuelve a abrirlo
-3. Intenta de nuevo
-
-### Opción 5: Verificar Firewall/Antivirus
-
-1. Tu antivirus o firewall podría estar bloqueando Cursor
-2. Agrega Cursor a las excepciones de tu antivirus
-3. Intenta de nuevo
+**Significa que la aplicación Flask NO está corriendo.**
 
 ---
 
-## 🛡️ IMPORTANTE: Tus cambios NO se pierden
+## ✅ Solución Paso a Paso
 
-**Aunque veas este error, tus cambios están SEGUROS:**
+### Paso 1: Verificar si ejecutaste `run_local.bat`
 
-1. ✅ Cursor guarda localmente en tu computadora
-2. ✅ Tu código está en los archivos (no se borra)
-3. ✅ Solo afecta la sincronización, NO el código guardado
+**¿Ejecutaste el archivo `run_local.bat`?**
+
+- ✅ **SÍ** → Ve al Paso 2
+- ❌ **NO** → Ve al Paso 1.1
+
+#### Paso 1.1: Ejecutar `run_local.bat` por primera vez
+
+1. Abrí el Explorador de Archivos (Windows + E)
+2. Navegá a: `C:\Users\jperm\.cursor\flask-app`
+3. Buscá el archivo: `run_local.bat`
+4. **Hacé DOBLE CLIC** en ese archivo
+5. Se abrirá una ventana negra (CMD)
+6. **ESPERÁ** a que termine (puede tardar varios minutos)
+7. Cuando veas: "Aplicacion iniciada! Abri en tu navegador: http://localhost:5000"
+8. **NO CIERRES esa ventana negra** (déjala abierta)
+9. Recién ahí, abrí Firefox y escribí: `http://localhost:5000`
 
 ---
 
-## 📝 VERIFICAR QUE TUS CAMBIOS ESTÁN GUARDADOS
+### Paso 2: Si ejecutaste `run_local.bat` pero sigue sin funcionar
 
-Después de resolver el error, verifica:
+**Revisá la ventana negra (CMD) que se abrió:**
 
-1. **Abre tu carpeta:** `C:\Users\jperm\.cursor\flask-app`
-2. **Revisa la fecha de modificación** de tus archivos
-3. **Si la fecha es reciente:** Tus cambios están guardados ✅
+#### ¿Qué mensajes ves?
+
+**A) Si ves errores en rojo:**
+- Mandame una captura de pantalla de la ventana negra
+- O copiá y pegá el error completo aquí
+
+**B) Si la ventana se cerró sola:**
+- Probablemente hubo un error
+- Volvé a ejecutar `run_local.bat`
+- Esta vez, **NO cierres la ventana** y fijate qué mensaje sale al final
+
+**C) Si ves "Running on http://127.0.0.1:5000":**
+- ✅ La app está corriendo
+- Probá con: `http://127.0.0.1:5000` en lugar de `localhost:5000`
 
 ---
 
-## 🚀 HACER CAMBIOS SIN PROBLEMAS DE CONEXIÓN
+### Paso 3: Verificar que la aplicación esté corriendo
 
-Si el error persiste, puedes hacer cambios igual:
+**Abrí una nueva ventana de PowerShell y escribí:**
 
-1. **Modifica tu código normalmente**
-2. **Guarda manualmente:** `Ctrl + S` (o `Cmd + S` en Mac)
-3. **Usa Git manualmente** cuando tengas conexión:
-   ```batch
-   git add .
-   git commit -m "Tus cambios"
-   git push origin main
+```powershell
+netstat -ano | findstr :5000
+```
+
+**Si ves algo como:**
+```
+TCP    0.0.0.0:5000    0.0.0.0:0    LISTENING    12345
+```
+
+✅ **La aplicación está corriendo** → El problema es otro (ve al Paso 4)
+
+**Si NO ves nada:**
+❌ **La aplicación NO está corriendo** → Volvé al Paso 1
+
+---
+
+### Paso 4: Si la app está corriendo pero no carga
+
+**Probá estas alternativas:**
+
+1. **Usá `127.0.0.1` en lugar de `localhost`:**
+   - Escribí en Firefox: `http://127.0.0.1:5000`
+
+2. **Verificá que no haya otro programa usando el puerto 5000:**
+   ```powershell
+   netstat -ano | findstr :5000
    ```
+   Si ves varios procesos, puede haber conflicto
+
+3. **Probá con otro navegador:**
+   - Chrome: `http://localhost:5000`
+   - Edge: `http://localhost:5000`
+
+4. **Verificá el firewall:**
+   - Windows puede estar bloqueando la conexión
+   - Permití Python/Flask en el firewall
 
 ---
 
-## 📞 RESUMEN
+## 🚀 Método Alternativo: Ejecutar Manualmente
 
-- **Error de conexión:** Cursor no puede conectarse a internet
-- **Tus datos:** Están SEGUROS en tu computadora
-- **Solución rápida:** Haz clic en "Resume" o verifica tu internet
-- **Si persiste:** Reinicia Cursor o verifica VPN/Firewall
+Si `run_local.bat` no funciona, probá esto:
 
-**No te preocupes, tus cambios no se pierden.**
+### 1. Abrí PowerShell
+
+Presioná `Windows + R`, escribí `powershell`, presioná Enter
+
+### 2. Ejecutá estos comandos (uno por uno):
+
+```powershell
+cd c:\Users\jperm\.cursor\flask-app
+```
+
+```powershell
+python -m venv venv
+```
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+**Si te sale error de "execution policy":**
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+Luego volvé a:
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+```powershell
+pip install -r requirements.txt
+```
+
+```powershell
+flask db upgrade
+```
+
+```powershell
+python main.py
+```
+
+### 3. Deberías ver:
+
+```
+ * Running on http://127.0.0.1:5000
+```
+
+### 4. **NO CIERRES esta ventana**
+
+### 5. Abrí Firefox y escribí: `http://localhost:5000`
+
+---
+
+## 📋 Checklist de Diagnóstico
+
+Antes de pedir ayuda, verificá:
+
+- [ ] ¿Ejecutaste `run_local.bat`?
+- [ ] ¿La ventana negra (CMD) sigue abierta?
+- [ ] ¿Ves el mensaje "Running on http://127.0.0.1:5000"?
+- [ ] ¿Probaste con `http://127.0.0.1:5000` en lugar de `localhost`?
+- [ ] ¿Probaste con otro navegador?
+- [ ] ¿Hay errores en la ventana negra?
+
+---
+
+## 🆘 Si Nada Funciona
+
+Mandame:
+
+1. **Captura de pantalla de la ventana negra (CMD)** donde ejecutaste `run_local.bat`
+2. **El último mensaje** que ves en esa ventana
+3. **Qué pasos seguiste** exactamente
+
+Con esa información te puedo ayudar mejor.
+
+---
+
+## 💡 Consejo Importante
+
+**La aplicación Flask debe estar CORRIENDO para que puedas acceder a `localhost:5000`.**
+
+Es como encender la TV antes de verla. La aplicación es el "encendido" y el navegador es la "pantalla".
+
+**Siempre:**
+1. Primero ejecutá `run_local.bat` (o `python main.py`)
+2. Esperá a ver "Running on..."
+3. **NO cierres esa ventana**
+4. Recién ahí abrí el navegador
