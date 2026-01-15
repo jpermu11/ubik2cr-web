@@ -2060,6 +2060,136 @@ def publicar():
 
 
 # =====================================================
+# PUBLICAR VEHÍCULOS
+# =====================================================
+@app.route("/vehiculos/publicar", methods=["GET", "POST"])
+def publicar_vehiculo():
+    """Publicar un vehículo nuevo"""
+    if not VEHICULOS_AVAILABLE:
+        flash("El sistema de vehículos aún no está disponible.")
+        return redirect("/")
+    
+    # Verificar si el usuario está logueado
+    if "user_id" not in session:
+        flash("Creá tu cuenta o iniciá sesión para publicar tu vehículo.")
+        return redirect("/cuenta")
+    
+    if request.method == "POST":
+        # Obtener datos del formulario
+        marca = request.form.get("marca", "").strip()
+        modelo = request.form.get("modelo", "").strip()
+        año_str = request.form.get("año", "").strip()
+        precio_str = request.form.get("precio", "").strip()
+        kilometraje_str = request.form.get("kilometraje", "").strip()
+        tipo_vehiculo = request.form.get("tipo_vehiculo", "").strip()
+        transmision = request.form.get("transmision", "").strip() or None
+        combustible = request.form.get("combustible", "").strip() or None
+        color = request.form.get("color", "").strip() or None
+        estado_vehiculo = request.form.get("estado_vehiculo", "Usado").strip()
+        descripcion = request.form.get("descripcion", "").strip()
+        provincia = request.form.get("provincia", "").strip() or None
+        canton = request.form.get("canton", "").strip() or None
+        distrito = request.form.get("distrito", "").strip() or None
+        telefono = request.form.get("telefono", "").strip() or None
+        whatsapp = request.form.get("whatsapp", "").strip() or None
+        
+        # Validaciones
+        if not marca or not modelo or not año_str or not precio_str or not descripcion:
+            flash("Completá todos los campos obligatorios.")
+            return redirect("/vehiculos/publicar")
+        
+        try:
+            año = int(año_str)
+            if año < 1950 or año > 2025:
+                flash("El año debe estar entre 1950 y 2025.")
+                return redirect("/vehiculos/publicar")
+        except ValueError:
+            flash("El año debe ser un número válido.")
+            return redirect("/vehiculos/publicar")
+        
+        try:
+            precio = float(precio_str)
+            if precio < 0:
+                flash("El precio no puede ser negativo.")
+                return redirect("/vehiculos/publicar")
+        except ValueError:
+            flash("El precio debe ser un número válido.")
+            return redirect("/vehiculos/publicar")
+        
+        kilometraje = None
+        if kilometraje_str:
+            try:
+                kilometraje = int(kilometraje_str)
+                if kilometraje < 0:
+                    flash("El kilometraje no puede ser negativo.")
+                    return redirect("/vehiculos/publicar")
+            except ValueError:
+                pass  # Si no es válido, dejarlo como None
+        
+        # Guardar imágenes (hasta 10)
+        imagenes_urls = save_multiple_uploads("imagenes", max_files=10)
+        imagen_url = imagenes_urls[0] if imagenes_urls else "/static/uploads/logo.png"
+        
+        # Crear vehículo
+        nuevo_vehiculo = Vehiculo(
+            owner_id=session["user_id"],
+            marca=marca,
+            modelo=modelo,
+            año=año,
+            precio=precio,
+            kilometraje=kilometraje,
+            tipo_vehiculo=tipo_vehiculo,
+            transmision=transmision,
+            combustible=combustible,
+            color=color,
+            estado_vehiculo=estado_vehiculo,
+            descripcion=descripcion,
+            provincia=provincia,
+            canton=canton,
+            distrito=distrito,
+            telefono=telefono,
+            whatsapp=whatsapp,
+            imagen_url=imagen_url,
+            estado="pendiente",
+            es_vip=False,
+            destacado=False
+        )
+        
+        db.session.add(nuevo_vehiculo)
+        db.session.flush()  # Para obtener el ID
+        
+        # Guardar imágenes adicionales en la tabla ImagenVehiculo
+        try:
+            for orden, img_url in enumerate(imagenes_urls[1:], start=1):  # Empezar desde la segunda imagen
+                imagen_vehiculo = ImagenVehiculo(
+                    vehiculo_id=nuevo_vehiculo.id,
+                    imagen_url=img_url,
+                    orden=orden
+                )
+                db.session.add(imagen_vehiculo)
+        except Exception as e:
+            print(f"[IMAGENES] No se pudieron guardar imágenes adicionales: {e}")
+        
+        db.session.commit()
+        
+        flash("¡Vehículo publicado exitosamente! Está pendiente de aprobación.")
+        return redirect("/panel")
+    
+    # GET: Mostrar formulario
+    # Cargar datos de ubicaciones
+    import os
+    json_path = os.path.join(os.path.dirname(__file__), "static", "data", "costa_rica_ubicaciones.json")
+    ubicaciones_data = {}
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            ubicaciones_data = json.load(f)
+    except Exception as e:
+        print(f"[ERROR] No se pudo cargar ubicaciones: {e}")
+    
+    return render_template("vehiculos_publicar.html", ubicaciones_data=ubicaciones_data)
+
+
+# =====================================================
 # GESTIONAR OFERTAS (DUEÑOS)
 # =====================================================
 @app.route("/panel/oferta/nueva", methods=["GET", "POST"])
