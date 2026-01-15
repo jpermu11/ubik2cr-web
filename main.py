@@ -1719,34 +1719,39 @@ def panel_owner():
     
     # Si el sistema de vehículos está disponible, mostrar panel de vehículos
     if VEHICULOS_AVAILABLE:
-        user_id = session["user_id"]
-        vehiculos = Vehiculo.query.filter_by(owner_id=user_id).order_by(Vehiculo.created_at.desc()).all()
-        
-        total = len(vehiculos)
-        aprobados = len([v for v in vehiculos if v.estado == "aprobado"])
-        pendientes = len([v for v in vehiculos if v.estado == "pendiente"])
-        destacados = len([v for v in vehiculos if (v.es_vip or v.destacado) and v.estado == "aprobado"])
-        
-        user_email = session.get("user_email", "Usuario")
-        
-        return render_template(
-            "panel_vehiculos.html",
-            vehiculos=vehiculos,
-            total=total,
-            aprobados=aprobados,
-            pendientes=pendientes,
-            destacados=destacados,
-            user_email=user_email
-        )
+        try:
+            user_id = session["user_id"]
+            vehiculos = Vehiculo.query.filter_by(owner_id=user_id).order_by(Vehiculo.created_at.desc()).all()
+            
+            total = len(vehiculos)
+            aprobados = len([v for v in vehiculos if v.estado == "aprobado"])
+            pendientes = len([v for v in vehiculos if v.estado == "pendiente"])
+            destacados = len([v for v in vehiculos if (v.es_vip or v.destacado) and v.estado == "aprobado"])
+            
+            user_email = session.get("user_email", "Usuario")
+            
+            return render_template(
+                "panel_vehiculos.html",
+                vehiculos=vehiculos,
+                total=total,
+                aprobados=aprobados,
+                pendientes=pendientes,
+                destacados=destacados,
+                user_email=user_email
+            )
+        except Exception as e:
+            # Si hay error (tablas no existen aún), mostrar panel antiguo
+            print(f"[ERROR PANEL] Error al cargar vehículos: {e}")
+            # Continuar con panel antiguo
     
     # Panel antiguo para negocios (fallback)
-    if not owner_required():
+    if not owner_logged_in():
         return redirect("/cuenta")
 
     # Si por alguna razón el modelo no tiene owner_id todavía, evitamos crash
     if not hasattr(Negocio, "owner_id"):
         flash("Falta el campo owner_id en Negocio. Necesita migración.")
-        return render_template("panel_owner.html", negocios=[])
+        return render_template("panel_owner.html", negocios=[], total=0, aprobados=0, pendientes=0, vip=0, ofertas=[], noticias=[], user_email=session.get("user_email"), mensajes_no_leidos=0, ahora=datetime.utcnow())
 
     negocios = (
         Negocio.query.filter_by(owner_id=session["user_id"])
@@ -2102,6 +2107,15 @@ def publicar_vehiculo():
         flash("Creá tu cuenta o iniciá sesión para publicar tu vehículo.")
         return redirect("/cuenta")
     
+    # Verificar que las tablas existen
+    try:
+        # Test query para verificar que la tabla existe
+        Vehiculo.query.limit(1).all()
+    except Exception as e:
+        print(f"[ERROR] Tabla de vehículos no existe aún: {e}")
+        flash("El sistema de vehículos está en proceso de configuración. Por favor, intentá más tarde.")
+        return redirect("/")
+    
     if request.method == "POST":
         # Obtener datos del formulario
         marca = request.form.get("marca", "").strip()
@@ -2224,73 +2238,100 @@ def detalle_vehiculo(vehiculo_id):
         flash("El sistema de vehículos aún no está disponible.")
         return redirect("/")
     
-    vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
-    
-    # Solo mostrar vehículos aprobados (o si es el dueño/admin)
-    if vehiculo.estado != "aprobado":
-        if "user_id" not in session or (vehiculo.owner_id != session["user_id"] and not admin_logged_in()):
-            flash("Este vehículo no está disponible.")
-            return redirect("/")
-    
-    # Obtener imágenes adicionales
-    imagenes_adicionales = ImagenVehiculo.query.filter_by(
-        vehiculo_id=vehiculo_id
-    ).order_by(ImagenVehiculo.orden).all()
-    
-    return render_template(
-        "vehiculo_detalle.html",
-        vehiculo=vehiculo,
-        imagenes_adicionales=imagenes_adicionales
-    )
+    try:
+        vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
+        
+        # Solo mostrar vehículos aprobados (o si es el dueño/admin)
+        if vehiculo.estado != "aprobado":
+            if "user_id" not in session or (vehiculo.owner_id != session["user_id"] and not admin_logged_in()):
+                flash("Este vehículo no está disponible.")
+                return redirect("/")
+        
+        # Obtener imágenes adicionales
+        imagenes_adicionales = []
+        try:
+            imagenes_adicionales = ImagenVehiculo.query.filter_by(
+                vehiculo_id=vehiculo_id
+            ).order_by(ImagenVehiculo.orden).all()
+        except Exception as e:
+            print(f"[ERROR] No se pudieron cargar imágenes adicionales: {e}")
+        
+        return render_template(
+            "vehiculo_detalle.html",
+            vehiculo=vehiculo,
+            imagenes_adicionales=imagenes_adicionales
+        )
+    except Exception as e:
+        print(f"[ERROR] Error al cargar detalle de vehículo: {e}")
+        flash("Error al cargar el vehículo. Por favor, intentá más tarde.")
+        return redirect("/")
 
 
 @app.route("/panel/vehiculo/<int:vehiculo_id>/marcar-vendido", methods=["POST"])
 def marcar_vehiculo_vendido(vehiculo_id):
     """Marcar un vehículo como vendido"""
+    if not VEHICULOS_AVAILABLE:
+        flash("El sistema de vehículos no está disponible.")
+        return redirect("/panel")
+    
     if "user_id" not in session:
         flash("Debés iniciar sesión.")
         return redirect("/cuenta")
     
-    vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
-    
-    # Verificar que el vehículo pertenece al usuario
-    if vehiculo.owner_id != session["user_id"]:
-        flash("No tenés permiso para modificar este vehículo.")
+    try:
+        vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
+        
+        # Verificar que el vehículo pertenece al usuario
+        if vehiculo.owner_id != session["user_id"]:
+            flash("No tenés permiso para modificar este vehículo.")
+            return redirect("/panel")
+        
+        vehiculo.estado = "vendido"
+        vehiculo.fecha_venta = datetime.utcnow()
+        db.session.commit()
+        
+        flash("¡Vehículo marcado como vendido!")
         return redirect("/panel")
-    
-    vehiculo.estado = "vendido"
-    vehiculo.fecha_venta = datetime.utcnow()
-    db.session.commit()
-    
-    flash("¡Vehículo marcado como vendido!")
-    return redirect("/panel")
+    except Exception as e:
+        print(f"[ERROR] Error al marcar vehículo como vendido: {e}")
+        flash("Error al actualizar el vehículo.")
+        return redirect("/panel")
 
 
 @app.route("/panel/vehiculo/<int:vehiculo_id>/eliminar", methods=["POST"])
 def eliminar_vehiculo(vehiculo_id):
     """Eliminar un vehículo"""
+    if not VEHICULOS_AVAILABLE:
+        flash("El sistema de vehículos no está disponible.")
+        return redirect("/panel")
+    
     if "user_id" not in session:
         flash("Debés iniciar sesión.")
         return redirect("/cuenta")
     
-    vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
-    
-    # Verificar que el vehículo pertenece al usuario
-    if vehiculo.owner_id != session["user_id"]:
-        flash("No tenés permiso para eliminar este vehículo.")
-        return redirect("/panel")
-    
-    # Eliminar imágenes asociadas
     try:
-        ImagenVehiculo.query.filter_by(vehiculo_id=vehiculo_id).delete()
+        vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
+        
+        # Verificar que el vehículo pertenece al usuario
+        if vehiculo.owner_id != session["user_id"]:
+            flash("No tenés permiso para eliminar este vehículo.")
+            return redirect("/panel")
+        
+        # Eliminar imágenes asociadas
+        try:
+            ImagenVehiculo.query.filter_by(vehiculo_id=vehiculo_id).delete()
+        except Exception as e:
+            print(f"[ERROR] No se pudieron eliminar imágenes: {e}")
+        
+        db.session.delete(vehiculo)
+        db.session.commit()
+        
+        flash("Vehículo eliminado exitosamente.")
+        return redirect("/panel")
     except Exception as e:
-        print(f"[ERROR] No se pudieron eliminar imágenes: {e}")
-    
-    db.session.delete(vehiculo)
-    db.session.commit()
-    
-    flash("Vehículo eliminado exitosamente.")
-    return redirect("/panel")
+        print(f"[ERROR] Error al eliminar vehículo: {e}")
+        flash("Error al eliminar el vehículo.")
+        return redirect("/panel")
 
 
 # =====================================================
