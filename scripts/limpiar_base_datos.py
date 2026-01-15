@@ -125,22 +125,71 @@ def limpiar_base_datos():
         
         # HACER COMMIT de todos los cambios
         print("\n💾 Guardando cambios en la base de datos...")
-        db.session.commit()
-        print("✅ Commit realizado exitosamente")
+        try:
+            db.session.commit()
+            print("✅ Commit realizado exitosamente")
+        except Exception as e:
+            print(f"❌ Error al hacer commit: {e}")
+            db.session.rollback()
+            raise
         
-        # Verificar que las tablas estén vacías
-        print("\n🔍 Verificando limpieza...")
+        # HACER COMMIT explícito antes de verificar
+        try:
+            db.session.commit()
+            print("✅ Commit final realizado")
+        except Exception as e:
+            print(f"⚠️ Error en commit final: {e}")
+            db.session.rollback()
+        
+        # Verificar que las tablas estén vacías DESPUÉS del commit
+        print("\n🔍 Verificando limpieza (después de commit)...")
+        errores_verificacion = []
         if 'negocios' in tablas_existentes:
-            count_negocios = db.session.execute(text("SELECT COUNT(*) FROM negocios")).scalar()
-            print(f"  - Negocios restantes: {count_negocios}")
-        if 'usuarios' in tablas_existentes:
-            count_usuarios = db.session.execute(text("SELECT COUNT(*) FROM usuarios")).scalar()
-            print(f"  - Usuarios restantes: {count_usuarios}")
-        if 'vehiculos' in tablas_existentes:
-            count_vehiculos = db.session.execute(text("SELECT COUNT(*) FROM vehiculos")).scalar()
-            print(f"  - Vehículos restantes: {count_vehiculos}")
+            try:
+                count_negocios = db.session.execute(text("SELECT COUNT(*) FROM negocios")).scalar()
+                print(f"  - Negocios restantes: {count_negocios}")
+                if count_negocios > 0:
+                    errores_verificacion.append(f"Negocios: {count_negocios} restantes")
+            except Exception as e:
+                print(f"  - ⚠️ Error verificando negocios: {e}")
         
-        print("\n✅ Limpieza completada exitosamente!")
+        if 'usuarios' in tablas_existentes:
+            try:
+                count_usuarios = db.session.execute(text("SELECT COUNT(*) FROM usuarios")).scalar()
+                print(f"  - Usuarios restantes: {count_usuarios}")
+                if count_usuarios > 0:
+                    errores_verificacion.append(f"Usuarios: {count_usuarios} restantes")
+            except Exception as e:
+                print(f"  - ⚠️ Error verificando usuarios: {e}")
+        
+        if 'vehiculos' in tablas_existentes:
+            try:
+                count_vehiculos = db.session.execute(text("SELECT COUNT(*) FROM vehiculos")).scalar()
+                print(f"  - Vehículos restantes: {count_vehiculos}")
+                if count_vehiculos > 0:
+                    errores_verificacion.append(f"Vehículos: {count_vehiculos} restantes")
+            except Exception as e:
+                print(f"  - ⚠️ Error verificando vehículos: {e}")
+        
+        if 'noticias' in tablas_existentes:
+            try:
+                count_noticias = db.session.execute(text("SELECT COUNT(*) FROM noticias")).scalar()
+                print(f"  - Noticias restantes: {count_noticias}")
+                if count_noticias > 0:
+                    errores_verificacion.append(f"Noticias: {count_noticias} restantes")
+            except Exception as e:
+                print(f"  - ⚠️ Error verificando noticias: {e}")
+        
+        if errores_verificacion:
+            print(f"\n⚠️ ADVERTENCIA: Quedaron datos sin eliminar: {', '.join(errores_verificacion)}")
+            print("   Esto puede deberse a transacciones pendientes. Intentando commit adicional...")
+            try:
+                db.session.commit()
+                print("   ✅ Commit adicional realizado")
+            except Exception as e:
+                print(f"   ❌ Error en commit adicional: {e}")
+        
+        print("\n✅ Limpieza completada!")
         print("📝 Nota: Las credenciales de admin NO se perdieron (están en variables de entorno)")
         
         return True

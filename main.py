@@ -3313,19 +3313,24 @@ def limpiar_base_datos():
             sys.path.insert(0, os.path.dirname(__file__))
             from scripts.limpiar_base_datos import limpiar_base_datos
             
+            print(f"[LIMPIEZA] Iniciando proceso de limpieza...")
+            print(f"[LIMPIEZA] Confirmación recibida: '{confirmacion}'")
+            
             # Ejecutar limpieza dentro del contexto de la app
             resultado = limpiar_base_datos()
             
             if resultado:
+                print(f"[LIMPIEZA] ✅ Proceso completado exitosamente")
                 flash("✅ Base de datos limpiada exitosamente. Todas las tablas fueron vaciadas. Las credenciales de admin NO se perdieron (están en variables de entorno).")
             else:
-                flash("❌ Error al limpiar la base de datos. Revisá los logs en Render.com para más detalles.")
+                print(f"[LIMPIEZA] ❌ El script retornó False")
+                flash("❌ Error al limpiar la base de datos. El script retornó False. Revisá los logs en Render.com para más detalles.")
         except Exception as e:
             import traceback
             error_msg = str(e) + "\n" + traceback.format_exc()
             print(f"[ERROR LIMPIEZA] {error_msg}")
             print(f"[ERROR LIMPIEZA] Tipo de error: {type(e).__name__}")
-            flash(f"❌ Error al limpiar: {str(e)}. Revisá los logs en Render.com.")
+            flash(f"❌ Error al limpiar: {str(e)}. Revisá los logs en Render.com para ver el traceback completo.")
         
         return redirect("/admin")
     
