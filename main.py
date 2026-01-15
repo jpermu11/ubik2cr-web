@@ -395,7 +395,8 @@ def verify_reset_token(token: str, expiration: int = 3600):
 # =====================================================
 # MODO MANTENIMIENTO
 # =====================================================
-MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "false").lower() == "true"
+# Activar modo mantenimiento: Cambiar a True o agregar MAINTENANCE_MODE=true en Render.com
+MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "true").lower() == "true"  # CAMBIADO A TRUE POR DEFECTO
 
 @app.before_request
 def check_maintenance_mode():
