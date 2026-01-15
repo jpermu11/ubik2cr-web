@@ -40,19 +40,15 @@ favoritos_vehiculos = None
 
 try:
     from models import Vehiculo, Agencia, ImagenVehiculo, favoritos_vehiculos
-    # Verificar que las tablas existen
-    try:
-        # Test query para verificar que la tabla existe
-        with app.app_context():
-            db.session.execute(db.text("SELECT 1 FROM vehiculos LIMIT 1"))
-        VEHICULOS_AVAILABLE = True
-        print("[INFO] Sistema de vehículos disponible")
-    except Exception as e:
-        VEHICULOS_AVAILABLE = False
-        print(f"[INFO] Tablas de vehículos no existen aún. Ejecutá: flask db upgrade")
+    VEHICULOS_AVAILABLE = True
+    print("[INFO] Modelos de vehículos importados correctamente")
 except Exception as e:
     print(f"[WARNING] No se pudieron importar modelos de vehículos: {e}")
     VEHICULOS_AVAILABLE = False
+    Vehiculo = None
+    Agencia = None
+    ImagenVehiculo = None
+    favoritos_vehiculos = None
 
 
 # =====================================================
