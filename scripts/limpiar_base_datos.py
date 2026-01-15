@@ -3,11 +3,11 @@ Script de Limpieza de Base de Datos
 Limpia todos los datos excepto la estructura de tablas
 Mantiene las credenciales de admin (están en variables de entorno)
 """
-from models import db, Negocio, Usuario, Noticia, Resena, Oferta, Mensaje, ImagenNegocio, Visita
+from models import db
 from sqlalchemy import text, inspect
 
 def limpiar_base_datos():
-    """Limpia todos los datos de las tablas (incluye sistema antiguo y nuevo si existe)"""
+    """Limpia todos los datos de las tablas usando SQL directo para evitar problemas de foreign keys"""
     print("🧹 Iniciando limpieza de base de datos...")
     
     try:
@@ -16,112 +16,64 @@ def limpiar_base_datos():
         tablas_existentes = inspector.get_table_names()
         print(f"📋 Tablas encontradas en BD: {', '.join(tablas_existentes)}")
         
-        # Limpiar tablas del sistema de vehículos (si existen)
-        if 'imagenes_vehiculos' in tablas_existentes:
-            print("  - Eliminando imágenes de vehículos...")
-            try:
-                db.session.execute(text("DELETE FROM imagenes_vehiculos"))
-                print(f"    ✅ Imágenes de vehículos eliminadas")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando imágenes de vehículos: {e}")
+        # Desactivar temporalmente las verificaciones de foreign keys (PostgreSQL)
+        try:
+            db.session.execute(text("SET session_replication_role = 'replica'"))
+            print("  ✅ Verificaciones de foreign keys desactivadas temporalmente")
+        except Exception as e:
+            print(f"  ⚠️ No se pudieron desactivar foreign keys (puede ser SQLite): {e}")
         
-        if 'favoritos_vehiculos' in tablas_existentes:
-            print("  - Eliminando favoritos de vehículos...")
-            try:
-                db.session.execute(text("DELETE FROM favoritos_vehiculos"))
-                print(f"    ✅ Favoritos de vehículos eliminados")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando favoritos de vehículos: {e}")
+        # Lista de tablas a limpiar (en orden para respetar foreign keys)
+        # Primero las tablas dependientes, luego las principales
+        tablas_a_limpiar = [
+            'imagenes_vehiculos',
+            'favoritos_vehiculos',
+            'imagenes_negocios',
+            'favoritos',
+            'resenas',
+            'mensajes',
+            'ofertas',
+            'noticias',
+            'vehiculos',
+            'agencias',
+            'negocios',
+            'usuarios'
+        ]
         
-        if 'vehiculos' in tablas_existentes:
-            print("  - Eliminando vehículos...")
-            try:
-                db.session.execute(text("DELETE FROM vehiculos"))
-                print(f"    ✅ Vehículos eliminados")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando vehículos: {e}")
-        
-        if 'agencias' in tablas_existentes:
-            print("  - Eliminando agencias...")
-            try:
-                db.session.execute(text("DELETE FROM agencias"))
-                print(f"    ✅ Agencias eliminadas")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando agencias: {e}")
-        
-        # Limpiar tablas del sistema antiguo (negocios)
-        if 'imagenes_negocios' in tablas_existentes:
-            print("  - Eliminando imágenes de negocios...")
-            try:
-                ImagenNegocio.query.delete()
-                print(f"    ✅ Imágenes de negocios eliminadas")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando imágenes de negocios: {e}")
-        
-        if 'favoritos' in tablas_existentes:
-            print("  - Eliminando favoritos...")
-            try:
-                db.session.execute(text("DELETE FROM favoritos"))
-                print(f"    ✅ Favoritos eliminados")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando favoritos: {e}")
-        
-        if 'resenas' in tablas_existentes:
-            print("  - Eliminando reseñas...")
-            try:
-                Resena.query.delete()
-                print(f"    ✅ Reseñas eliminadas")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando reseñas: {e}")
-        
-        if 'mensajes' in tablas_existentes:
-            print("  - Eliminando mensajes...")
-            try:
-                Mensaje.query.delete()
-                print(f"    ✅ Mensajes eliminados")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando mensajes: {e}")
-        
-        if 'ofertas' in tablas_existentes:
-            print("  - Eliminando ofertas...")
-            try:
-                Oferta.query.delete()
-                print(f"    ✅ Ofertas eliminadas")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando ofertas: {e}")
-        
-        if 'noticias' in tablas_existentes:
-            print("  - Eliminando noticias...")
-            try:
-                Noticia.query.delete()
-                print(f"    ✅ Noticias eliminadas")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando noticias: {e}")
-        
-        if 'negocios' in tablas_existentes:
-            print("  - Eliminando negocios...")
-            try:
-                Negocio.query.delete()
-                print(f"    ✅ Negocios eliminados")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando negocios: {e}")
-        
-        # Limpiar usuarios (ADMIN está en variables de entorno, no en BD)
-        if 'usuarios' in tablas_existentes:
-            print("  - Eliminando usuarios...")
-            try:
-                total_usuarios = Usuario.query.count()
-                Usuario.query.delete()
-                print(f"    ✅ {total_usuarios} usuarios eliminados")
-                print(f"    📝 Nota: Las credenciales de admin NO se perdieron (están en variables de entorno)")
-            except Exception as e:
-                print(f"    ⚠️ Error eliminando usuarios: {e}")
+        # Limpiar cada tabla usando SQL directo
+        registros_eliminados_total = 0
+        for tabla in tablas_a_limpiar:
+            if tabla in tablas_existentes:
+                print(f"  - Eliminando datos de {tabla}...")
+                try:
+                    # Contar registros antes de eliminar
+                    count_before = db.session.execute(text(f"SELECT COUNT(*) FROM {tabla}")).scalar()
+                    
+                    if count_before > 0:
+                        # Eliminar todos los registros
+                        result = db.session.execute(text(f"DELETE FROM {tabla}"))
+                        registros_eliminados = result.rowcount
+                        registros_eliminados_total += registros_eliminados
+                        print(f"    ✅ {registros_eliminados} registros eliminados de {tabla}")
+                    else:
+                        print(f"    ℹ️  {tabla} ya estaba vacía")
+                except Exception as e:
+                    print(f"    ❌ Error eliminando {tabla}: {e}")
+                    import traceback
+                    print(f"    📋 Traceback: {traceback.format_exc()}")
         
         # Opcional: Limpiar visitas (comentado por defecto para mantener analytics)
         if 'visitas' in tablas_existentes:
-            print("  - Visitas: Manteniendo para analytics (comentar línea en script para limpiar)")
-            # Descomentar para limpiar también visitas:
-            # Visita.query.delete()
+            print("  - Visitas: Manteniendo para analytics (no se eliminan)")
+        
+        # Reactivar verificaciones de foreign keys
+        try:
+            db.session.execute(text("SET session_replication_role = 'origin'"))
+            print("  ✅ Verificaciones de foreign keys reactivadas")
+        except Exception as e:
+            print(f"  ⚠️ No se pudieron reactivar foreign keys: {e}")
+        
+        print(f"\n📊 Total de registros eliminados: {registros_eliminados_total}")
         
         # HACER COMMIT de todos los cambios
         print("\n💾 Guardando cambios en la base de datos...")
@@ -130,66 +82,49 @@ def limpiar_base_datos():
             print("✅ Commit realizado exitosamente")
         except Exception as e:
             print(f"❌ Error al hacer commit: {e}")
+            import traceback
+            print(f"📋 Traceback: {traceback.format_exc()}")
             db.session.rollback()
             raise
-        
-        # HACER COMMIT explícito antes de verificar
-        try:
-            db.session.commit()
-            print("✅ Commit final realizado")
-        except Exception as e:
-            print(f"⚠️ Error en commit final: {e}")
-            db.session.rollback()
         
         # Verificar que las tablas estén vacías DESPUÉS del commit
         print("\n🔍 Verificando limpieza (después de commit)...")
         errores_verificacion = []
-        if 'negocios' in tablas_existentes:
-            try:
-                count_negocios = db.session.execute(text("SELECT COUNT(*) FROM negocios")).scalar()
-                print(f"  - Negocios restantes: {count_negocios}")
-                if count_negocios > 0:
-                    errores_verificacion.append(f"Negocios: {count_negocios} restantes")
-            except Exception as e:
-                print(f"  - ⚠️ Error verificando negocios: {e}")
+        tablas_principales = ['usuarios', 'noticias', 'vehiculos', 'agencias', 'negocios']
         
-        if 'usuarios' in tablas_existentes:
-            try:
-                count_usuarios = db.session.execute(text("SELECT COUNT(*) FROM usuarios")).scalar()
-                print(f"  - Usuarios restantes: {count_usuarios}")
-                if count_usuarios > 0:
-                    errores_verificacion.append(f"Usuarios: {count_usuarios} restantes")
-            except Exception as e:
-                print(f"  - ⚠️ Error verificando usuarios: {e}")
-        
-        if 'vehiculos' in tablas_existentes:
-            try:
-                count_vehiculos = db.session.execute(text("SELECT COUNT(*) FROM vehiculos")).scalar()
-                print(f"  - Vehículos restantes: {count_vehiculos}")
-                if count_vehiculos > 0:
-                    errores_verificacion.append(f"Vehículos: {count_vehiculos} restantes")
-            except Exception as e:
-                print(f"  - ⚠️ Error verificando vehículos: {e}")
-        
-        if 'noticias' in tablas_existentes:
-            try:
-                count_noticias = db.session.execute(text("SELECT COUNT(*) FROM noticias")).scalar()
-                print(f"  - Noticias restantes: {count_noticias}")
-                if count_noticias > 0:
-                    errores_verificacion.append(f"Noticias: {count_noticias} restantes")
-            except Exception as e:
-                print(f"  - ⚠️ Error verificando noticias: {e}")
+        for tabla in tablas_principales:
+            if tabla in tablas_existentes:
+                try:
+                    count = db.session.execute(text(f"SELECT COUNT(*) FROM {tabla}")).scalar()
+                    print(f"  - {tabla}: {count} registros restantes")
+                    if count > 0:
+                        errores_verificacion.append(f"{tabla}: {count}")
+                except Exception as e:
+                    print(f"  - ⚠️ Error verificando {tabla}: {e}")
         
         if errores_verificacion:
             print(f"\n⚠️ ADVERTENCIA: Quedaron datos sin eliminar: {', '.join(errores_verificacion)}")
-            print("   Esto puede deberse a transacciones pendientes. Intentando commit adicional...")
+            print("   Reintentando eliminación directa...")
+            for tabla_info in errores_verificacion:
+                tabla = tabla_info.split(":")[0]
+                try:
+                    db.session.execute(text(f"TRUNCATE TABLE {tabla} CASCADE"))
+                    print(f"   ✅ {tabla} truncada con CASCADE")
+                except Exception as e:
+                    try:
+                        db.session.execute(text(f"DELETE FROM {tabla}"))
+                        print(f"   ✅ {tabla} limpiada con DELETE")
+                    except Exception as e2:
+                        print(f"   ❌ Error limpiando {tabla}: {e2}")
+            
             try:
                 db.session.commit()
-                print("   ✅ Commit adicional realizado")
+                print("   ✅ Commit final realizado después de limpieza adicional")
             except Exception as e:
-                print(f"   ❌ Error en commit adicional: {e}")
+                print(f"   ❌ Error en commit final: {e}")
         
         print("\n✅ Limpieza completada!")
+        print(f"📊 Total de registros eliminados: {registros_eliminados_total}")
         print("📝 Nota: Las credenciales de admin NO se perdieron (están en variables de entorno)")
         
         return True
