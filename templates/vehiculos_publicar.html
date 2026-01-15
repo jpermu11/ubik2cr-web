@@ -540,9 +540,15 @@
 </div>
 
 <!-- FOOTER -->
-<footer class="bg-dark text-white py-4 mt-5">
+<footer class="bg-dark text-white py-4 mt-5" style="position: relative;">
     <div class="container text-center">
         <p class="mb-0">&copy; 2024 Ubik2CR. Todos los derechos reservados.</p>
+    </div>
+    <!-- Enlace discreto al panel de administrador -->
+    <div style="position: absolute; bottom: 5px; right: 10px;">
+        <a href="/login" style="font-size: 10px; color: rgba(255,255,255,0.2); text-decoration: none; opacity: 0.3; transition: opacity 0.3s;" 
+           onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='0.3'"
+           title="Panel de Administrador">Admin</a>
     </div>
 </footer>
 
