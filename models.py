@@ -21,14 +21,14 @@ class Usuario(db.Model):
     nombre = db.Column(db.String(100))
     rol = db.Column(db.String(20), default="VENDEDOR", index=True)  # ADMIN, VENDEDOR, AGENCIA, VENDEDOR_AGENCIA
     
-    # Campos para sistema de vehículos
+    # Campos para sistema de vehículos (TEMPORALMENTE DESHABILITADO)
     tipo_usuario = db.Column(db.String(20), default="individual", index=True)  # individual, agencia
-    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Si es vendedor de agencia
+    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # TEMPORALMENTE COMENTADO
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     negocios = db.relationship("Negocio", backref="owner", lazy=True)
-    vehiculos = db.relationship("Vehiculo", foreign_keys="Vehiculo.owner_id", backref="vendedor", lazy=True)
+    # vehiculos = db.relationship("Vehiculo", foreign_keys="Vehiculo.owner_id", backref="vendedor", lazy=True)  # TEMPORALMENTE COMENTADO
 
 # --- MODELO NEGOCIO ---
 class Negocio(db.Model):
@@ -85,7 +85,7 @@ class Noticia(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     # Ahora las noticias son de agencias (no de negocios)
-    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Noticia de una agencia
+    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # TEMPORALMENTE COMENTADO
     # Mantener negocio_id por compatibilidad durante migración, pero será NULL
     negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=True, index=True)  # DEPRECATED - mantener por compatibilidad
     
@@ -115,7 +115,7 @@ class Resena(db.Model):
     
     # Reseña para vendedor individual o agencia (NO para vehículos)
     vendedor_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True, index=True)  # Vendedor individual
-    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Agencia
+    # agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # TEMPORALMENTE COMENTADO
     
     # Mantener negocio_id por compatibilidad durante migración
     negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=True, index=True)  # DEPRECATED
@@ -271,8 +271,10 @@ class Agencia(db.Model):
         db.Index("ix_agencias_estado", "estado"),
         db.Index("ix_agencias_provincia", "provincia"),
     )
+"""
 
-# --- MODELO VEHICULO ---
+# --- MODELO VEHICULO --- (TEMPORALMENTE DESHABILITADO)
+"""
 class Vehiculo(db.Model):
     __tablename__ = "vehiculos"
     
@@ -328,8 +330,10 @@ class Vehiculo(db.Model):
         db.Index("ix_vehiculos_tipo_estado", "tipo_vehiculo", "estado"),
         db.Index("ix_vehiculos_provincia_estado", "provincia", "estado"),
     )
+"""
 
-# --- MODELO IMAGEN DE VEHICULO ---
+# --- MODELO IMAGEN DE VEHICULO --- (TEMPORALMENTE DESHABILITADO)
+"""
 class ImagenVehiculo(db.Model):
     __tablename__ = "imagenes_vehiculo"
     
@@ -341,11 +345,14 @@ class ImagenVehiculo(db.Model):
     
     # Relación
     vehiculo = db.relationship("Vehiculo", backref="imagenes")
+"""
 
-# --- TABLA FAVORITOS VEHICULOS (relación muchos-a-muchos) ---
+# --- TABLA FAVORITOS VEHICULOS (relación muchos-a-muchos) --- (TEMPORALMENTE DESHABILITADO)
+"""
 favoritos_vehiculos = db.Table(
     'favoritos_vehiculos',
     db.Column('usuario_id', db.Integer, db.ForeignKey('usuarios.id'), primary_key=True),
     db.Column('vehiculo_id', db.Integer, db.ForeignKey('vehiculos.id'), primary_key=True),
     db.Column('created_at', db.DateTime, default=datetime.utcnow)
 )
+"""
