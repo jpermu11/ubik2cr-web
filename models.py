@@ -79,20 +79,25 @@ class Negocio(db.Model):
         db.Index("ix_negocios_provincia_canton_distrito", "provincia", "canton", "distrito"),
     )
 
-# --- MODELO NOTICIA ---
+# --- MODELO NOTICIA (Adaptado para Agencias de Autos) ---
 class Noticia(db.Model):
     __tablename__ = "noticias"
 
     id = db.Column(db.Integer, primary_key=True)
-    negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=True, index=True)  # Opcional: noticias pueden ser de un negocio o generales
+    # Ahora las noticias son de agencias (no de negocios)
+    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Noticia de una agencia
+    # Mantener negocio_id por compatibilidad durante migración, pero será NULL
+    negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=True, index=True)  # DEPRECATED - mantener por compatibilidad
+    
     titulo = db.Column(db.String(200), nullable=False, index=True)
     contenido = db.Column(db.Text, nullable=False)
     imagen_url = db.Column(db.String(500))
     fecha = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    fecha_caducidad = db.Column(db.DateTime, nullable=True, index=True)  # Fecha de desaparición automática
+    fecha_caducidad = db.Column(db.DateTime, nullable=False, index=True)  # OBLIGATORIA - Fecha de desaparición automática
     
-    # Relación
-    negocio = db.relationship("Negocio", backref="noticias")
+    # Relaciones
+    # negocio = db.relationship("Negocio", backref="noticias")  # DEPRECATED
+    # agencia = db.relationship("Agencia", backref="noticias")  # Se agregará cuando se descomente Agencia
 
 # --- MODELO FAVORITOS (relación muchos-a-muchos) ---
 favoritos = db.Table(
@@ -102,13 +107,20 @@ favoritos = db.Table(
     db.Column('created_at', db.DateTime, default=datetime.utcnow)
 )
 
-# --- MODELO RESEÑA ---
+# --- MODELO RESEÑA (Adaptado para Vendedores/Agencias) ---
 class Resena(db.Model):
     __tablename__ = "resenas"
 
     id = db.Column(db.Integer, primary_key=True)
-    negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=False, index=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True, index=True)
+    
+    # Reseña para vendedor individual o agencia (NO para vehículos)
+    vendedor_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True, index=True)  # Vendedor individual
+    agencia_id = db.Column(db.Integer, db.ForeignKey("agencias.id"), nullable=True, index=True)  # Agencia
+    
+    # Mantener negocio_id por compatibilidad durante migración
+    negocio_id = db.Column(db.Integer, db.ForeignKey("negocios.id"), nullable=True, index=True)  # DEPRECATED
+    
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True, index=True)  # Usuario que hace la reseña
     
     nombre_usuario = db.Column(db.String(100))  # Para reseñas anónimas
     email_usuario = db.Column(db.String(180))  # Para reseñas anónimas
@@ -121,8 +133,10 @@ class Resena(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relaciones
-    negocio = db.relationship("Negocio", backref="resenas")
-    usuario = db.relationship("Usuario", backref="resenas")
+    # negocio = db.relationship("Negocio", backref="resenas")  # DEPRECATED
+    vendedor = db.relationship("Usuario", foreign_keys=[vendedor_id], backref="resenas_recibidas")
+    agencia = db.relationship("Agencia", backref="resenas")  # Se agregará cuando se descomente Agencia
+    usuario = db.relationship("Usuario", foreign_keys=[usuario_id], backref="resenas_enviadas")
 
 # --- MODELO IMAGEN DE NEGOCIO ---
 class ImagenNegocio(db.Model):

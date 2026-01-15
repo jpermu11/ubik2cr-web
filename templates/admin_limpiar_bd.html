@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Limpiar Base de Datos | Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --brand-blue: #0b4fa3; --brand-green: #38b24d; }
+        body { background-color: #f4f7f6; }
+        .navbar { 
+            background-color: white !important; 
+            border-bottom: 3px solid var(--brand-blue); 
+            padding: 10px 0; 
+        }
+        .warning-box {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+            border: 3px solid #ffc107;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        .stats-box {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/admin">
+            <img src="/static/uploads/logo.png" alt="Admin" style="height: 70px;">
+            <span class="ms-2 fw-bold">| Limpiar Base de Datos</span>
+        </a>
+        <div class="ms-auto">
+            <a href="/admin" class="btn btn-outline-primary btn-sm">Volver al Panel</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="warning-box text-center">
+                <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #ffc107; margin-bottom: 20px;"></i>
+                <h2 class="fw-bold mb-3" style="color: #856404;">⚠️ ADVERTENCIA: Operación Irreversible</h2>
+                <p class="lead mb-4">
+                    Esta acción eliminará <strong>TODOS</strong> los datos de la base de datos excepto la estructura de tablas.
+                </p>
+                <div class="alert alert-info">
+                    <strong>✅ Las credenciales de admin NO se perderán</strong> (están en variables de entorno)
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-database me-2"></i>Datos que se Eliminarán</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stats-box">
+                                <h5><i class="fas fa-store text-primary me-2"></i>Negocios</h5>
+                                <p class="fs-3 fw-bold text-primary mb-0">{{ total_negocios }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stats-box">
+                                <h5><i class="fas fa-users text-info me-2"></i>Usuarios</h5>
+                                <p class="fs-3 fw-bold text-info mb-0">{{ total_usuarios }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stats-box">
+                                <h5><i class="fas fa-newspaper text-success me-2"></i>Noticias</h5>
+                                <p class="fs-3 fw-bold text-success mb-0">{{ total_noticias }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stats-box">
+                                <h5><i class="fas fa-tags text-warning me-2"></i>Ofertas</h5>
+                                <p class="fs-3 fw-bold text-warning mb-0">{{ total_ofertas }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stats-box">
+                                <h5><i class="fas fa-envelope text-danger me-2"></i>Mensajes</h5>
+                                <p class="fs-3 fw-bold text-danger mb-0">{{ total_mensajes }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stats-box">
+                                <h5><i class="fas fa-star text-warning me-2"></i>Reseñas</h5>
+                                <p class="fs-3 fw-bold text-warning mb-0">{{ total_resenas }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" class="mt-4" onsubmit="return confirmarLimpieza()">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-3"><i class="fas fa-keyboard me-2"></i>Confirmación Requerida</h5>
+                        <p>Para confirmar, escribí <strong>"limpiar"</strong> en el siguiente campo:</p>
+                        <div class="mb-3">
+                            <input type="text" 
+                                   name="confirmar" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="Escribí 'limpiar' para confirmar"
+                                   required
+                                   autocomplete="off">
+                        </div>
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-trash-alt me-2"></i>Limpiar Base de Datos
+                            </button>
+                            <a href="/admin" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarLimpieza() {
+    const confirmar = document.querySelector('input[name="confirmar"]').value.toLowerCase();
+    if (confirmar !== 'limpiar') {
+        alert('Debés escribir exactamente "limpiar" para confirmar.');
+        return false;
+    }
+    return confirm('¿Estás SEGURO que querés limpiar TODA la base de datos? Esta acción NO se puede deshacer.');
+}
+</script>
+</body>
+</html>

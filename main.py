@@ -1210,16 +1210,22 @@ def enviar_mensaje(negocio_id):
             mensajes_url = f"{base_url}/panel/mensajes"
             negocio_url = f"{base_url}/negocio/{negocio.id}"
             
+            # Mensaje adaptado para vehículos (cuando se implemente)
             text_body = (
-                f"Hola {owner.nombre or 'dueño del negocio'},\n\n"
-                f"Has recibido un nuevo mensaje para tu negocio '{negocio.nombre}'.\n\n"
+                f"Hola {owner.nombre or 'vendedor'},\n\n"
+                f"Has recibido un nuevo contacto sobre tu publicación.\n\n"
                 f"Remitente: {nombre} ({email})\n"
                 f"Asunto: {asunto}\n\n"
                 f"Mensaje:\n{mensaje_texto}\n\n"
-                f"Podés ver y responder el mensaje desde tu panel:\n{mensajes_url}\n\n"
-                f"Negocio: {negocio_url}\n\n"
-                "El equipo de Ubik2CR"
             )
+            
+            # Si el método es WhatsApp, agregar link
+            if metodo_contacto == "whatsapp" and negocio.whatsapp:
+                whatsapp_link = f"https://wa.me/{negocio.whatsapp.replace('+', '').replace('-', '').replace(' ', '')}?text=Hola, te contacto desde Ubik2CR sobre: {asunto}"
+                text_body += f"Contactar por WhatsApp: {whatsapp_link}\n\n"
+            
+            text_body += f"Podés responder directamente a: {email}\n\n"
+            text_body += "El equipo de Ubik2CR"
             
             html_body = f"""
             <div style="font-family:Arial,sans-serif;background:#f5f7fa;padding:24px">
@@ -1264,11 +1270,16 @@ def enviar_mensaje(negocio_id):
             </div>
             """
             
-            send_email(owner.email, f"Nuevo mensaje para '{negocio.nombre}' en Ubik2CR", text_body, html_body)
+            send_email(owner.email, f"Nuevo contacto desde Ubik2CR: {asunto}", text_body, html_body)
         except Exception as e:
-            print(f"[EMAIL ERROR] No se pudo enviar notificación de mensaje a {owner.email}: {e}")
+            print(f"[EMAIL ERROR] No se pudo enviar notificación a {owner.email}: {e}")
     
-    flash("¡Mensaje enviado exitosamente! El dueño del negocio recibirá una notificación por email.")
+    # Si es WhatsApp, también enviar link directo
+    if metodo_contacto == "whatsapp" and negocio.whatsapp:
+        flash(f"¡Contacto enviado! Podés contactar directamente por WhatsApp.")
+    else:
+        flash("¡Mensaje enviado exitosamente! El vendedor recibirá una notificación por email.")
+    
     return redirect(f"/negocio/{negocio_id}")
 
 
@@ -2603,6 +2614,49 @@ def importar_lugares_osm(provincia, canton, tipos_amenity=None):
         print(f"[OSM IMPORT ERROR] Error inesperado: {e}")
         db.session.rollback()
         return {"error": f"Error inesperado: {str(e)}"}
+
+@app.route("/admin/limpiar-bd", methods=["GET", "POST"])
+def limpiar_base_datos():
+    """Panel para limpiar la base de datos (solo admin)"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    if request.method == "POST":
+        confirmacion = request.form.get("confirmar", "").strip().lower()
+        
+        if confirmacion != "limpiar":
+            flash("Debés escribir 'limpiar' para confirmar.")
+            return redirect("/admin/limpiar-bd")
+        
+        # Importar y ejecutar script de limpieza
+        try:
+            from scripts.limpiar_base_datos import limpiar_base_datos
+            resultado = limpiar_base_datos()
+            
+            if resultado:
+                flash("✅ Base de datos limpiada exitosamente. Las credenciales de admin NO se perdieron (están en variables de entorno).")
+            else:
+                flash("❌ Error al limpiar la base de datos. Revisá los logs.")
+        except Exception as e:
+            flash(f"❌ Error: {str(e)}")
+        
+        return redirect("/admin")
+    
+    # Mostrar información antes de limpiar
+    total_negocios = Negocio.query.count()
+    total_usuarios = Usuario.query.count()
+    total_noticias = Noticia.query.count()
+    total_ofertas = Oferta.query.count()
+    total_mensajes = Mensaje.query.count()
+    total_resenas = Resena.query.count()
+    
+    return render_template("admin_limpiar_bd.html", 
+                         total_negocios=total_negocios,
+                         total_usuarios=total_usuarios,
+                         total_noticias=total_noticias,
+                         total_ofertas=total_ofertas,
+                         total_mensajes=total_mensajes,
+                         total_resenas=total_resenas)
 
 @app.route("/admin/importar-osm", methods=["GET", "POST"])
 def importar_osm():
