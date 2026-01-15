@@ -3331,15 +3331,20 @@ def limpiar_base_datos():
     
     # Mostrar información antes de limpiar
     total_usuarios = Usuario.query.count()
+    usuarios_lista = Usuario.query.order_by(Usuario.created_at.desc()).all()
+    
     total_noticias = Noticia.query.count()
+    noticias_lista = Noticia.query.order_by(Noticia.fecha.desc()).all()
     
     # Estadísticas de vehículos (si existe)
     total_vehiculos = 0
     total_agencias = 0
+    vehiculos_lista = []
     if VEHICULOS_AVAILABLE:
         if Vehiculo is not None:
             try:
                 total_vehiculos = Vehiculo.query.count()
+                vehiculos_lista = Vehiculo.query.order_by(Vehiculo.created_at.desc()).limit(10).all()
             except:
                 pass
         if Agencia is not None:
@@ -3365,7 +3370,10 @@ def limpiar_base_datos():
                          total_vehiculos=total_vehiculos,
                          total_agencias=total_agencias,
                          total_usuarios=total_usuarios,
+                         usuarios_lista=usuarios_lista,
                          total_noticias=total_noticias,
+                         noticias_lista=noticias_lista,
+                         vehiculos_lista=vehiculos_lista,
                          total_negocios=total_negocios,
                          total_ofertas=total_ofertas,
                          total_mensajes=total_mensajes,
