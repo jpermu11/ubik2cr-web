@@ -273,7 +273,6 @@ class Agencia(db.Model):
         db.Index("ix_agencias_provincia", "provincia"),
     )
 """
-"""
 
 # --- MODELO VEHICULO --- (TEMPORALMENTE DESHABILITADO)
 """
