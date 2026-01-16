@@ -5,17 +5,203 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Crear cuenta | Ubik2CR</title>
   <link rel="stylesheet" href="/static/css/styles.css">
+  <!-- Google Fonts - Tipografía Moderna -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    .wrap{max-width:420px;margin:0 auto;padding:18px}
-    .card{border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;background:rgba(255,255,255,.03)}
-    h1{margin:0 0 6px 0;font-size:20px}
-    .muted{opacity:.75;font-size:13px;margin-bottom:12px}
-    label{display:block;margin:10px 0 6px}
-    input{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.15);color:inherit}
-    .btn{display:block;width:100%;margin-top:12px;padding:10px 14px;border-radius:10px;text-decoration:none;border:1px solid rgba(255,255,255,.18);text-align:center}
-    .btn-primary{background:#1f6feb;color:#fff;border-color:#1f6feb}
-    .links{display:flex;justify-content:space-between;margin-top:12px;font-size:13px;opacity:.85}
-    .flash{margin:10px 0;padding:10px;border-radius:10px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.30)}
+    * {
+      font-family: 'Montserrat', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #19539D 0%, #2a6bb5 50%, #69D41B 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .wrap {
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0;
+    }
+    
+    .card {
+      border: none;
+      border-radius: 24px;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    h1 {
+      margin: 0 0 12px 0;
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: #19539D;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    
+    .muted {
+      font-family: 'Montserrat', sans-serif;
+      opacity: 0.75;
+      font-size: 0.95rem;
+      margin-bottom: 28px;
+      color: #555;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+    
+    label {
+      display: block;
+      margin: 20px 0 8px 0;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #333;
+      letter-spacing: 0.01em;
+    }
+    
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 2px solid #e0e0e0;
+      background: #fff;
+      color: #333;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1rem;
+      font-weight: 400;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #19539D;
+      box-shadow: 0 0 0 4px rgba(25, 83, 157, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    input::placeholder {
+      color: #999;
+      font-weight: 400;
+    }
+    
+    .btn {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      text-decoration: none;
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #19539D 0%, #69D41B 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(25, 83, 157, 0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(25, 83, 157, 0.4);
+      color: #fff;
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    .links {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+      font-size: 0.9rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    .links a {
+      color: #19539D;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #69D41B;
+      transition: width 0.3s ease;
+    }
+    
+    .links a:hover {
+      color: #69D41B;
+    }
+    
+    .links a:hover::after {
+      width: 100%;
+    }
+    
+    .flash {
+      margin: 0 0 20px 0;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 2px solid rgba(245, 158, 11, 0.3);
+      color: #92400e;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+    
+    @media (max-width: 480px) {
+      .card {
+        padding: 28px 24px;
+        border-radius: 20px;
+      }
+      h1 {
+        font-size: 1.75rem;
+      }
+      .muted {
+        font-size: 0.9rem;
+      }
+    }
   </style>
 </head>
 <body>
