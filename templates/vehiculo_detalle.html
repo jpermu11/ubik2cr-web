@@ -83,22 +83,36 @@
             width: 30px;
         }
         
+        .contact-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+        
         .btn-contactar {
             background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
             color: white;
             border: none;
             padding: 15px 30px;
             border-radius: 12px;
-            font-weight: 800;
-            font-size: 1.1rem;
+            font-weight: 700;
+            font-size: 1rem;
             width: 100%;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.3s;
+            box-sizing: border-box;
         }
         
         .btn-contactar:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(25, 83, 157, 0.3);
             color: white;
+            text-decoration: none;
         }
         
         .btn-whatsapp {
@@ -107,15 +121,24 @@
             border: none;
             padding: 15px 30px;
             border-radius: 12px;
-            font-weight: 800;
-            font-size: 1.1rem;
+            font-weight: 700;
+            font-size: 1rem;
             width: 100%;
-            margin-top: 10px;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-sizing: border-box;
         }
         
         .btn-whatsapp:hover {
             background: #1ebc57;
             color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.3);
+            text-decoration: none;
         }
         
         .badge-vip {
@@ -293,23 +316,25 @@
             <div class="info-card sticky-top" style="top: 20px;">
                 <h4 class="mb-4"><i class="fas fa-phone me-2"></i>Contactar Vendedor</h4>
                 
-                {% if vehiculo.whatsapp %}
-                <a href="https://wa.me/{{ vehiculo.whatsapp.replace('+', '').replace(' ', '').replace('-', '') }}" 
-                   target="_blank" 
-                   class="btn-whatsapp">
-                    <i class="fab fa-whatsapp me-2"></i>Contactar por WhatsApp
-                </a>
-                {% endif %}
-                
-                {% if vehiculo.telefono %}
-                <a href="tel:{{ vehiculo.telefono }}" class="btn-contactar">
-                    <i class="fas fa-phone me-2"></i>Llamar: {{ vehiculo.telefono }}
-                </a>
-                {% else %}
-                <button type="button" class="btn-contactar" onclick="alert('El vendedor no ha proporcionado teléfono. Usá WhatsApp si está disponible.')">
-                    <i class="fas fa-envelope me-2"></i>Contactar Vendedor
-                </button>
-                {% endif %}
+                <div class="contact-buttons">
+                    {% if vehiculo.whatsapp %}
+                    <a href="https://wa.me/{{ vehiculo.whatsapp.replace('+', '').replace(' ', '').replace('-', '') }}" 
+                       target="_blank" 
+                       class="btn-whatsapp">
+                        <i class="fab fa-whatsapp me-2"></i>Contactar por WhatsApp
+                    </a>
+                    {% endif %}
+                    
+                    {% if vehiculo.telefono %}
+                    <a href="tel:{{ vehiculo.telefono }}" class="btn-contactar">
+                        <i class="fas fa-phone me-2"></i>Llamar: {{ vehiculo.telefono }}
+                    </a>
+                    {% else %}
+                    <button type="button" class="btn-contactar" onclick="alert('El vendedor no ha proporcionado teléfono. Usá WhatsApp si está disponible.')">
+                        <i class="fas fa-envelope me-2"></i>Contactar Vendedor
+                    </button>
+                    {% endif %}
+                </div>
                 
                 <hr class="my-4">
                 
