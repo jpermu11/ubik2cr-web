@@ -455,11 +455,13 @@ else:
 @app.before_request
 def check_maintenance_mode():
     """Verificar si la aplicación está en modo mantenimiento - SE EJECUTA PRIMERO"""
-    if not MAINTENANCE_MODE:
-        return None
-    
-    # Rutas permitidas durante mantenimiento
-    path = request.path
+    # IMPORTANTE: Manejar errores para evitar bucles de redirección
+    try:
+        if not MAINTENANCE_MODE:
+            return None
+        
+        # Rutas permitidas durante mantenimiento
+        path = request.path if hasattr(request, 'path') else '/'
     allowed_paths = [
         '/', '/static', '/favicon.ico', '/health', '/health/db',
         '/login', '/logout', '/admin', '/admin/', '/api/',
@@ -471,13 +473,13 @@ def check_maintenance_mode():
     if any(path.startswith(allowed) for allowed in allowed_paths):
         return None
 
-    # Si el usuario es admin o está logueado, permitir acceso
-    if admin_logged_in() or owner_logged_in():
-        return None
-    
-    # Para todos los demás, mostrar página de mantenimiento
-    from flask import render_template_string
-    return render_template_string("""
+        # Si el usuario es admin o está logueado, permitir acceso
+        if admin_logged_in() or owner_logged_in():
+            return None
+        
+        # Para todos los demás, mostrar página de mantenimiento
+        from flask import render_template_string
+        return render_template_string("""
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -558,9 +560,13 @@ def check_maintenance_mode():
             Si sos administrador, podés <a href="/login" class="btn-admin">iniciar sesión aquí</a>
         </p>
     </div>
-</body>
+    </body>
 </html>
     """), 503
+    except Exception as e:
+        # Si hay error en modo mantenimiento, permitir acceso normal para evitar bucles
+        print(f"[ERROR check_maintenance_mode] {e}")
+        return None
 
 # =====================================================
 # ANALYTICS - REGISTRAR VISITAS
@@ -568,43 +574,49 @@ def check_maintenance_mode():
 @app.before_request
 def registrar_visita():
     """Registrar visitas automáticamente (excepto admin y rutas excluidas)"""
-    import hashlib
-    
-    # Rutas excluidas (no registrar)
-    path = request.path
-    excluded_paths = [
-        '/health', '/health/db', '/static', '/favicon.ico',
-        '/admin', '/login', '/logout', '/panel', '/owner',
-        '/api/', '/_internal'
-    ]
-    
-    # Si es ruta excluida o admin está logueado, no registrar
-    if any(path.startswith(excluded) for excluded in excluded_paths):
-        return None
-    
-    # Obtener IP (hashear para privacidad)
-    ip = request.remote_addr or 'unknown'
-    ip_hash = hashlib.sha256(ip.encode()).hexdigest()
-    
-    # Obtener datos
-    url = request.path
-    user_agent = request.headers.get('User-Agent', '')[:200] if request.headers.get('User-Agent') else None
-    referrer = request.headers.get('Referer', '')[:500] if request.headers.get('Referer') else None
-    
-    # Registrar en la base de datos (en background para no bloquear)
+    # IMPORTANTE: Siempre retornar None al final para no interrumpir el request
     try:
-        visita = Visita(
-            ip_hash=ip_hash,
-            url=url,
-            user_agent=user_agent,
-            referrer=referrer,
-            created_at=datetime.utcnow()
-        )
-        db.session.add(visita)
-        db.session.commit()
+        import hashlib
+        
+        # Rutas excluidas (no registrar)
+        path = request.path if hasattr(request, 'path') else ''
+        excluded_paths = [
+            '/health', '/health/db', '/static', '/favicon.ico',
+            '/admin', '/login', '/logout', '/panel', '/owner',
+            '/api/', '/_internal'
+        ]
+        
+        # Si es ruta excluida o admin está logueado, no registrar
+        if any(path.startswith(excluded) for excluded in excluded_paths):
+            return None
+        
+        # Obtener IP (hashear para privacidad)
+        ip = request.remote_addr if hasattr(request, 'remote_addr') else 'unknown'
+        ip_hash = hashlib.sha256(ip.encode()).hexdigest()
+        
+        # Obtener datos
+        url = request.path if hasattr(request, 'path') else ''
+        user_agent = request.headers.get('User-Agent', '')[:200] if request.headers.get('User-Agent') else None
+        referrer = request.headers.get('Referer', '')[:500] if request.headers.get('Referer') else None
+        
+        # Registrar en la base de datos (en background para no bloquear)
+        try:
+            visita = Visita(
+                ip_hash=ip_hash,
+                url=url,
+                user_agent=user_agent,
+                referrer=referrer,
+                created_at=datetime.utcnow()
+            )
+            db.session.add(visita)
+            db.session.commit()
+        except Exception as e:
+            # Si falla, no afectar la experiencia del usuario
+            db.session.rollback()
+            pass
     except Exception as e:
-        # Si falla, no afectar la experiencia del usuario
-        db.session.rollback()
+        # Si hay cualquier error, no interrumpir el request
+        print(f"[ERROR registrar_visita] {e}")
         pass
     
     return None
