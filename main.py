@@ -1802,8 +1802,9 @@ def owner_registro():
                 password=pwd_hash, 
                 nombre=nombre if nombre else None,
                 rol="VENDEDOR",  # Cambiado de "OWNER" a "VENDEDOR" para consistencia
-                tipo_usuario="individual",
-                agencia_id=None  # Sin agencia por defecto
+                tipo_usuario="individual"
+                # Nota: agencia_id no se puede pasar aquí porque el campo está comentado en el modelo
+                # Se agregará después de crear la tabla agencias via migraciones
             )
             db.session.add(nuevo)
             db.session.commit()
