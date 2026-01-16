@@ -705,9 +705,15 @@ def inicio():
     
     PER_PAGE = 24
     
-    # Query base: solo vehículos aprobados (con manejo de errores)
+    # Query base: solo vehículos aprobados y no vencidos (con manejo de errores)
     try:
-        query = Vehiculo.query.filter_by(estado="aprobado")
+        ahora = datetime.utcnow()
+        query = Vehiculo.query.filter_by(estado="aprobado").filter(
+            or_(
+                Vehiculo.fecha_vencimiento.is_(None),  # Si no tiene fecha_vencimiento (vehículos antiguos)
+                Vehiculo.fecha_vencimiento > ahora  # O si aún no ha vencido
+            )
+        )
     except Exception as e:
         print(f"[ERROR] No se puede consultar vehículos: {e}")
         # Retornar página vacía
@@ -833,9 +839,15 @@ def inicio():
     
     vehiculos = query.offset((page - 1) * PER_PAGE).limit(PER_PAGE).all()
     
-    # Obtener marcas únicas para el dropdown
+    # Obtener marcas únicas para el dropdown (solo vehículos no vencidos)
     try:
-        marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").distinct().order_by(Vehiculo.marca).all()
+        ahora = datetime.utcnow()
+        marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").filter(
+            or_(
+                Vehiculo.fecha_vencimiento.is_(None),
+                Vehiculo.fecha_vencimiento > ahora
+            )
+        ).distinct().order_by(Vehiculo.marca).all()
         marcas = [m[0] for m in marcas_unicas]
     except Exception as e:
         print(f"[ERROR] No se pueden obtener marcas: {e}")
@@ -1176,9 +1188,15 @@ def api_modelos_vehiculos():
         return {"modelos": []}
     
     try:
+        ahora = datetime.utcnow()
         modelos_unicos = db.session.query(Vehiculo.modelo).filter_by(
             marca=marca,
             estado="aprobado"
+        ).filter(
+            or_(
+                Vehiculo.fecha_vencimiento.is_(None),
+                Vehiculo.fecha_vencimiento > ahora
+            )
         ).distinct().order_by(Vehiculo.modelo).all()
         modelos = [m[0] for m in modelos_unicos]
         return {"modelos": modelos}
@@ -2334,6 +2352,9 @@ def publicar_vehiculo():
         imagenes_urls = save_multiple_uploads("imagenes", max_files=10)
         imagen_url = imagenes_urls[0] if imagenes_urls else "/static/uploads/logo.png"
         
+        # Calcular fecha de vencimiento (3 meses desde ahora)
+        fecha_vencimiento = datetime.utcnow() + timedelta(days=90)  # 3 meses = 90 días
+        
         # Crear vehículo
         nuevo_vehiculo = Vehiculo(
             owner_id=session["user_id"],
@@ -2356,7 +2377,9 @@ def publicar_vehiculo():
             imagen_url=imagen_url,
             estado="pendiente",
             es_vip=False,
-            destacado=False
+            destacado=False,
+            fecha_vencimiento=fecha_vencimiento,  # Vence en 3 meses
+            notificacion_vencimiento_enviada=False
         )
         
         db.session.add(nuevo_vehiculo)
@@ -2403,8 +2426,11 @@ def detalle_vehiculo(vehiculo_id):
     try:
         vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
         
-        # Solo mostrar vehículos aprobados (o si es el dueño/admin)
-        if vehiculo.estado != "aprobado":
+        # Solo mostrar vehículos aprobados y no vencidos (o si es el dueño/admin)
+        ahora = datetime.utcnow()
+        vehiculo_vencido = vehiculo.fecha_vencimiento and vehiculo.fecha_vencimiento <= ahora
+        
+        if vehiculo.estado != "aprobado" or vehiculo_vencido:
             if "user_id" not in session or (vehiculo.owner_id != session["user_id"] and not admin_logged_in()):
                 flash("Este vehículo no está disponible.")
                 return redirect("/")
@@ -3624,6 +3650,190 @@ def reset_password(token):
         return redirect("/owner/login")
 
     return render_template("reset_password.html", token=token, email=email)
+
+
+# =====================================================
+# SISTEMA DE VENCIMIENTO AUTOMÁTICO DE VEHÍCULOS
+# =====================================================
+
+def verificar_y_notificar_vencimientos():
+    """Verificar vehículos próximos a vencer (1 semana antes) y enviar email de advertencia"""
+    if not VEHICULOS_AVAILABLE or Vehiculo is None:
+        return
+    
+    try:
+        ahora = datetime.utcnow()
+        una_semana_despues = ahora + timedelta(days=7)
+        
+        # Buscar vehículos que vencen en los próximos 7 días y aún no se les envió notificación
+        vehiculos_proximos_vencer = Vehiculo.query.filter(
+            Vehiculo.estado == "aprobado",
+            Vehiculo.fecha_vencimiento.isnot(None),
+            Vehiculo.fecha_vencimiento <= una_semana_despues,
+            Vehiculo.fecha_vencimiento > ahora,
+            Vehiculo.notificacion_vencimiento_enviada == False
+        ).all()
+        
+        for vehiculo in vehiculos_proximos_vencer:
+            try:
+                # Obtener el vendedor/owner
+                owner = db.session.get(Usuario, vehiculo.owner_id)
+                if owner and owner.email:
+                    base_url = get_base_url_from_request()
+                    vehiculo_url = f"{base_url}/vehiculo/{vehiculo.id}"
+                    renovar_url = f"{base_url}/panel/vehiculo/{vehiculo.id}/renovar"
+                    fecha_vencimiento_str = vehiculo.fecha_vencimiento.strftime('%d/%m/%Y') if vehiculo.fecha_vencimiento else "próximamente"
+                    
+                    subject = f"⚠️ Tu vehículo {vehiculo.marca} {vehiculo.modelo} vence pronto en Ubik2CR"
+                    
+                    text_body = (
+                        f"Hola {owner.nombre or 'vendedor'},\n\n"
+                        f"Te notificamos que tu publicación del vehículo {vehiculo.marca} {vehiculo.modelo} "
+                        f"está próxima a vencer.\n\n"
+                        f"📅 Fecha de vencimiento: {fecha_vencimiento_str}\n"
+                        f"⏰ Tiempo restante: Menos de una semana\n\n"
+                        f"Si querés renovar tu publicación por otros 3 meses, podés hacerlo desde tu panel:\n"
+                        f"{renovar_url}\n\n"
+                        f"O visitá tu vehículo aquí:\n"
+                        f"{vehiculo_url}\n\n"
+                        f"Si no renovás, tu publicación desaparecerá automáticamente después de la fecha de vencimiento.\n\n"
+                        f"¡Gracias por usar Ubik2CR!\n"
+                        f"El equipo de Ubik2CR"
+                    )
+                    
+                    html_body = f"""
+                    <html>
+                    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                            <h2 style="color: #19539D;">⚠️ Tu vehículo está próximo a vencer</h2>
+                            <p>Hola {owner.nombre or 'vendedor'},</p>
+                            <p>Te notificamos que tu publicación del vehículo <strong>{vehiculo.marca} {vehiculo.modelo}</strong> está próxima a vencer.</p>
+                            <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                                <p style="margin: 0;"><strong>📅 Fecha de vencimiento:</strong> {fecha_vencimiento_str}</p>
+                                <p style="margin: 10px 0 0 0;"><strong>⏰ Tiempo restante:</strong> Menos de una semana</p>
+                            </div>
+                            <p>Si querés renovar tu publicación por otros 3 meses, hacé clic en el botón:</p>
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="{renovar_url}" style="background: linear-gradient(135deg, #19539D, #69D41B); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                                    ✨ Renovar por 3 meses más
+                                </a>
+                            </div>
+                            <p>O visitá tu vehículo: <a href="{vehiculo_url}">{vehiculo_url}</a></p>
+                            <p style="color: #666; font-size: 0.9em; margin-top: 30px;">
+                                Si no renovás, tu publicación desaparecerá automáticamente después de la fecha de vencimiento.
+                            </p>
+                            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                            <p style="color: #999; font-size: 0.8em;">¡Gracias por usar Ubik2CR!<br>El equipo de Ubik2CR</p>
+                        </div>
+                    </body>
+                    </html>
+                    """
+                    
+                    send_email(owner.email, subject, text_body, html_body)
+                    
+                    # Marcar como notificado
+                    vehiculo.notificacion_vencimiento_enviada = True
+                    db.session.commit()
+                    
+                    print(f"[VENCIMIENTO] Email de advertencia enviado a {owner.email} para vehículo {vehiculo.id}")
+            except Exception as e:
+                print(f"[ERROR VENCIMIENTO] Error al enviar email a vehículo {vehiculo.id}: {e}")
+                db.session.rollback()
+                continue
+                
+    except Exception as e:
+        print(f"[ERROR VENCIMIENTO] Error general en verificar_vencimientos: {e}")
+
+def marcar_vehiculos_vencidos():
+    """Marcar vehículos vencidos como eliminados automáticamente"""
+    if not VEHICULOS_AVAILABLE or Vehiculo is None:
+        return
+    
+    try:
+        ahora = datetime.utcnow()
+        
+        # Buscar vehículos aprobados que ya vencieron
+        vehiculos_vencidos = Vehiculo.query.filter(
+            Vehiculo.estado == "aprobado",
+            Vehiculo.fecha_vencimiento.isnot(None),
+            Vehiculo.fecha_vencimiento <= ahora
+        ).all()
+        
+        count = 0
+        for vehiculo in vehiculos_vencidos:
+            vehiculo.estado = "eliminado"
+            vehiculo.updated_at = datetime.utcnow()
+            count += 1
+        
+        if count > 0:
+            db.session.commit()
+            print(f"[VENCIMIENTO] {count} vehículos marcados como eliminados por vencimiento")
+    except Exception as e:
+        print(f"[ERROR VENCIMIENTO] Error al marcar vencidos: {e}")
+        db.session.rollback()
+
+
+@app.route("/panel/vehiculo/<int:vehiculo_id>/renovar", methods=["POST", "GET"])
+def renovar_vehiculo(vehiculo_id):
+    """Renovar un vehículo por otros 3 meses"""
+    if not VEHICULOS_AVAILABLE:
+        flash("El sistema de vehículos no está disponible.")
+        return redirect("/panel")
+    
+    if "user_id" not in session:
+        flash("Debés iniciar sesión.")
+        return redirect("/cuenta")
+    
+    try:
+        vehiculo = db.session.get(Vehiculo, vehiculo_id)
+        if not vehiculo:
+            flash("Vehículo no encontrado.")
+            return redirect("/panel")
+        
+        # Verificar que el usuario es el dueño
+        if vehiculo.owner_id != session["user_id"]:
+            flash("No tenés permiso para renovar este vehículo.")
+            return redirect("/panel")
+        
+        # Calcular nueva fecha de vencimiento (3 meses desde ahora)
+        nueva_fecha_vencimiento = datetime.utcnow() + timedelta(days=90)
+        
+        # Si el vehículo está eliminado por vencimiento, reactivarlo
+        if vehiculo.estado == "eliminado" and vehiculo.fecha_vencimiento and vehiculo.fecha_vencimiento <= datetime.utcnow():
+            vehiculo.estado = "aprobado"
+        
+        vehiculo.fecha_vencimiento = nueva_fecha_vencimiento
+        vehiculo.notificacion_vencimiento_enviada = False  # Reset para nueva notificación
+        vehiculo.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        flash(f"✅ Vehículo {vehiculo.marca} {vehiculo.modelo} renovado exitosamente por otros 3 meses.")
+    except Exception as e:
+        print(f"[ERROR RENOVAR] {e}")
+        db.session.rollback()
+        flash("❌ Error al renovar el vehículo. Por favor, intentá más tarde.")
+    
+    return redirect("/panel")
+
+
+# Ejecutar verificación de vencimientos en cada request (solo una vez por día para no sobrecargar)
+_last_vencimiento_check = None
+
+@app.before_request
+def check_vencimientos_before_request():
+    """Verificar vencimientos antes de cada request (solo una vez por día)"""
+    global _last_vencimiento_check
+    ahora = datetime.utcnow()
+    
+    # Verificar solo si pasó más de 1 hora desde la última verificación
+    if _last_vencimiento_check is None or (ahora - _last_vencimiento_check).total_seconds() > 3600:
+        try:
+            verificar_y_notificar_vencimientos()
+            marcar_vehiculos_vencidos()
+            _last_vencimiento_check = ahora
+        except Exception as e:
+            print(f"[ERROR] Error en check_vencimientos: {e}")
 
 
 # =====================================================

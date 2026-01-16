@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
 
 class Base(DeclarativeBase):
@@ -322,6 +322,8 @@ class Vehiculo(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, index=True)
     fecha_venta = db.Column(db.DateTime, nullable=True)  # Cuando se marca como vendido
+    fecha_vencimiento = db.Column(db.DateTime, nullable=True, index=True)  # Fecha de vencimiento automático (3 meses desde created_at)
+    notificacion_vencimiento_enviada = db.Column(db.Boolean, default=False, index=True)  # Para evitar enviar email duplicado
     
     __table_args__ = (
         db.Index("ix_vehiculos_marca_modelo", "marca", "modelo"),
