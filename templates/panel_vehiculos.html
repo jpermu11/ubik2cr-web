@@ -102,6 +102,7 @@
             <th>Vehículo</th>
             <th>Precio</th>
             <th>Estado</th>
+            <th>Vencimiento</th>
             <th>Destacado</th>
             <th>Acciones</th>
           </tr>
@@ -135,6 +136,38 @@
               {% endif %}
             </td>
             <td>
+              {% if v.fecha_vencimiento %}
+                {% set ahora = datetime.utcnow() %}
+                {% set dias_restantes = (v.fecha_vencimiento - ahora).days %}
+                {% if dias_restantes < 0 %}
+                  <span class="badge" style="background:#dc3545;color:#fff;">
+                    <i class="fas fa-exclamation-triangle me-1"></i>Vencido
+                  </span>
+                  <div class="hint small" style="color:#dc3545;margin-top:5px;">
+                    Venció el {{ v.fecha_vencimiento.strftime('%d/%m/%Y') }}
+                  </div>
+                {% elif dias_restantes <= 7 %}
+                  <span class="badge" style="background:#ff9800;color:#fff;">
+                    <i class="fas fa-clock me-1"></i>Por vencer
+                  </span>
+                  <div class="hint small" style="color:#ff9800;margin-top:5px;">
+                    Vence en {{ dias_restantes }} día{% if dias_restantes != 1 %}s{% endif %}
+                  </div>
+                {% else %}
+                  <span class="badge" style="background:#28a745;color:#fff;">
+                    <i class="fas fa-check-circle me-1"></i>Activo
+                  </span>
+                  <div class="hint small" style="color:#666;margin-top:5px;">
+                    Vence el {{ v.fecha_vencimiento.strftime('%d/%m/%Y') }}
+                  </div>
+                {% endif %}
+              {% else %}
+                <span class="badge" style="background:#6c757d;color:#fff;">
+                  <i class="fas fa-info-circle me-1"></i>Sin fecha
+                </span>
+              {% endif %}
+            </td>
+            <td>
               {% if v.es_vip or v.destacado %}
                 <span class="badge b-vip"><i class="fas fa-star me-1"></i>Destacado</span>
               {% else %}
@@ -157,6 +190,17 @@
                     <i class="fas fa-check-double me-1"></i>Vendido
                   </button>
                 </form>
+                {% endif %}
+                {% if v.fecha_vencimiento %}
+                  {% set ahora = datetime.utcnow() %}
+                  {% set dias_restantes = (v.fecha_vencimiento - ahora).days %}
+                  {% if dias_restantes <= 30 %}
+                  <a href="/panel/vehiculo/{{ v.id }}/renovar" class="btn" 
+                     style="background:#ff9800;color:#fff;padding:8px 12px;font-size:0.9rem;text-decoration:none;"
+                     onclick="return confirm('¿Renovar este vehículo por otros 3 meses?');">
+                    <i class="fas fa-sync-alt me-1"></i>Renovar
+                  </a>
+                  {% endif %}
                 {% endif %}
                 <form method="POST" action="/panel/vehiculo/{{ v.id }}/eliminar" style="display:inline;">
                   <button type="submit" class="btn btn-danger" 

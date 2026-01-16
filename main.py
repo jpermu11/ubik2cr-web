@@ -1914,6 +1914,9 @@ def panel_owner():
             
             user_email = session.get("user_email", "Usuario")
             
+            # Pasar datetime al template para calcular vencimientos
+            ahora = datetime.utcnow()
+            
             return render_template(
                 "panel_vehiculos.html",
                 vehiculos=vehiculos,
@@ -1921,7 +1924,8 @@ def panel_owner():
                 aprobados=aprobados,
                 pendientes=pendientes,
                 destacados=destacados,
-                user_email=user_email
+                user_email=user_email,
+                datetime=datetime  # Pasar datetime al template
             )
         except Exception as e:
             print(f"[ERROR PANEL] Error al cargar vehículos: {e}")
