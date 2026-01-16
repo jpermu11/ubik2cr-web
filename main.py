@@ -5,7 +5,7 @@ import json
 import requests
 import time
 from email.message import EmailMessage
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 load_dotenv()  # Carga variables del archivo .env
