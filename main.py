@@ -2754,6 +2754,58 @@ def gestionar_comercios():
         return redirect("/login")
     return redirect("/admin/vehiculos")
 
+@app.route("/admin/vehiculo/<int:id>/aprobar", methods=["POST", "GET"])
+def aprobar_vehiculo(id):
+    """Aprobar un vehículo pendiente"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    if not VEHICULOS_AVAILABLE or Vehiculo is None:
+        flash("El sistema de vehículos aún no está disponible.")
+        return redirect("/admin")
+    
+    try:
+        vehiculo = db.session.get(Vehiculo, id)
+        if vehiculo:
+            vehiculo.estado = "aprobado"
+            vehiculo.updated_at = datetime.utcnow()
+            db.session.commit()
+            flash(f"✅ Vehículo {vehiculo.marca} {vehiculo.modelo} aprobado exitosamente.")
+        else:
+            flash("❌ Vehículo no encontrado.")
+    except Exception as e:
+        print(f"[ERROR APROBAR VEHICULO] {e}")
+        db.session.rollback()
+        flash("❌ Error al aprobar el vehículo.")
+    
+    return redirect("/admin/vehiculos")
+
+@app.route("/admin/vehiculo/<int:id>/rechazar", methods=["POST", "GET"])
+def rechazar_vehiculo(id):
+    """Rechazar un vehículo pendiente"""
+    if not admin_logged_in():
+        return redirect("/login")
+    
+    if not VEHICULOS_AVAILABLE or Vehiculo is None:
+        flash("El sistema de vehículos aún no está disponible.")
+        return redirect("/admin")
+    
+    try:
+        vehiculo = db.session.get(Vehiculo, id)
+        if vehiculo:
+            vehiculo.estado = "eliminado"
+            vehiculo.updated_at = datetime.utcnow()
+            db.session.commit()
+            flash(f"⚠️ Vehículo {vehiculo.marca} {vehiculo.modelo} rechazado y eliminado.")
+        else:
+            flash("❌ Vehículo no encontrado.")
+    except Exception as e:
+        print(f"[ERROR RECHAZAR VEHICULO] {e}")
+        db.session.rollback()
+        flash("❌ Error al rechazar el vehículo.")
+    
+    return redirect("/admin/vehiculos")
+
 @app.route("/admin/aprobar/<int:id>")
 def aprobar_negocio(id):
     if not admin_logged_in():
