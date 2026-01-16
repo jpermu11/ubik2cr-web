@@ -461,10 +461,10 @@ def check_maintenance_mode():
     # Rutas permitidas durante mantenimiento
     path = request.path
     allowed_paths = [
-        '/static', '/favicon.ico', '/health', '/health/db',
+        '/', '/static', '/favicon.ico', '/health', '/health/db',
         '/login', '/logout', '/admin', '/admin/', '/api/',
         '/cuenta', '/owner/login', '/owner/registro', '/panel',
-        '/vehiculos', '/vehiculo', '/publicar'
+        '/vehiculos', '/vehiculo', '/publicar', '/negocio'
     ]
 
     # Permitir acceso a rutas de admin y login
@@ -3683,7 +3683,17 @@ def verificar_y_notificar_vencimientos():
                 # Obtener el vendedor/owner
                 owner = db.session.get(Usuario, vehiculo.owner_id)
                 if owner and owner.email:
-                    base_url = get_base_url_from_request()
+                    # Obtener base_url de manera segura
+                    try:
+                        from flask import has_request_context, request
+                        if has_request_context():
+                            base_url = get_base_url_from_request()
+                        else:
+                            # Si no hay request context, usar URL por defecto
+                            base_url = os.environ.get("BASE_URL", "https://ubik2cr.onrender.com")
+                    except Exception:
+                        base_url = os.environ.get("BASE_URL", "https://ubik2cr.onrender.com")
+                    
                     vehiculo_url = f"{base_url}/vehiculo/{vehiculo.id}"
                     renovar_url = f"{base_url}/panel/vehiculo/{vehiculo.id}/renovar"
                     fecha_vencimiento_str = vehiculo.fecha_vencimiento.strftime('%d/%m/%Y') if vehiculo.fecha_vencimiento else "próximamente"
@@ -3828,6 +3838,12 @@ _last_vencimiento_check = None
 def check_vencimientos_before_request():
     """Verificar vencimientos antes de cada request (solo una vez por día)"""
     global _last_vencimiento_check
+    
+    # NO ejecutar en rutas estáticas, health checks, o si hay error en la DB
+    path = request.path if hasattr(request, 'path') else ''
+    if path.startswith('/static') or path.startswith('/health') or path.startswith('/favicon'):
+        return None
+    
     ahora = datetime.utcnow()
     
     # Verificar solo si pasó más de 1 hora desde la última verificación
@@ -3838,6 +3854,10 @@ def check_vencimientos_before_request():
             _last_vencimiento_check = ahora
         except Exception as e:
             print(f"[ERROR] Error en check_vencimientos: {e}")
+            # NO interrumpir el request si hay error en vencimientos
+            pass
+    
+    return None
 
 
 # =====================================================
