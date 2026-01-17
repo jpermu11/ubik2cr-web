@@ -50,6 +50,9 @@ if not exist "venv\Lib\site-packages\flask" (
     echo.
 )
 
+REM Configurar FLASK_APP
+set FLASK_APP=main.py
+
 REM Verificar si la base de datos está inicializada
 if not exist "migrations\" (
     echo Inicializando base de datos...
@@ -73,7 +76,21 @@ echo ========================================
 echo.
 
 REM Ejecutar la aplicación
+echo.
+echo Si ves ERRORES aquí abajo, cópialos y compártelos
+echo Si ves "Running on http://0.0.0.0:5000", entonces está funcionando
+echo.
 python main.py
+
+if errorlevel 1 (
+    echo.
+    echo ========================================
+    echo   ERROR AL EJECUTAR LA APLICACIÓN
+    echo ========================================
+    echo.
+    echo Por favor, copia los errores de arriba y compártelos
+    echo.
+)
 
 pause
 
