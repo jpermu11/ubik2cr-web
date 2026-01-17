@@ -6,7 +6,6 @@
     <title>¡Éxito!</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .success-card { 
             text-align: center; 
@@ -17,22 +16,16 @@
             max-width: 500px; 
             margin: 60px auto; 
         }
-        .icon-check { font-size: 4rem; color: #38b24d; margin-bottom: 20px; }
+        .icon-check { font-size: 4rem; color: var(--verde); margin-bottom: 20px; }
         .btn-home { 
             display: inline-block; 
             margin-top: 20px; 
-            background: #0b4fa3; 
+            background: var(--azul); 
             color: white; 
-            padding: 12px 30px; 
+            padding: 10px 30px; 
             border-radius: 50px; 
             text-decoration: none; 
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .btn-home:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            color: white;
+            font-weight: bold; 
         }
     </style>
 </head>
@@ -40,22 +33,13 @@
     <div class="container">
         <div class="success-card">
             <div class="icon-check">✅</div>
-            <h1 style="color: #0b4fa3;">¡Negocio Recibido!</h1>
+            <h1 style="color: var(--azul);">¡Negocio Recibido!</h1>
             <p style="margin-top: 15px; color: #555;">
                 Hemos guardado la información de tu comercio exitosamente.
                 <br><br>
                 Ahora está en <strong>revisión</strong> por nuestros administradores y pronto aparecerá en el mapa.
             </p>
-            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 25px;">
-                {% if user_logged_in %}
-                <a href="/panel" class="btn-home" style="background: #38b24d;">
-                    <i class="fas fa-tachometer-alt" style="margin-right: 8px;"></i>Ir al Panel
-                </a>
-                {% endif %}
-                <a href="/" class="btn-home">
-                    <i class="fas fa-home" style="margin-right: 8px;"></i>Volver al Inicio
-                </a>
-            </div>
+            <a href="/" class="btn-home">Volver al Inicio</a>
         </div>
     </div>
 </body>

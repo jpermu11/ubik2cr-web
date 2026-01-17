@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}UBIK2CR - Venta de Vehículos Usados en Costa Rica{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --ubik-blue: #0b4fa3;
+            --ubik-green: #38b24d;
+            --ubik-blue-dark: #083a78;
+            --ubik-green-dark: #2a8c3a;
+        }
+        
+        * {
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: #f8f9fa;
+        }
+        
+        .navbar-ubik {
+            background: linear-gradient(135deg, var(--ubik-blue) 0%, var(--ubik-blue-dark) 100%);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            padding: 12px 0;
+        }
+        
+        .navbar-ubik .navbar-brand {
+            font-weight: 800;
+            font-size: 1.6rem;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .navbar-ubik .nav-link, .navbar-ubik .btn {
+            color: white !important;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .navbar-ubik .btn-primary {
+            background: var(--ubik-green);
+            border: none;
+            padding: 8px 24px;
+            border-radius: 50px;
+        }
+        
+        .navbar-ubik .btn-primary:hover {
+            background: var(--ubik-green-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 178, 77, 0.4);
+        }
+        
+        .btn-ubik-primary {
+            background: linear-gradient(135deg, var(--ubik-green), var(--ubik-green-dark));
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: 12px 32px;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+        
+        .btn-ubik-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(56, 178, 77, 0.4);
+            color: white;
+        }
+        
+        .btn-ubik-secondary {
+            background: linear-gradient(135deg, var(--ubik-blue), var(--ubik-blue-dark));
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: 12px 32px;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+        
+        .btn-ubik-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(11, 79, 163, 0.4);
+            color: white;
+        }
+        
+        .footer-ubik {
+            background: linear-gradient(135deg, var(--ubik-blue-dark) 0%, #000 100%);
+            color: white;
+            padding: 40px 0 20px 0;
+            margin-top: 80px;
+        }
+        
+        .footer-ubik a {
+            color: var(--ubik-green);
+            text-decoration: none;
+        }
+        
+        .footer-ubik a:hover {
+            color: white;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-ubik sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="/static/uploads/logo.png" alt="UBIK2CR" style="height: 50px; width: auto;">
+                <span>UBIK2CR</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/vehiculos">Buscar Autos</a>
+                    </li>
+                    {% if session.user_id %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/panel">Mi Panel</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">Salir</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item me-2">
+                            <a class="nav-link" href="/login">Iniciar Sesión</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/registro" class="btn btn-primary">Vender mi Auto</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Flashed messages -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="container mt-3">
+            {% for msg in messages %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {{ msg }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+    
+    <!-- Content -->
+    {% block content %}{% endblock %}
+    
+    <!-- Footer -->
+    <footer class="footer-ubik">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5 class="text-white mb-3">UBIK2CR</h5>
+                    <p style="opacity: 0.8;">La mejor plataforma de venta de vehículos usados en Costa Rica.</p>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-white mb-3">Enlaces</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/vehiculos">Buscar Vehículos</a></li>
+                        <li><a href="/registro">Vender mi Auto</a></li>
+                        <li><a href="/login">Iniciar Sesión</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-white mb-3">Contacto</h6>
+                    <p style="opacity: 0.8;">
+                        <i class="fas fa-envelope me-2"></i>info@ubik2cr.com
+                    </p>
+                </div>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 30px 0 20px 0;">
+            <div class="text-center" style="opacity: 0.7;">
+                <small>&copy; 2026 UBIK2CR. Todos los derechos reservados. Costa Rica.</small>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

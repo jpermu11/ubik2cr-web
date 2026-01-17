@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Ubik2CR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-danger">
+        <div class="container">
+            <span class="navbar-brand">Panel Admin</span>
+            <a href="/logout" class="btn btn-sm btn-outline-light">Salir</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>Vehiculos Pendientes de Aprobacion</h2>
+        
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for msg in messages %}
+            <div class="alert alert-success">{{ msg }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        
+        {% if pendientes %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Vehiculo</th>
+                    <th>Precio</th>
+                    <th>Vendedor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in pendientes %}
+                <tr>
+                    <td>{{ v.marca }} {{ v.modelo }} {{ v.año }}</td>
+                    <td>₡{{ "{:,.0f}".format(v.precio) }}</td>
+                    <td>ID: {{ v.owner_id }}</td>
+                    <td>
+                        <form method="POST" action="/admin/aprobar/{{ v.id }}" style="display:inline">
+                            <button class="btn btn-sm btn-success">Aprobar</button>
+                        </form>
+                        <form method="POST" action="/admin/rechazar/{{ v.id }}" style="display:inline">
+                            <button class="btn btn-sm btn-danger">Rechazar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="alert alert-info">No hay vehiculos pendientes</p>
+        {% endif %}
+        
+        <hr>
+        <h3>Ultimos Aprobados</h3>
+        {% if aprobados %}
+        <ul class="list-group">
+            {% for v in aprobados %}
+            <li class="list-group-item">{{ v.marca }} {{ v.modelo }} - ₡{{ "{:,.0f}".format(v.precio) }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</body>
+</html>

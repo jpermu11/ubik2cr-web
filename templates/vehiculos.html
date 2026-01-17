@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Vehículos Usados en Costa Rica - UBIK2CR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-search {
+        background: linear-gradient(135deg, var(--ubik-blue) 0%, var(--ubik-blue-dark) 50%, var(--ubik-green-dark) 100%);
+        padding: 60px 0;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-search::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(255,255,255,0.05)"/></svg>') no-repeat bottom;
+        background-size: cover;
+        opacity: 0.3;
+    }
+    
+    .hero-search h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        margin-bottom: 10px;
+    }
+    
+    .hero-search p {
+        font-size: 1.2rem;
+        opacity: 0.95;
+        margin-bottom: 30px;
+    }
+    
+    .search-box {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .search-box .form-control, .search-box .form-select {
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .search-box .form-control:focus, .search-box .form-select:focus {
+        border-color: var(--ubik-green);
+        box-shadow: 0 0 0 0.2rem rgba(56, 178, 77, 0.15);
+    }
+    
+    .vehicle-card {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+        background: white;
+        margin-bottom: 24px;
+    }
+    
+    .vehicle-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    }
+    
+    .vehicle-card img {
+        height: 220px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .vehicle-card .card-body {
+        padding: 20px;
+    }
+    
+    .vehicle-card .price {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--ubik-green);
+        margin-bottom: 8px;
+    }
+    
+    .vehicle-card .title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--ubik-blue);
+        margin-bottom: 12px;
+    }
+    
+    .vehicle-card .details {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 16px;
+    }
+    
+    .vehicle-card .details i {
+        color: var(--ubik-green);
+        margin-right: 6px;
+    }
+    
+    .badge-vip {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #000;
+        font-weight: 800;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        box-shadow: 0 4px 12px rgba(255,215,0,0.4);
+        animation: pulse-vip 2s infinite;
+    }
+    
+    @keyframes pulse-vip {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .filters-section {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        color: var(--ubik-blue);
+        opacity: 0.3;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-search">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h1>Encuentra tu Vehículo Ideal</h1>
+            <p>Miles de autos usados en Costa Rica | Vende tu auto fácil y rápido</p>
+        </div>
+        
+        <!-- Quick Search -->
+        <div class="search-box">
+            <form method="GET" action="/vehiculos">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <select name="marca" class="form-select">
+                            <option value="">Todas las marcas</option>
+                            {% for marca in marcas %}
+                            <option value="{{ marca }}" {% if marca_actual == marca %}selected{% endif %}>{{ marca }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="tipo" class="form-select">
+                            <option value="">Todos los tipos</option>
+                            <option>Sedan</option>
+                            <option>SUV</option>
+                            <option>Pickup</option>
+                            <option>Coupe</option>
+                            <option>Van</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" name="precio_max" class="form-control" placeholder="Precio máx">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" name="año_min" class="form-control" placeholder="Año mín">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-ubik-primary w-100">
+                            <i class="fas fa-search me-2"></i>Buscar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Results -->
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="color: var(--ubik-blue); font-weight: 700;">
+            <i class="fas fa-car me-2"></i>Vehículos Disponibles
+            <small class="text-muted" style="font-size: 1rem; font-weight: 400;">({{ total }} encontrados)</small>
+        </h2>
+        <div>
+            <select class="form-select" onchange="window.location.href='/vehiculos?orden='+this.value">
+                <option>Ordenar por</option>
+                <option value="recientes">Más recientes</option>
+                <option value="precio_asc">Precio: menor a mayor</option>
+                <option value="precio_desc">Precio: mayor a menor</option>
+                <option value="año_desc">Más nuevos</option>
+                <option value="km_asc">Menos kilometraje</option>
+            </select>
+        </div>
+    </div>
+    
+    {% if vehiculos %}
+    <div class="row">
+        {% for v in vehiculos %}
+        <div class="col-lg-4 col-md-6">
+            <div class="vehicle-card position-relative">
+                {% if v.es_vip %}
+                <span class="badge-vip"><i class="fas fa-crown me-1"></i>VIP</span>
+                {% endif %}
+                
+                {% if v.imagen_url %}
+                <img src="{{ v.imagen_url }}" alt="{{ v.marca }} {{ v.modelo }}">
+                {% else %}
+                <div style="height: 220px; background: linear-gradient(135deg, #e0e0e0, #f5f5f5); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-car" style="font-size: 4rem; color: #ccc;"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <div class="price">₡{{ "{:,.0f}".format(v.precio) }}</div>
+                    <div class="title">{{ v.marca }} {{ v.modelo }} {{ v.año }}</div>
+                    <div class="details">
+                        <div class="mb-1">
+                            <i class="fas fa-tachometer-alt"></i>{{ "{:,}".format(v.kilometraje or 0) }} km
+                            <span class="ms-3"><i class="fas fa-cog"></i>{{ v.transmision or 'N/A' }}</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-gas-pump"></i>{{ v.combustible or 'N/A' }}
+                            {% if v.provincia %}
+                            <span class="ms-3"><i class="fas fa-map-marker-alt"></i>{{ v.provincia }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a href="/vehiculo/{{ v.id }}" class="btn btn-ubik-secondary w-100">
+                        <i class="fas fa-eye me-2"></i>Ver Detalles
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginación -->
+    {% if total_pages > 1 %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if page > 1 %}
+            <li class="page-item"><a class="page-link" href="/vehiculos?page={{ page - 1 }}">Anterior</a></li>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="/vehiculos?page={{ p }}">{{ p }}</a></li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page < total_pages %}
+            <li class="page-item"><a class="page-link" href="/vehiculos?page={{ page + 1 }}">Siguiente</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-car-side"></i>
+        <h3 style="color: var(--ubik-blue); font-weight: 700;">No hay vehículos disponibles</h3>
+        <p class="text-muted">Sé el primero en publicar tu vehículo</p>
+        <a href="/registro" class="btn btn-ubik-primary btn-lg mt-3">
+            <i class="fas fa-plus-circle me-2"></i>Vender mi Auto
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
