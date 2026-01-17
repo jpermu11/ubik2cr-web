@@ -227,6 +227,15 @@ def publicar():
                 imagen.save(path)
                 imagen_url = f"/static/uploads/{filename}"
         
+        # Obtener más campos del formulario
+        tipo = request.form.get("tipo", "").strip()
+        transmision = request.form.get("transmision", "").strip()
+        combustible = request.form.get("combustible", "").strip()
+        color = request.form.get("color", "").strip()
+        provincia = request.form.get("provincia", "").strip()
+        kilometraje = request.form.get("kilometraje", "").strip()
+        whatsapp = request.form.get("whatsapp", "").strip()
+        
         # Crear vehículo
         fecha_venc = datetime.utcnow() + timedelta(days=90)
         
@@ -236,8 +245,15 @@ def publicar():
             modelo=modelo,
             año=int(año),
             precio=float(precio),
+            kilometraje=int(kilometraje) if kilometraje else None,
+            tipo=tipo or None,
+            transmision=transmision or None,
+            combustible=combustible or None,
+            color=color or None,
+            provincia=provincia or None,
             descripcion=descripcion,
-            telefono=telefono,
+            telefono=telefono or None,
+            whatsapp=whatsapp or None,
             imagen_url=imagen_url,
             fecha_vencimiento=fecha_venc
         )

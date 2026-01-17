@@ -39,6 +39,15 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            transition: transform 0.3s;
+        }
+        
+        .navbar-ubik .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+        
+        .navbar-ubik .navbar-brand img {
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
         }
         
         .navbar-ubik .nav-link, .navbar-ubik .btn {
@@ -116,8 +125,7 @@
     <nav class="navbar navbar-expand-lg navbar-ubik sticky-top">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <img src="/static/uploads/logo.png" alt="UBIK2CR" style="height: 50px; width: auto;">
-                <span>UBIK2CR</span>
+                <img src="/static/uploads/logo_oficial.png" alt="UBIK2CR" style="height: 55px; width: auto;">
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

@@ -1,56 +1,192 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Mi Panel - Ubik2CR</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-dark bg-success">
-        <div class="container">
-            <span class="navbar-brand">Mi Panel - {{ session.email }}</span>
-            <div>
-                <a href="/publicar" class="btn btn-sm btn-light">Publicar Vehiculo</a>
-                <a href="/logout" class="btn btn-sm btn-outline-light">Salir</a>
+{% extends "base.html" %}
+
+{% block title %}Mi Panel - UBIK2CR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .panel-header {
+        background: linear-gradient(135deg, var(--ubik-green), var(--ubik-green-dark));
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 40px;
+    }
+    
+    .panel-header h1 {
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        text-align: center;
+        transition: transform 0.3s;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+    
+    .stats-card .number {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--ubik-green);
+        line-height: 1;
+    }
+    
+    .stats-card .label {
+        color: #666;
+        font-weight: 600;
+        margin-top: 8px;
+    }
+    
+    .vehicle-table {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .vehicle-table h3 {
+        color: var(--ubik-blue);
+        font-weight: 800;
+        margin-bottom: 24px;
+    }
+    
+    .table thead {
+        background: linear-gradient(135deg, var(--ubik-blue), var(--ubik-blue-dark));
+        color: white;
+    }
+    
+    .table thead th {
+        border: none;
+        font-weight: 700;
+        padding: 16px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--ubik-green);
+        opacity: 0.3;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fas fa-user-circle me-3"></i>Mi Panel</h1>
+                <p class="mb-0" style="opacity: 0.9;">{{ session.email }}</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="/publicar" class="btn btn-light btn-lg px-4">
+                    <i class="fas fa-plus-circle me-2"></i>Publicar Vehículo
+                </a>
             </div>
         </div>
-    </nav>
+    </div>
+</div>
 
-    <div class="container mt-4">
-        <h2>Mis Vehiculos</h2>
-        
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for msg in messages %}
-            <div class="alert alert-success">{{ msg }}</div>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
+<div class="container mb-5">
+    <!-- Estadísticas -->
+    <div class="row mb-5">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="number">{{ vehiculos|length }}</div>
+                <div class="label">Total Publicados</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="number" style="color: #28a745;">{{ vehiculos|selectattr('estado', 'equalto', 'aprobado')|list|length }}</div>
+                <div class="label">Aprobados</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="number" style="color: #ffc107;">{{ vehiculos|selectattr('estado', 'equalto', 'pendiente')|list|length }}</div>
+                <div class="label">En Revisión</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="number" style="color: #17a2b8;">{{ vehiculos|selectattr('estado', 'equalto', 'vendido')|list|length }}</div>
+                <div class="label">Vendidos</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabla de vehículos -->
+    <div class="vehicle-table">
+        <h3><i class="fas fa-list me-2"></i>Mis Vehículos</h3>
         
         {% if vehiculos %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Vehiculo</th>
-                    <th>Precio</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for v in vehiculos %}
-                <tr>
-                    <td>{{ v.marca }} {{ v.modelo }} {{ v.año }}</td>
-                    <td>₡{{ "{:,.0f}".format(v.precio) }}</td>
-                    <td><span class="badge bg-{{ 'success' if v.estado == 'aprobado' else 'warning' }}">{{ v.estado }}</span></td>
-                    <td>{{ v.created_at.strftime('%d/%m/%Y') }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Vehículo</th>
+                        <th>Precio</th>
+                        <th>KM</th>
+                        <th>Estado</th>
+                        <th>Publicado</th>
+                        <th>Vencimiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vehiculos %}
+                    <tr>
+                        <td>
+                            <strong>{{ v.marca }} {{ v.modelo }}</strong><br>
+                            <small class="text-muted">{{ v.año }}</small>
+                        </td>
+                        <td><strong style="color: var(--ubik-green);">₡{{ "{:,.0f}".format(v.precio) }}</strong></td>
+                        <td>{{ "{:,}".format(v.kilometraje or 0) }} km</td>
+                        <td>
+                            {% if v.estado == 'aprobado' %}
+                            <span class="badge bg-success">Aprobado</span>
+                            {% elif v.estado == 'pendiente' %}
+                            <span class="badge bg-warning">En Revisión</span>
+                            {% elif v.estado == 'vendido' %}
+                            <span class="badge bg-info">Vendido</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ v.estado }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ v.created_at.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if v.fecha_vencimiento %}
+                            <small class="text-muted">{{ v.fecha_vencimiento.strftime('%d/%m/%Y') }}</small>
+                            {% else %}
+                            <small class="text-muted">-</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-        <p class="alert alert-info">No has publicado vehiculos aun. <a href="/publicar">Publica tu primer vehiculo</a></p>
+        <div class="empty-state">
+            <i class="fas fa-car-side"></i>
+            <h4 style="color: var(--ubik-blue); font-weight: 700;">No has publicado vehículos aún</h4>
+            <p class="text-muted mb-4">Comienza publicando tu primer vehículo</p>
+            <a href="/publicar" class="btn btn-ubik-primary btn-lg">
+                <i class="fas fa-plus-circle me-2"></i>Publicar mi Primer Vehículo
+            </a>
+        </div>
         {% endif %}
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
