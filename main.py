@@ -225,12 +225,25 @@ def asegurar_columnas_vencimiento():
         print(f"[MIGRACION AUTOMATICA] Error verificando/creando columnas: {e}")
         # No interrumpir la app si falla
 
-# Ejecutar al iniciar la app
-with app.app_context():
+# EJECUTAR CREACIÓN DE COLUMNAS EN PRIMER BEFORE_REQUEST (antes de cualquier query)
+_columna_vencimiento_verificada = False
+
+@app.before_request
+def asegurar_columnas_vencimiento_before_request():
+    """Verificar y crear columnas de vencimiento en el primer request"""
+    global _columna_vencimiento_verificada
+    if _columna_vencimiento_verificada:
+        return None
+    
+    # Ejecutar solo una vez
+    _columna_vencimiento_verificada = True
+    
     try:
         asegurar_columnas_vencimiento()
     except Exception as e:
         print(f"[INICIO] Error en asegurar_columnas_vencimiento (no crítico): {e}")
+    
+    return None
 
 
 # =====================================================
@@ -516,6 +529,7 @@ else:
     MAINTENANCE_MODE = os.environ.get("MAINTENANCE_MODE", "false").lower() == "true"
 
 # Este before_request debe ejecutarse PRIMERO (antes de registrar_visita)
+# NOTA: asegurar_columnas_vencimiento_before_request() debe ejecutarse antes que cualquier query
 @app.before_request
 def check_maintenance_mode():
     """Verificar si la aplicación está en modo mantenimiento - SE EJECUTA PRIMERO"""
@@ -783,13 +797,26 @@ def inicio():
     
     # Query base: solo vehículos aprobados y no vencidos (con manejo de errores)
     try:
+        # Asegurar que las columnas existan ANTES de la query
+        try:
+            asegurar_columnas_vencimiento()
+        except Exception as e:
+            print(f"[QUERY] Error verificando columnas: {e}")
+        
         ahora = datetime.utcnow()
-        query = Vehiculo.query.filter_by(estado="aprobado").filter(
-            or_(
-                Vehiculo.fecha_vencimiento.is_(None),  # Si no tiene fecha_vencimiento (vehículos antiguos)
-                Vehiculo.fecha_vencimiento > ahora  # O si aún no ha vencido
+        
+        # Intentar query con fecha_vencimiento, si falla usar query sin filtro de vencimiento
+        try:
+            query = Vehiculo.query.filter_by(estado="aprobado").filter(
+                or_(
+                    Vehiculo.fecha_vencimiento.is_(None),  # Si no tiene fecha_vencimiento (vehículos antiguos)
+                    Vehiculo.fecha_vencimiento > ahora  # O si aún no ha vencido
+                )
             )
-        )
+        except Exception as e:
+            # Si falla, es porque la columna no existe aún - usar query simple
+            print(f"[QUERY] Columna fecha_vencimiento no disponible, usando query sin filtro: {e}")
+            query = Vehiculo.query.filter_by(estado="aprobado")
     except Exception as e:
         print(f"[ERROR] No se puede consultar vehículos: {e}")
         # Retornar página vacía
@@ -918,13 +945,19 @@ def inicio():
     # Obtener marcas únicas para el dropdown (solo vehículos no vencidos)
     try:
         ahora = datetime.utcnow()
-        marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").filter(
-            or_(
-                Vehiculo.fecha_vencimiento.is_(None),
-                Vehiculo.fecha_vencimiento > ahora
-            )
-        ).distinct().order_by(Vehiculo.marca).all()
-        marcas = [m[0] for m in marcas_unicas]
+        try:
+            marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").filter(
+                or_(
+                    Vehiculo.fecha_vencimiento.is_(None),
+                    Vehiculo.fecha_vencimiento > ahora
+                )
+            ).distinct().order_by(Vehiculo.marca).all()
+            marcas = [m[0] for m in marcas_unicas]
+        except Exception as e:
+            # Si falla por columna faltante, usar query simple
+            print(f"[MARCAS] Usando query sin filtro de vencimiento: {e}")
+            marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").distinct().order_by(Vehiculo.marca).all()
+            marcas = [m[0] for m in marcas_unicas]
     except Exception as e:
         print(f"[ERROR] No se pueden obtener marcas: {e}")
         marcas = []
@@ -1265,16 +1298,25 @@ def api_modelos_vehiculos():
     
     try:
         ahora = datetime.utcnow()
-        modelos_unicos = db.session.query(Vehiculo.modelo).filter_by(
-            marca=marca,
-            estado="aprobado"
-        ).filter(
-            or_(
-                Vehiculo.fecha_vencimiento.is_(None),
-                Vehiculo.fecha_vencimiento > ahora
-            )
-        ).distinct().order_by(Vehiculo.modelo).all()
-        modelos = [m[0] for m in modelos_unicos]
+        try:
+            modelos_unicos = db.session.query(Vehiculo.modelo).filter_by(
+                marca=marca,
+                estado="aprobado"
+            ).filter(
+                or_(
+                    Vehiculo.fecha_vencimiento.is_(None),
+                    Vehiculo.fecha_vencimiento > ahora
+                )
+            ).distinct().order_by(Vehiculo.modelo).all()
+            modelos = [m[0] for m in modelos_unicos]
+        except Exception as e:
+            # Si falla por columna faltante, usar query simple
+            print(f"[API MODELOS] Usando query sin filtro de vencimiento: {e}")
+            modelos_unicas = db.session.query(Vehiculo.modelo).filter_by(
+                marca=marca,
+                estado="aprobado"
+            ).distinct().order_by(Vehiculo.modelo).all()
+            modelos = [m[0] for m in modelos_unicas]
         return {"modelos": modelos}
     except Exception as e:
         print(f"[API ERROR] Error al obtener modelos: {e}")
@@ -2507,8 +2549,15 @@ def detalle_vehiculo(vehiculo_id):
         vehiculo = Vehiculo.query.get_or_404(vehiculo_id)
         
         # Solo mostrar vehículos aprobados y no vencidos (o si es el dueño/admin)
-        ahora = datetime.utcnow()
-        vehiculo_vencido = vehiculo.fecha_vencimiento and vehiculo.fecha_vencimiento <= ahora
+        vehiculo_vencido = False
+        try:
+            ahora = datetime.utcnow()
+            if vehiculo.fecha_vencimiento:
+                vehiculo_vencido = vehiculo.fecha_vencimiento <= ahora
+        except Exception as e:
+            # Si fecha_vencimiento no existe, ignorar (vehículo no vencido)
+            print(f"[DETALLE] fecha_vencimiento no disponible: {e}")
+            vehiculo_vencido = False
         
         if vehiculo.estado != "aprobado" or vehiculo_vencido:
             if "user_id" not in session or (vehiculo.owner_id != session["user_id"] and not admin_logged_in()):
