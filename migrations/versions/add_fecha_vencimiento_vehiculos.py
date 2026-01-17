@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_fecha_vencimiento_vehiculos'
-down_revision = 'add_vehiculos_agencias'
+down_revision = 'adaptar_noticias_resenas'
 branch_labels = None
 depends_on = None
 
