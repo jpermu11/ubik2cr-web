@@ -198,30 +198,26 @@ def asegurar_columnas_vencimiento():
             # Si falta fecha_vencimiento, crearla
             if 'fecha_vencimiento' not in columnas_vehiculos:
                 print("[MIGRACION AUTOMATICA] Creando columna fecha_vencimiento...")
-                with db.engine.connect() as conn:
+                with db.engine.begin() as conn:
                     conn.execute(text("ALTER TABLE vehiculos ADD COLUMN fecha_vencimiento TIMESTAMP"))
-                    conn.commit()
                 print("[MIGRACION AUTOMATICA] ✅ Columna fecha_vencimiento creada")
             
             # Si falta notificacion_vencimiento_enviada, crearla
             if 'notificacion_vencimiento_enviada' not in columnas_vehiculos:
                 print("[MIGRACION AUTOMATICA] Creando columna notificacion_vencimiento_enviada...")
-                with db.engine.connect() as conn:
+                with db.engine.begin() as conn:
                     conn.execute(text("ALTER TABLE vehiculos ADD COLUMN notificacion_vencimiento_enviada BOOLEAN DEFAULT FALSE"))
-                    conn.commit()
                 print("[MIGRACION AUTOMATICA] ✅ Columna notificacion_vencimiento_enviada creada")
                 
             # Crear índices si no existen
             try:
                 indexes = [idx['name'] for idx in inspector.get_indexes('vehiculos')]
                 if 'ix_vehiculos_fecha_vencimiento' not in indexes:
-                    with db.engine.connect() as conn:
+                    with db.engine.begin() as conn:
                         conn.execute(text("CREATE INDEX ix_vehiculos_fecha_vencimiento ON vehiculos(fecha_vencimiento)"))
-                        conn.commit()
                 if 'ix_vehiculos_notificacion_vencimiento_enviada' not in indexes:
-                    with db.engine.connect() as conn:
+                    with db.engine.begin() as conn:
                         conn.execute(text("CREATE INDEX ix_vehiculos_notificacion_vencimiento_enviada ON vehiculos(notificacion_vencimiento_enviada)"))
-                        conn.commit()
             except Exception as e:
                 print(f"[MIGRACION AUTOMATICA] Nota: Error creando índices (puede que ya existan): {e}")
                 
