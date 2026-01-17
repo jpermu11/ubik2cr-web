@@ -275,26 +275,33 @@ def asegurar_columnas_vencimiento():
         _columna_vencimiento_verificada = True  # Marcar como verificado para no reintentar
         _fecha_vencimiento_disponible = False
 
-# EJECUTAR INMEDIATAMENTE después de inicializar la base de datos
-with app.app_context():
-    try:
-        asegurar_columnas_vencimiento()
-    except Exception as e:
-        print(f"[INICIO APP] Error inicial en asegurar_columnas_vencimiento: {e}")
-
-# También en el primer before_request por si acaso
+# NO EJECUTAR durante el import - solo durante el runtime
+# La verificación se hará en el primer request para evitar errores durante el build
 @app.before_request
 def asegurar_columnas_vencimiento_before_request():
-    """Verificar y crear columnas de vencimiento en el primer request (fallback)"""
+    """Verificar y crear columnas de vencimiento en el primer request (NO durante el build)"""
     global _columna_vencimiento_verificada, _fecha_vencimiento_disponible
+    
+    # Solo ejecutar si no se ha verificado ya
     if not _columna_vencimiento_verificada:
         try:
-            asegurar_columnas_vencimiento()
+            # Solo intentar si estamos en un contexto de aplicación válido
+            # y la base de datos está configurada
+            if app.config.get("SQLALCHEMY_DATABASE_URI"):
+                asegurar_columnas_vencimiento()
         except Exception as e:
-            print(f"[BEFORE_REQUEST] Error en asegurar_columnas_vencimiento: {e}")
+            # Si falla, no es crítico - las queries tendrán fallback
+            print(f"[BEFORE_REQUEST] Error en asegurar_columnas_vencimiento (no crítico): {e}")
+            _columna_vencimiento_verificada = True  # Marcar como verificado para no reintentar
+    
     # Verificar si la columna existe (puede haberse creado después de la primera verificación)
     if not _fecha_vencimiento_disponible:
-        _fecha_vencimiento_disponible = verificar_columna_fecha_vencimiento()
+        try:
+            if app.config.get("SQLALCHEMY_DATABASE_URI"):
+                _fecha_vencimiento_disponible = verificar_columna_fecha_vencimiento()
+        except Exception:
+            pass  # No crítico si falla
+    
     return None
 
 
