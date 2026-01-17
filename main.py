@@ -20,6 +20,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 from sqlalchemy import text, or_
+from sqlalchemy import inspect as sqlalchemy_inspect
 from sqlalchemy.pool import QueuePool
 
 try:
@@ -181,6 +182,59 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 # =====================================================
 db.init_app(app)
 migrate = Migrate(app, db)
+
+# Asegurar que las columnas de vencimiento existan (fallback si migración no se ejecutó)
+def asegurar_columnas_vencimiento():
+    """Crear columnas de vencimiento automáticamente si no existen (fallback)"""
+    if not VEHICULOS_AVAILABLE or Vehiculo is None:
+        return
+    
+    try:
+        with app.app_context():
+            # Verificar si la columna fecha_vencimiento existe
+            inspector = sqlalchemy_inspect(db.engine)
+            columnas_vehiculos = [col['name'] for col in inspector.get_columns('vehiculos')]
+            
+            # Si falta fecha_vencimiento, crearla
+            if 'fecha_vencimiento' not in columnas_vehiculos:
+                print("[MIGRACION AUTOMATICA] Creando columna fecha_vencimiento...")
+                with db.engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE vehiculos ADD COLUMN fecha_vencimiento TIMESTAMP"))
+                    conn.commit()
+                print("[MIGRACION AUTOMATICA] ✅ Columna fecha_vencimiento creada")
+            
+            # Si falta notificacion_vencimiento_enviada, crearla
+            if 'notificacion_vencimiento_enviada' not in columnas_vehiculos:
+                print("[MIGRACION AUTOMATICA] Creando columna notificacion_vencimiento_enviada...")
+                with db.engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE vehiculos ADD COLUMN notificacion_vencimiento_enviada BOOLEAN DEFAULT FALSE"))
+                    conn.commit()
+                print("[MIGRACION AUTOMATICA] ✅ Columna notificacion_vencimiento_enviada creada")
+                
+            # Crear índices si no existen
+            try:
+                indexes = [idx['name'] for idx in inspector.get_indexes('vehiculos')]
+                if 'ix_vehiculos_fecha_vencimiento' not in indexes:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("CREATE INDEX ix_vehiculos_fecha_vencimiento ON vehiculos(fecha_vencimiento)"))
+                        conn.commit()
+                if 'ix_vehiculos_notificacion_vencimiento_enviada' not in indexes:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("CREATE INDEX ix_vehiculos_notificacion_vencimiento_enviada ON vehiculos(notificacion_vencimiento_enviada)"))
+                        conn.commit()
+            except Exception as e:
+                print(f"[MIGRACION AUTOMATICA] Nota: Error creando índices (puede que ya existan): {e}")
+                
+    except Exception as e:
+        print(f"[MIGRACION AUTOMATICA] Error verificando/creando columnas: {e}")
+        # No interrumpir la app si falla
+
+# Ejecutar al iniciar la app
+with app.app_context():
+    try:
+        asegurar_columnas_vencimiento()
+    except Exception as e:
+        print(f"[INICIO] Error en asegurar_columnas_vencimiento (no crítico): {e}")
 
 
 # =====================================================
