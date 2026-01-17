@@ -64,13 +64,20 @@ def handle_500_error(e):
     error_trace = traceback.format_exc()
     print(f"[ERROR 500] {error_trace}")
     
-    # Si es una ruta de admin, mostrar error detallado
-    if request.path.startswith('/admin'):
-        return f"<h1>Error 500</h1><pre>{error_trace}</pre>", 500
+    # Proteger contra request no disponible
+    try:
+        from flask import has_request_context
+        if has_request_context() and hasattr(request, 'path') and request.path.startswith('/admin'):
+            return f"<h1>Error 500</h1><pre>{error_trace}</pre>", 500
+    except Exception:
+        pass
     
     # Para rutas públicas, redirigir a inicio
-    flash("Ocurrió un error. Por favor, intentá más tarde.")
-    return redirect("/")
+    try:
+        flash("Ocurrió un error. Por favor, intentá más tarde.")
+        return redirect("/")
+    except Exception:
+        return "<h1>Error 500</h1><p>Ocurrió un error interno.</p>", 500
 
 @app.errorhandler(Exception)
 def handle_exception(e):
@@ -79,13 +86,20 @@ def handle_exception(e):
     error_trace = traceback.format_exc()
     print(f"[ERROR] {error_trace}")
     
-    # Si es una ruta de admin, mostrar error detallado
-    if request.path.startswith('/admin'):
-        return f"<h1>Error</h1><pre>{error_trace}</pre>", 500
+    # Proteger contra request no disponible
+    try:
+        from flask import has_request_context
+        if has_request_context() and hasattr(request, 'path') and request.path.startswith('/admin'):
+            return f"<h1>Error</h1><pre>{error_trace}</pre>", 500
+    except Exception:
+        pass
     
     # Para rutas públicas, redirigir a inicio
-    flash("Ocurrió un error. Por favor, intentá más tarde.")
-    return redirect("/")
+    try:
+        flash("Ocurrió un error. Por favor, intentá más tarde.")
+        return redirect("/")
+    except Exception:
+        return "<h1>Error</h1><p>Ocurrió un error interno.</p>", 500
 
 # Agregar filtro personalizado para parsear JSON en templates
 @app.template_filter('from_json')
