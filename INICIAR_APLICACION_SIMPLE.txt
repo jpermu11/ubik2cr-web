@@ -1,0 +1,66 @@
+═══════════════════════════════════════════════════════════
+  GUÍA ULTRA SIMPLE - EJECUTAR APLICACIÓN
+═══════════════════════════════════════════════════════════
+
+PASO 1: CAMBIAR LA TERMINAL A CMD
+───────────────────────────────────────────────────────────
+En Cursor (abajo donde dice PowerShell):
+1. Haz clic en la flechita junto al "+"
+2. Selecciona "Command Prompt" o "CMD"
+3. Se abrirá una nueva terminal CMD
+
+═══════════════════════════════════════════════════════════
+
+PASO 2: COPIAR Y PEGAR ESTOS COMANDOS UNO POR UNO
+───────────────────────────────────────────────────────────
+
+COMANDO 1: Ir a la carpeta del proyecto
+──────────────────────────────────────
+cd C:\Users\jperm\.cursor\flask-app
+
+COMANDO 2: Crear entorno virtual (solo la primera vez)
+──────────────────────────────────────
+python -m venv venv
+
+COMANDO 3: Activar entorno virtual
+──────────────────────────────────────
+venv\Scripts\activate.bat
+
+COMANDO 4: Instalar dependencias
+──────────────────────────────────────
+pip install -r requirements.txt
+
+COMANDO 5: Aplicar migraciones de base de datos
+──────────────────────────────────────
+set FLASK_APP=main.py
+flask db upgrade
+
+COMANDO 6: INICIAR LA APLICACIÓN
+──────────────────────────────────────
+python main.py
+
+═══════════════════════════════════════════════════════════
+
+PASO 3: ABRIR EN EL NAVEGADOR
+───────────────────────────────────────────────────────────
+Cuando veas este mensaje en la terminal:
+
+  * Running on http://0.0.0.0:5000
+
+Entonces abre tu navegador y ve a:
+
+  http://localhost:5000
+
+═══════════════════════════════════════════════════════════
+
+SI HAY ERRORES:
+───────────────────────────────────────────────────────────
+Copia TODA la terminal (Ctrl+A, Ctrl+C) y compártela.
+
+═══════════════════════════════════════════════════════════
+
+PARA DETENER LA APLICACIÓN:
+───────────────────────────────────────────────────────────
+Presiona: Ctrl+C en la terminal
+
+═══════════════════════════════════════════════════════════
