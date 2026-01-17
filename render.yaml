@@ -3,7 +3,7 @@ services:
     name: ubik2cr-web
     env: python
     buildCommand: pip install -r requirements.txt && FLASK_APP=main.py flask db upgrade
-    startCommand: gunicorn main:app
+    startCommand: sh -c "FLASK_APP=main.py flask db upgrade && gunicorn main:app"
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
