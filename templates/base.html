@@ -46,7 +46,7 @@
             transform: scale(1.05);
         }
         
-        .navbar-ubik .navbar-brand img {
+        .navbar-ubik .navbar-brand div {
             filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
         }
         
@@ -125,7 +125,15 @@
     <nav class="navbar navbar-expand-lg navbar-ubik sticky-top">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <img src="/static/uploads/logo_oficial.png" alt="UBIK2CR" style="height: 55px; width: auto;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="background: white; border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-map-marker-alt" style="color: var(--ubik-green); font-size: 1.8rem;"></i>
+                        <i class="fas fa-car" style="color: var(--ubik-blue); font-size: 1.5rem;"></i>
+                    </div>
+                    <span style="font-size: 1.8rem; font-weight: 900; letter-spacing: -1px;">
+                        <span style="color: var(--ubik-blue);">UBIK</span><span style="color: var(--ubik-green);">2CR</span>
+                    </span>
+                </div>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -179,7 +187,12 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-4">
-                    <h5 class="text-white mb-3">UBIK2CR</h5>
+                    <div class="mb-3" style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-map-marker-alt" style="color: var(--ubik-green); font-size: 2rem;"></i>
+                        <span style="font-size: 1.8rem; font-weight: 900;">
+                            <span style="color: white;">UBIK</span><span style="color: var(--ubik-green);">2CR</span>
+                        </span>
+                    </div>
                     <p style="opacity: 0.8;">La mejor plataforma de venta de vehículos usados en Costa Rica.</p>
                 </div>
                 <div class="col-md-4">
