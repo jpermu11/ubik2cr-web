@@ -592,16 +592,16 @@ def check_maintenance_mode():
         
         # Rutas permitidas durante mantenimiento
         path = request.path if hasattr(request, 'path') else '/'
-    allowed_paths = [
-        '/', '/static', '/favicon.ico', '/health', '/health/db',
-        '/login', '/logout', '/admin', '/admin/', '/api/',
-        '/cuenta', '/owner/login', '/owner/registro', '/panel',
-        '/vehiculos', '/vehiculo', '/publicar', '/negocio'
-    ]
+        allowed_paths = [
+            '/', '/static', '/favicon.ico', '/health', '/health/db',
+            '/login', '/logout', '/admin', '/admin/', '/api/',
+            '/cuenta', '/owner/login', '/owner/registro', '/panel',
+            '/vehiculos', '/vehiculo', '/publicar', '/negocio'
+        ]
 
-    # Permitir acceso a rutas de admin y login
-    if any(path.startswith(allowed) for allowed in allowed_paths):
-        return None
+        # Permitir acceso a rutas de admin y login
+        if any(path.startswith(allowed) for allowed in allowed_paths):
+            return None
 
         # Si el usuario es admin o está logueado, permitir acceso
         if admin_logged_in() or owner_logged_in():
