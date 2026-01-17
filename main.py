@@ -186,16 +186,34 @@ migrate = Migrate(app, db)
 # Asegurar que las columnas de vencimiento existan (fallback si migración no se ejecutó)
 # EJECUTAR INMEDIATAMENTE después de inicializar la base de datos
 _columna_vencimiento_verificada = False
+_fecha_vencimiento_disponible = False  # Cache si la columna existe
+
+def verificar_columna_fecha_vencimiento():
+    """Verificar si la columna fecha_vencimiento existe en la base de datos"""
+    global _fecha_vencimiento_disponible
+    
+    if not VEHICULOS_AVAILABLE or Vehiculo is None:
+        return False
+    
+    try:
+        inspector = sqlalchemy_inspect(db.engine)
+        columnas_vehiculos = [col['name'] for col in inspector.get_columns('vehiculos')]
+        _fecha_vencimiento_disponible = 'fecha_vencimiento' in columnas_vehiculos
+        return _fecha_vencimiento_disponible
+    except Exception as e:
+        print(f"[VERIFICAR COLUMNA] Error verificando fecha_vencimiento: {e}")
+        return False
 
 def asegurar_columnas_vencimiento():
     """Crear columnas de vencimiento automáticamente si no existen (fallback)"""
-    global _columna_vencimiento_verificada
+    global _columna_vencimiento_verificada, _fecha_vencimiento_disponible
     
     if _columna_vencimiento_verificada:
         return
     
     if not VEHICULOS_AVAILABLE or Vehiculo is None:
         _columna_vencimiento_verificada = True
+        _fecha_vencimiento_disponible = False
         return
     
     try:
@@ -206,6 +224,7 @@ def asegurar_columnas_vencimiento():
         except Exception:
             # Si la tabla no existe, no hacer nada
             _columna_vencimiento_verificada = True
+            _fecha_vencimiento_disponible = False
             return
         
         # Si falta fecha_vencimiento, crearla
@@ -215,8 +234,12 @@ def asegurar_columnas_vencimiento():
                 with db.engine.begin() as conn:
                     conn.execute(text("ALTER TABLE vehiculos ADD COLUMN fecha_vencimiento TIMESTAMP"))
                 print("[MIGRACION AUTOMATICA] ✅ Columna fecha_vencimiento creada")
+                _fecha_vencimiento_disponible = True
             except Exception as e:
                 print(f"[MIGRACION AUTOMATICA] Error creando fecha_vencimiento: {e}")
+                _fecha_vencimiento_disponible = False
+        else:
+            _fecha_vencimiento_disponible = True
         
         # Si falta notificacion_vencimiento_enviada, crearla
         if 'notificacion_vencimiento_enviada' not in columnas_vehiculos:
@@ -231,7 +254,7 @@ def asegurar_columnas_vencimiento():
         # Crear índices si no existen (no crítico si falla)
         try:
             indexes = [idx['name'] for idx in inspector.get_indexes('vehiculos')]
-            if 'ix_vehiculos_fecha_vencimiento' not in indexes:
+            if 'ix_vehiculos_fecha_vencimiento' not in indexes and _fecha_vencimiento_disponible:
                 try:
                     with db.engine.begin() as conn:
                         conn.execute(text("CREATE INDEX ix_vehiculos_fecha_vencimiento ON vehiculos(fecha_vencimiento)"))
@@ -250,6 +273,7 @@ def asegurar_columnas_vencimiento():
     except Exception as e:
         print(f"[MIGRACION AUTOMATICA] Error verificando/creando columnas: {e}")
         _columna_vencimiento_verificada = True  # Marcar como verificado para no reintentar
+        _fecha_vencimiento_disponible = False
 
 # EJECUTAR INMEDIATAMENTE después de inicializar la base de datos
 with app.app_context():
@@ -262,12 +286,15 @@ with app.app_context():
 @app.before_request
 def asegurar_columnas_vencimiento_before_request():
     """Verificar y crear columnas de vencimiento en el primer request (fallback)"""
-    global _columna_vencimiento_verificada
+    global _columna_vencimiento_verificada, _fecha_vencimiento_disponible
     if not _columna_vencimiento_verificada:
         try:
             asegurar_columnas_vencimiento()
         except Exception as e:
             print(f"[BEFORE_REQUEST] Error en asegurar_columnas_vencimiento: {e}")
+    # Verificar si la columna existe (puede haberse creado después de la primera verificación)
+    if not _fecha_vencimiento_disponible:
+        _fecha_vencimiento_disponible = verificar_columna_fecha_vencimiento()
     return None
 
 
@@ -821,26 +848,28 @@ def inicio():
     PER_PAGE = 24
     
     # Query base: solo vehículos aprobados y no vencidos (con manejo de errores)
-    try:
-        # Asegurar que las columnas existan ANTES de la query
+    # Asegurar que las columnas existan ANTES de la query
+    asegurar_columnas_vencimiento()
+    
+    # Verificar si la columna existe antes de usarla
+    tiene_fecha_vencimiento = verificar_columna_fecha_vencimiento()
+    
+    # Construir query según si la columna existe
+    query = Vehiculo.query.filter_by(estado="aprobado")
+    
+    if tiene_fecha_vencimiento:
+        # Solo usar filtro de vencimiento si la columna existe
         try:
-            asegurar_columnas_vencimiento()
-        except Exception as e:
-            print(f"[QUERY] Error verificando columnas: {e}")
-        
-        ahora = datetime.utcnow()
-        
-        # Intentar query con fecha_vencimiento, si falla usar query sin filtro de vencimiento
-        try:
-            query = Vehiculo.query.filter_by(estado="aprobado").filter(
+            ahora = datetime.utcnow()
+            query = query.filter(
                 or_(
                     Vehiculo.fecha_vencimiento.is_(None),  # Si no tiene fecha_vencimiento (vehículos antiguos)
                     Vehiculo.fecha_vencimiento > ahora  # O si aún no ha vencido
                 )
             )
         except Exception as e:
-            # Si falla, es porque la columna no existe aún - usar query simple
-            print(f"[QUERY] Columna fecha_vencimiento no disponible, usando query sin filtro: {e}")
+            # Si falla, usar query simple sin filtro de vencimiento
+            print(f"[QUERY] Error usando fecha_vencimiento, usando query sin filtro: {e}")
             query = Vehiculo.query.filter_by(estado="aprobado")
     except Exception as e:
         print(f"[ERROR] No se puede consultar vehículos: {e}")
@@ -960,7 +989,18 @@ def inicio():
     else:
         query = query.order_by(Vehiculo.destacado.desc(), Vehiculo.es_vip.desc(), Vehiculo.created_at.desc())
     
-    total = query.count()
+    # Proteger count() contra columnas faltantes
+    try:
+        total = query.count()
+    except Exception as e:
+        print(f"[QUERY] Error en count(), intentando sin filtro de vencimiento: {e}")
+        # Si falla, intentar sin filtro de vencimiento
+        query_simple = Vehiculo.query.filter_by(estado="aprobado")
+        try:
+            total = query_simple.count()
+        except Exception as e2:
+            print(f"[QUERY] Error crítico en count(): {e2}")
+            total = 0
     total_pages = (total + PER_PAGE - 1) // PER_PAGE if total > 0 else 1
     if page > total_pages:
         page = total_pages
@@ -968,19 +1008,27 @@ def inicio():
     vehiculos = query.offset((page - 1) * PER_PAGE).limit(PER_PAGE).all()
     
     # Obtener marcas únicas para el dropdown (solo vehículos no vencidos)
+    asegurar_columnas_vencimiento()
+    tiene_fecha_vencimiento = verificar_columna_fecha_vencimiento()
+    
     try:
-        ahora = datetime.utcnow()
-        try:
-            marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").filter(
-                or_(
-                    Vehiculo.fecha_vencimiento.is_(None),
-                    Vehiculo.fecha_vencimiento > ahora
-                )
-            ).distinct().order_by(Vehiculo.marca).all()
-            marcas = [m[0] for m in marcas_unicas]
-        except Exception as e:
-            # Si falla por columna faltante, usar query simple
-            print(f"[MARCAS] Usando query sin filtro de vencimiento: {e}")
+        if tiene_fecha_vencimiento:
+            try:
+                ahora = datetime.utcnow()
+                marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").filter(
+                    or_(
+                        Vehiculo.fecha_vencimiento.is_(None),
+                        Vehiculo.fecha_vencimiento > ahora
+                    )
+                ).distinct().order_by(Vehiculo.marca).all()
+                marcas = [m[0] for m in marcas_unicas]
+            except Exception as e:
+                # Si falla por columna faltante, usar query simple
+                print(f"[MARCAS] Usando query sin filtro de vencimiento: {e}")
+                marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").distinct().order_by(Vehiculo.marca).all()
+                marcas = [m[0] for m in marcas_unicas]
+        else:
+            # Si la columna no existe, usar query simple
             marcas_unicas = db.session.query(Vehiculo.marca).filter_by(estado="aprobado").distinct().order_by(Vehiculo.marca).all()
             marcas = [m[0] for m in marcas_unicas]
     except Exception as e:
@@ -1322,21 +1370,33 @@ def api_modelos_vehiculos():
         return {"modelos": []}
     
     try:
-        ahora = datetime.utcnow()
-        try:
-            modelos_unicos = db.session.query(Vehiculo.modelo).filter_by(
-                marca=marca,
-                estado="aprobado"
-            ).filter(
-                or_(
-                    Vehiculo.fecha_vencimiento.is_(None),
-                    Vehiculo.fecha_vencimiento > ahora
-                )
-            ).distinct().order_by(Vehiculo.modelo).all()
-            modelos = [m[0] for m in modelos_unicos]
-        except Exception as e:
-            # Si falla por columna faltante, usar query simple
-            print(f"[API MODELOS] Usando query sin filtro de vencimiento: {e}")
+        # Asegurar que las columnas existan antes de usarlas
+        asegurar_columnas_vencimiento()
+        tiene_fecha_vencimiento = verificar_columna_fecha_vencimiento()
+        
+        if tiene_fecha_vencimiento:
+            try:
+                ahora = datetime.utcnow()
+                modelos_unicos = db.session.query(Vehiculo.modelo).filter_by(
+                    marca=marca,
+                    estado="aprobado"
+                ).filter(
+                    or_(
+                        Vehiculo.fecha_vencimiento.is_(None),
+                        Vehiculo.fecha_vencimiento > ahora
+                    )
+                ).distinct().order_by(Vehiculo.modelo).all()
+                modelos = [m[0] for m in modelos_unicos]
+            except Exception as e:
+                # Si falla por columna faltante, usar query simple
+                print(f"[API MODELOS] Usando query sin filtro de vencimiento: {e}")
+                modelos_unicas = db.session.query(Vehiculo.modelo).filter_by(
+                    marca=marca,
+                    estado="aprobado"
+                ).distinct().order_by(Vehiculo.modelo).all()
+                modelos = [m[0] for m in modelos_unicas]
+        else:
+            # Si la columna no existe, usar query simple
             modelos_unicas = db.session.query(Vehiculo.modelo).filter_by(
                 marca=marca,
                 estado="aprobado"
