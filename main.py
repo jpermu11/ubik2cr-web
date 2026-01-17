@@ -184,65 +184,90 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Asegurar que las columnas de vencimiento existan (fallback si migración no se ejecutó)
+# EJECUTAR INMEDIATAMENTE después de inicializar la base de datos
+_columna_vencimiento_verificada = False
+
 def asegurar_columnas_vencimiento():
     """Crear columnas de vencimiento automáticamente si no existen (fallback)"""
+    global _columna_vencimiento_verificada
+    
+    if _columna_vencimiento_verificada:
+        return
+    
     if not VEHICULOS_AVAILABLE or Vehiculo is None:
+        _columna_vencimiento_verificada = True
         return
     
     try:
-        with app.app_context():
-            # Verificar si la columna fecha_vencimiento existe
-            inspector = sqlalchemy_inspect(db.engine)
+        # Verificar si la tabla vehiculos existe
+        inspector = sqlalchemy_inspect(db.engine)
+        try:
             columnas_vehiculos = [col['name'] for col in inspector.get_columns('vehiculos')]
-            
-            # Si falta fecha_vencimiento, crearla
-            if 'fecha_vencimiento' not in columnas_vehiculos:
-                print("[MIGRACION AUTOMATICA] Creando columna fecha_vencimiento...")
+        except Exception:
+            # Si la tabla no existe, no hacer nada
+            _columna_vencimiento_verificada = True
+            return
+        
+        # Si falta fecha_vencimiento, crearla
+        if 'fecha_vencimiento' not in columnas_vehiculos:
+            print("[MIGRACION AUTOMATICA] Creando columna fecha_vencimiento...")
+            try:
                 with db.engine.begin() as conn:
                     conn.execute(text("ALTER TABLE vehiculos ADD COLUMN fecha_vencimiento TIMESTAMP"))
                 print("[MIGRACION AUTOMATICA] ✅ Columna fecha_vencimiento creada")
-            
-            # Si falta notificacion_vencimiento_enviada, crearla
-            if 'notificacion_vencimiento_enviada' not in columnas_vehiculos:
-                print("[MIGRACION AUTOMATICA] Creando columna notificacion_vencimiento_enviada...")
+            except Exception as e:
+                print(f"[MIGRACION AUTOMATICA] Error creando fecha_vencimiento: {e}")
+        
+        # Si falta notificacion_vencimiento_enviada, crearla
+        if 'notificacion_vencimiento_enviada' not in columnas_vehiculos:
+            print("[MIGRACION AUTOMATICA] Creando columna notificacion_vencimiento_enviada...")
+            try:
                 with db.engine.begin() as conn:
                     conn.execute(text("ALTER TABLE vehiculos ADD COLUMN notificacion_vencimiento_enviada BOOLEAN DEFAULT FALSE"))
                 print("[MIGRACION AUTOMATICA] ✅ Columna notificacion_vencimiento_enviada creada")
+            except Exception as e:
+                print(f"[MIGRACION AUTOMATICA] Error creando notificacion_vencimiento_enviada: {e}")
                 
-            # Crear índices si no existen
-            try:
-                indexes = [idx['name'] for idx in inspector.get_indexes('vehiculos')]
-                if 'ix_vehiculos_fecha_vencimiento' not in indexes:
+        # Crear índices si no existen (no crítico si falla)
+        try:
+            indexes = [idx['name'] for idx in inspector.get_indexes('vehiculos')]
+            if 'ix_vehiculos_fecha_vencimiento' not in indexes:
+                try:
                     with db.engine.begin() as conn:
                         conn.execute(text("CREATE INDEX ix_vehiculos_fecha_vencimiento ON vehiculos(fecha_vencimiento)"))
-                if 'ix_vehiculos_notificacion_vencimiento_enviada' not in indexes:
+                except Exception:
+                    pass  # Índice puede que ya exista
+            if 'ix_vehiculos_notificacion_vencimiento_enviada' not in indexes:
+                try:
                     with db.engine.begin() as conn:
                         conn.execute(text("CREATE INDEX ix_vehiculos_notificacion_vencimiento_enviada ON vehiculos(notificacion_vencimiento_enviada)"))
-            except Exception as e:
-                print(f"[MIGRACION AUTOMATICA] Nota: Error creando índices (puede que ya existan): {e}")
+                except Exception:
+                    pass  # Índice puede que ya exista
+        except Exception:
+            pass  # No crítico si falla crear índices
                 
+        _columna_vencimiento_verificada = True
     except Exception as e:
         print(f"[MIGRACION AUTOMATICA] Error verificando/creando columnas: {e}")
-        # No interrumpir la app si falla
+        _columna_vencimiento_verificada = True  # Marcar como verificado para no reintentar
 
-# EJECUTAR CREACIÓN DE COLUMNAS EN PRIMER BEFORE_REQUEST (antes de cualquier query)
-_columna_vencimiento_verificada = False
-
-@app.before_request
-def asegurar_columnas_vencimiento_before_request():
-    """Verificar y crear columnas de vencimiento en el primer request"""
-    global _columna_vencimiento_verificada
-    if _columna_vencimiento_verificada:
-        return None
-    
-    # Ejecutar solo una vez
-    _columna_vencimiento_verificada = True
-    
+# EJECUTAR INMEDIATAMENTE después de inicializar la base de datos
+with app.app_context():
     try:
         asegurar_columnas_vencimiento()
     except Exception as e:
-        print(f"[INICIO] Error en asegurar_columnas_vencimiento (no crítico): {e}")
-    
+        print(f"[INICIO APP] Error inicial en asegurar_columnas_vencimiento: {e}")
+
+# También en el primer before_request por si acaso
+@app.before_request
+def asegurar_columnas_vencimiento_before_request():
+    """Verificar y crear columnas de vencimiento en el primer request (fallback)"""
+    global _columna_vencimiento_verificada
+    if not _columna_vencimiento_verificada:
+        try:
+            asegurar_columnas_vencimiento()
+        except Exception as e:
+            print(f"[BEFORE_REQUEST] Error en asegurar_columnas_vencimiento: {e}")
     return None
 
 
@@ -2474,6 +2499,9 @@ def publicar_vehiculo():
         imagenes_urls = save_multiple_uploads("imagenes", max_files=10)
         imagen_url = imagenes_urls[0] if imagenes_urls else "/static/uploads/logo.png"
         
+        # Asegurar que las columnas existan antes de crear el vehículo
+        asegurar_columnas_vencimiento()
+        
         # Calcular fecha de vencimiento (3 meses desde ahora)
         fecha_vencimiento = datetime.utcnow() + timedelta(days=90)  # 3 meses = 90 días
         
@@ -3791,17 +3819,26 @@ def verificar_y_notificar_vencimientos():
         return
     
     try:
+        # Asegurar que las columnas existan antes de usarlas
+        asegurar_columnas_vencimiento()
+        
         ahora = datetime.utcnow()
         una_semana_despues = ahora + timedelta(days=7)
         
         # Buscar vehículos que vencen en los próximos 7 días y aún no se les envió notificación
-        vehiculos_proximos_vencer = Vehiculo.query.filter(
-            Vehiculo.estado == "aprobado",
-            Vehiculo.fecha_vencimiento.isnot(None),
-            Vehiculo.fecha_vencimiento <= una_semana_despues,
-            Vehiculo.fecha_vencimiento > ahora,
-            Vehiculo.notificacion_vencimiento_enviada == False
-        ).all()
+        # Usar try/except por si la columna aún no existe
+        try:
+            vehiculos_proximos_vencer = Vehiculo.query.filter(
+                Vehiculo.estado == "aprobado",
+                Vehiculo.fecha_vencimiento.isnot(None),
+                Vehiculo.fecha_vencimiento <= una_semana_despues,
+                Vehiculo.fecha_vencimiento > ahora,
+                Vehiculo.notificacion_vencimiento_enviada == False
+            ).all()
+        except Exception as e:
+            # Si la columna no existe, retornar sin hacer nada
+            print(f"[VENCIMIENTO] Columnas no disponibles aún: {e}")
+            return
         
         for vehiculo in vehiculos_proximos_vencer:
             try:
@@ -3889,14 +3926,23 @@ def marcar_vehiculos_vencidos():
         return
     
     try:
+        # Asegurar que las columnas existan antes de usarlas
+        asegurar_columnas_vencimiento()
+        
         ahora = datetime.utcnow()
         
         # Buscar vehículos aprobados que ya vencieron
-        vehiculos_vencidos = Vehiculo.query.filter(
-            Vehiculo.estado == "aprobado",
-            Vehiculo.fecha_vencimiento.isnot(None),
-            Vehiculo.fecha_vencimiento <= ahora
-        ).all()
+        # Usar try/except por si la columna aún no existe
+        try:
+            vehiculos_vencidos = Vehiculo.query.filter(
+                Vehiculo.estado == "aprobado",
+                Vehiculo.fecha_vencimiento.isnot(None),
+                Vehiculo.fecha_vencimiento <= ahora
+            ).all()
+        except Exception as e:
+            # Si la columna no existe, retornar sin hacer nada
+            print(f"[VENCIMIENTO] Columnas no disponibles aún: {e}")
+            return
         
         count = 0
         for vehiculo in vehiculos_vencidos:
@@ -3937,11 +3983,22 @@ def renovar_vehiculo(vehiculo_id):
         # Calcular nueva fecha de vencimiento (3 meses desde ahora)
         nueva_fecha_vencimiento = datetime.utcnow() + timedelta(days=90)
         
-        # Si el vehículo está eliminado por vencimiento, reactivarlo
-        if vehiculo.estado == "eliminado" and vehiculo.fecha_vencimiento and vehiculo.fecha_vencimiento <= datetime.utcnow():
-            vehiculo.estado = "aprobado"
+        # Asegurar que las columnas existan
+        asegurar_columnas_vencimiento()
         
-        vehiculo.fecha_vencimiento = nueva_fecha_vencimiento
+        # Si el vehículo está eliminado por vencimiento, reactivarlo
+        try:
+            if vehiculo.estado == "eliminado" and vehiculo.fecha_vencimiento and vehiculo.fecha_vencimiento <= datetime.utcnow():
+                vehiculo.estado = "aprobado"
+        except Exception:
+            pass  # Si fecha_vencimiento no existe, ignorar
+        
+        try:
+            vehiculo.fecha_vencimiento = nueva_fecha_vencimiento
+        except Exception as e:
+            print(f"[RENOVAR] Error asignando fecha_vencimiento: {e}")
+            flash("Error: La columna fecha_vencimiento no está disponible aún. Por favor, espera unos minutos.")
+            return redirect("/panel")
         vehiculo.notificacion_vencimiento_enviada = False  # Reset para nueva notificación
         vehiculo.updated_at = datetime.utcnow()
         
