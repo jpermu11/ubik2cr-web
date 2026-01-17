@@ -848,29 +848,30 @@ def inicio():
     PER_PAGE = 24
     
     # Query base: solo vehículos aprobados y no vencidos (con manejo de errores)
-    # Asegurar que las columnas existan ANTES de la query
-    asegurar_columnas_vencimiento()
-    
-    # Verificar si la columna existe antes de usarla
-    tiene_fecha_vencimiento = verificar_columna_fecha_vencimiento()
-    
-    # Construir query según si la columna existe
-    query = Vehiculo.query.filter_by(estado="aprobado")
-    
-    if tiene_fecha_vencimiento:
-        # Solo usar filtro de vencimiento si la columna existe
-        try:
-            ahora = datetime.utcnow()
-            query = query.filter(
-                or_(
-                    Vehiculo.fecha_vencimiento.is_(None),  # Si no tiene fecha_vencimiento (vehículos antiguos)
-                    Vehiculo.fecha_vencimiento > ahora  # O si aún no ha vencido
+    try:
+        # Asegurar que las columnas existan ANTES de la query
+        asegurar_columnas_vencimiento()
+        
+        # Verificar si la columna existe antes de usarla
+        tiene_fecha_vencimiento = verificar_columna_fecha_vencimiento()
+        
+        # Construir query según si la columna existe
+        query = Vehiculo.query.filter_by(estado="aprobado")
+        
+        if tiene_fecha_vencimiento:
+            # Solo usar filtro de vencimiento si la columna existe
+            try:
+                ahora = datetime.utcnow()
+                query = query.filter(
+                    or_(
+                        Vehiculo.fecha_vencimiento.is_(None),  # Si no tiene fecha_vencimiento (vehículos antiguos)
+                        Vehiculo.fecha_vencimiento > ahora  # O si aún no ha vencido
+                    )
                 )
-            )
-        except Exception as e:
-            # Si falla, usar query simple sin filtro de vencimiento
-            print(f"[QUERY] Error usando fecha_vencimiento, usando query sin filtro: {e}")
-            query = Vehiculo.query.filter_by(estado="aprobado")
+            except Exception as e:
+                # Si falla, usar query simple sin filtro de vencimiento
+                print(f"[QUERY] Error usando fecha_vencimiento, usando query sin filtro: {e}")
+                query = Vehiculo.query.filter_by(estado="aprobado")
     except Exception as e:
         print(f"[ERROR] No se puede consultar vehículos: {e}")
         # Retornar página vacía
